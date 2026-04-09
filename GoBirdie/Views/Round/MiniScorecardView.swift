@@ -77,15 +77,15 @@ private struct ScorecardRow: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 24, alignment: .leading)
 
-                // Stroke circles
+                // Stroke circles — show par number of slots, fill as played
                 HStack(spacing: 5) {
-                    if hole.strokes > 0 {
-                        ForEach(1...hole.strokes, id: \.self) { n in
+                    let totalSlots = max(hole.par, hole.strokes)
+                    ForEach(1...totalSlots, id: \.self) { n in
+                        if n <= hole.strokes {
+                            // Played stroke
                             StrokeCircle(n: n, total: hole.strokes, par: hole.par)
-                        }
-                    } else {
-                        // Not played — show 3 dim dots
-                        ForEach(0..<3, id: \.self) { _ in
+                        } else {
+                            // Unplayed slot
                             Circle()
                                 .fill(Color(.systemGray5))
                                 .frame(width: 18, height: 18)
@@ -117,12 +117,8 @@ private struct StrokeCircle: View {
     let total: Int
     let par: Int
 
-    // Last circle is red if over par, green if at/under par, otherwise green
     private var bg: Color {
-        if n == total {
-            return total > par ? .red : .green
-        }
-        return .green
+        n > par ? .red : .green
     }
 
     var body: some View {

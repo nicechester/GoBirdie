@@ -8,7 +8,7 @@ import GoBirdieCore
 struct RoundTab: View {
     @EnvironmentObject var appState: AppState
     @State private var showStartRoundSheet = false
-    @State private var showSettings = false
+    @State private var showMenu = false
 
     var body: some View {
         if let session = appState.activeRound,
@@ -17,11 +17,8 @@ struct RoundTab: View {
                 session: session,
                 viewModel: viewModel,
                 appState: appState,
-                showSettings: $showSettings
+                showMenu: $showMenu
             )
-            .sheet(isPresented: $showSettings) {
-                SettingsPlaceholder().environmentObject(appState)
-            }
         } else {
             EmptyRoundStateView(onStartRound: { showStartRoundSheet = true })
                 .sheet(isPresented: $showStartRoundSheet) { StartRoundView() }
@@ -34,60 +31,73 @@ private struct ActiveRoundView: View {
     @ObservedObject var session: RoundSession
     @ObservedObject var viewModel: RoundViewModel
     let appState: AppState
-    @Binding var showSettings: Bool
+    @Binding var showMenu: Bool
+    @State private var showEndConfirm = false
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                HoleHeaderView(session: session, course: viewModel.course)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 12)
+        VStack(spacing: 0) {
+            // Header row with menu button
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("Hole \(session.currentHoleNumber)")
+                    .font(.title3).fontWeight(.bold)
 
-                DistanceDisplayView(distances: viewModel.distances)
-                    .padding(.horizontal, 16)
+                if let hole = session.currentHole,
+                   let courseHole = viewModel.course.holes.first(where: { $0.number == session.currentHoleNumber }) {
+                    let ydsText = courseHole.yardage.map { "\($0) yds" } ?? ""
+                    Text("Par \(hole.par)" + (ydsText.isEmpty ? "" : "  ·  \(ydsText)"))
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+                Spacer()
 
-                HoleControlsView(
-                    session: session,
-                    course: viewModel.course,
-                    locationService: appState.getLocationService(),
-                    viewModel: viewModel
-                )
-                .padding(.top, 4)
-
-                MiniScorecardView(session: session, onHoleSelect: { holeNumber in
-                    session.navigateTo(holeNumber: holeNumber, course: viewModel.course)
-                })
-                .padding(.top, 4)
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { showSettings = true } label: {
-                        Image(systemName: "gearshape")
+                Menu {
+                    Button { } label: {
+                        Label("Change Tee", systemImage: "figure.golf")
                     }
+                    Divider()
+                    Button(role: .destructive) {
+                        showEndConfirm = true
+                    } label: {
+                        Label("End Round", systemImage: "flag.checkered")
+                    }
+                    Button(role: .destructive) {
+                        appState.cancelActiveRound()
+                    } label: {
+                        Label("Cancel Round", systemImage: "xmark.circle")
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal")
+                        .font(.title3)
+                        .foregroundStyle(.primary)
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+
+            DistanceDisplayView(distances: viewModel.distances)
+                .padding(.horizontal, 16)
+
+            HoleControlsView(
+                session: session,
+                course: viewModel.course,
+                locationService: appState.getLocationService(),
+                viewModel: viewModel
+            )
+            .padding(.top, 4)
+
+            MiniScorecardView(session: session, onHoleSelect: { holeNumber in
+                session.navigateTo(holeNumber: holeNumber, course: viewModel.course)
+            })
+            .padding(.top, 4)
         }
-    }
-}
-
-private struct HoleHeaderView: View {
-    @ObservedObject var session: RoundSession
-    let course: Course
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text("Hole \(session.currentHoleNumber)")
-                .font(.title3).fontWeight(.bold)
-
-            if let hole = session.currentHole,
-               let courseHole = course.holes.first(where: { $0.number == session.currentHoleNumber }) {
-                let ydsText = courseHole.yardage.map { "\($0) yds" } ?? ""
-                Text("Par \(hole.par)" + (ydsText.isEmpty ? "" : "  ·  \(ydsText)"))
-                    .font(.subheadline).foregroundStyle(.secondary)
+        .alert("End Round?", isPresented: $showEndConfirm) {
+            Button("End", role: .destructive) {
+                session.endRound()
+                appState.endActiveRound()
             }
-            Spacer()
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Save and finish this round?")
         }
     }
 }

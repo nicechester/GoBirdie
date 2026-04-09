@@ -114,10 +114,27 @@ final class AppState: ObservableObject {
         return session
     }
 
-    /// End the active round and clean up.
+    /// End the active round, save it, and clean up.
     func endActiveRound() {
-        guard let viewModel = activeRoundViewModel else { return }
-        viewModel.stopRound()
+        guard let session = activeRound else { return }
+        session.endRound()
+
+        let store = RoundStore()
+        do {
+            try store.save(session.round)
+            print("[AppState] Round saved: \(session.round.id)")
+        } catch {
+            print("[AppState] Failed to save round: \(error)")
+        }
+
+        activeRoundViewModel?.stopRound()
+        activeRound = nil
+        activeRoundViewModel = nil
+    }
+
+    /// Cancel the active round without saving.
+    func cancelActiveRound() {
+        activeRoundViewModel?.stopRound()
         activeRound = nil
         activeRoundViewModel = nil
     }

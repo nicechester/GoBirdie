@@ -65,6 +65,8 @@ final class RoundSession: ObservableObject {
             distanceToPinYards: distanceToPinYards
         )
         round.holes[currentHoleIndex].shots.append(shot)
+        round.holes[currentHoleIndex].strokes += 1
+        recomputeTotals()
     }
 
     /// Set the number of putts for the current hole.
@@ -72,7 +74,13 @@ final class RoundSession: ObservableObject {
     /// - Parameter count: Number of putts (must be >= 0).
     func setPutts(_ count: Int) {
         guard currentHole != nil, count >= 0 else { return }
+        let oldPutts = round.holes[currentHoleIndex].putts
+        let delta = count - oldPutts
         round.holes[currentHoleIndex].putts = count
+        round.holes[currentHoleIndex].strokes += delta
+        if round.holes[currentHoleIndex].strokes < 0 {
+            round.holes[currentHoleIndex].strokes = 0
+        }
         updateGIR()
         recomputeTotals()
     }

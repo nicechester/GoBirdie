@@ -12,7 +12,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $appState.selectedTab) {
-            ScorecardsPlaceholder()
+            ScorecardsTab()
                 .tabItem { Label("Scorecards", systemImage: "list.bullet.clipboard") }
                 .tag(0)
 

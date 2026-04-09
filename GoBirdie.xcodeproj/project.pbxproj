@@ -7,9 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		455FBF2A2F88239E008A4D0A /* GoBirdieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 455FBF292F88239E008A4D0A /* GoBirdieCore */; };
+		455FBF2C2F8823B7008A4D0A /* GoBirdieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 455FBF2B2F8823B7008A4D0A /* GoBirdieCore */; };
 		45985F3A2F86F41C00EB0B97 /* GoBirdie Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 45985F392F86F41C00EB0B97 /* GoBirdie Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		45985F4F2F86F44F00EB0B97 /* GoBirdieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 45985F4E2F86F44F00EB0B97 /* GoBirdieCore */; };
-		45985F522F86F45B00EB0B97 /* GoBirdieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 45985F512F86F45B00EB0B97 /* GoBirdieCore */; };
 		45D124A82F8723770096196E /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 45D124A72F8723770096196E /* MapLibre */; };
 /* End PBXBuildFile section */
 
@@ -61,6 +62,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				45D124A82F8723770096196E /* MapLibre in Frameworks */,
+				455FBF2A2F88239E008A4D0A /* GoBirdieCore in Frameworks */,
 				45985F4F2F86F44F00EB0B97 /* GoBirdieCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -69,7 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				45985F522F86F45B00EB0B97 /* GoBirdieCore in Frameworks */,
+				455FBF2C2F8823B7008A4D0A /* GoBirdieCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,6 +128,7 @@
 			packageProductDependencies = (
 				45985F4E2F86F44F00EB0B97 /* GoBirdieCore */,
 				45D124A72F8723770096196E /* MapLibre */,
+				455FBF292F88239E008A4D0A /* GoBirdieCore */,
 			);
 			productName = GoBirdie;
 			productReference = 45985F2C2F86F41A00EB0B97 /* GoBirdie.app */;
@@ -148,7 +151,7 @@
 			);
 			name = "GoBirdie Watch App";
 			packageProductDependencies = (
-				45985F512F86F45B00EB0B97 /* GoBirdieCore */,
+				455FBF2B2F8823B7008A4D0A /* GoBirdieCore */,
 			);
 			productName = "GoBirdie Watch App";
 			productReference = 45985F392F86F41C00EB0B97 /* GoBirdie Watch App.app */;
@@ -182,8 +185,8 @@
 			mainGroup = 45985F232F86F41A00EB0B97;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				45985F4D2F86F44F00EB0B97 /* XCLocalSwiftPackageReference "../GoBirdieCore" */,
 				45D124A62F8723770096196E /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */,
+				455FBF282F88239E008A4D0A /* XCLocalSwiftPackageReference "GoBirdieCore" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 45985F2D2F86F41A00EB0B97 /* Products */;
@@ -530,9 +533,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		45985F4D2F86F44F00EB0B97 /* XCLocalSwiftPackageReference "../GoBirdieCore" */ = {
+		455FBF282F88239E008A4D0A /* XCLocalSwiftPackageReference "GoBirdieCore" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../GoBirdieCore;
+			relativePath = GoBirdieCore;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -548,13 +551,17 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		45985F4E2F86F44F00EB0B97 /* GoBirdieCore */ = {
+		455FBF292F88239E008A4D0A /* GoBirdieCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = GoBirdieCore;
 		};
-		45985F512F86F45B00EB0B97 /* GoBirdieCore */ = {
+		455FBF2B2F8823B7008A4D0A /* GoBirdieCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 45985F4D2F86F44F00EB0B97 /* XCLocalSwiftPackageReference "../GoBirdieCore" */;
+			package = 455FBF282F88239E008A4D0A /* XCLocalSwiftPackageReference "GoBirdieCore" */;
+			productName = GoBirdieCore;
+		};
+		45985F4E2F86F44F00EB0B97 /* GoBirdieCore */ = {
+			isa = XCSwiftPackageProductDependency;
 			productName = GoBirdieCore;
 		};
 		45D124A72F8723770096196E /* MapLibre */ = {
