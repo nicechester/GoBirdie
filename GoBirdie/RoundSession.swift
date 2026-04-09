@@ -21,6 +21,21 @@ final class RoundSession: ObservableObject {
         self.round = round
         self.currentHoleIndex = startingHoleIndex
         self.isComplete = false
+
+        NotificationCenter.default.addObserver(
+            forName: .watchStrokeUpdate, object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let holeNumber = notification.userInfo?["holeNumber"] as? Int,
+                  let strokes = notification.userInfo?["strokes"] as? Int,
+                  let idx = self.round.holes.firstIndex(where: { $0.number == holeNumber })
+            else { return }
+            self.round.holes[idx].strokes = strokes
+            if let putts = notification.userInfo?["putts"] as? Int {
+                self.round.holes[idx].putts = putts
+            }
+            self.recomputeTotals()
+        }
     }
 
     // MARK: - Computed Properties
@@ -108,7 +123,12 @@ final class RoundSession: ObservableObject {
 
         // Notify Watch of hole change if course data is available
         if let course = course, let hole = course.holes.first(where: { $0.number == holeNumber }) {
-            ConnectivityService.shared.sendHoleCoordinates(hole, holeNumber: holeNumber)
+            ConnectivityService.shared.sendHoleData(
+                hole: hole,
+                holeNumber: holeNumber,
+                courseName: course.name,
+                totalStrokes: round.totalStrokes
+            )
         }
     }
 

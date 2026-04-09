@@ -112,6 +112,14 @@ final class RoundViewModel: ObservableObject {
             resolvedGreens[holeNumber] = green
             let actual = Int(tee.distanceMeters(to: green.center) * 1.09361)
             print("[Green] Hole \(holeNumber): resolved from tee (target=\(targetYards)y actual=\(actual)y)")
+
+            // Send resolved green to Watch
+            if let holeData = course.holes.first(where: { $0.number == holeNumber }) {
+                ConnectivityService.shared.sendResolvedGreen(
+                    green, tee: tee, holeNumber: holeNumber,
+                    par: holeData.par, courseName: course.name
+                )
+            }
         }
     }
 }

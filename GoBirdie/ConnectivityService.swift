@@ -10,8 +10,6 @@ import Combine
 import WatchConnectivity
 import GoBirdieCore
 
-/// Manages WatchConnectivity communication between iPhone and Watch.
-/// Sends hole coordinates and round data to Watch for display.
 @MainActor
 final class ConnectivityService: NSObject, ObservableObject {
     static let shared = ConnectivityService()
@@ -22,110 +20,121 @@ final class ConnectivityService: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        setupWatchConnectivity()
+        guard WCSession.isSupported() else { return }
+        session.delegate = self
+        session.activate()
     }
 
-    // MARK: - Public API
-
-    /// Send the current hole's coordinates to the Watch.
-    /// - Parameters:
-    ///   - hole: The Hole data to send.
-    ///   - holeNumber: The hole number (1-18).
-    func sendHoleCoordinates(_ hole: Hole, holeNumber: Int) {
-        guard session.isPaired && session.isWatchAppInstalled else { return }
-
-        var context: [String: Any] = [
+    /// Send hole + round data to Watch as a single context.
+    func sendHoleData(hole: Hole, holeNumber: Int, courseName: String, totalStrokes: Int) {
+        var ctx: [String: Any] = [
             "holeNumber": holeNumber,
             "par": hole.par,
-        ]
-
-        if let tee = hole.tee {
-            context["tee_lat"] = tee.lat
-            context["tee_lon"] = tee.lon
-        }
-
-        if let greenCenter = hole.greenCenter {
-            context["green_lat"] = greenCenter.lat
-            context["green_lon"] = greenCenter.lon
-        }
-
-        if let greenFront = hole.greenFront {
-            context["front_lat"] = greenFront.lat
-            context["front_lon"] = greenFront.lon
-        }
-
-        if let greenBack = hole.greenBack {
-            context["back_lat"] = greenBack.lat
-            context["back_lon"] = greenBack.lon
-        }
-
-        do {
-            try session.updateApplicationContext(context)
-        } catch {
-            print("[ConnectivityService] Failed to send hole coordinates: \(error.localizedDescription)")
-        }
-    }
-
-    /// Send round summary to the Watch.
-    /// - Parameters:
-    ///   - courseName: The name of the course.
-    ///   - holesPlayed: Number of holes completed.
-    ///   - totalStrokes: Total strokes so far.
-    func sendRoundSummary(courseName: String, holesPlayed: Int, totalStrokes: Int) {
-        guard session.isPaired && session.isWatchAppInstalled else { return }
-
-        let context: [String: Any] = [
             "courseName": courseName,
-            "holesPlayed": holesPlayed,
             "totalStrokes": totalStrokes,
         ]
 
-        do {
-            try session.updateApplicationContext(context)
-        } catch {
-            print("[ConnectivityService] Failed to send round summary: \(error.localizedDescription)")
+        if let tee = hole.tee {
+            ctx["tee_lat"] = tee.lat
+            ctx["tee_lon"] = tee.lon
         }
+        if let gc = hole.greenCenter {
+            ctx["green_lat"] = gc.lat
+            ctx["green_lon"] = gc.lon
+        }
+        if let gf = hole.greenFront {
+            ctx["front_lat"] = gf.lat
+            ctx["front_lon"] = gf.lon
+        }
+        if let gb = hole.greenBack {
+            ctx["back_lat"] = gb.lat
+            ctx["back_lon"] = gb.lon
+        }
+
+        send(ctx)
     }
 
-    // MARK: - Private
+    /// Send resolved green coordinates (from runtime resolution) to Watch.
+    func sendResolvedGreen(_ green: GreenPolygon, tee: GpsPoint, holeNumber: Int, par: Int, courseName: String) {
+        let fb = green.frontAndBack(from: tee)
+        let ctx: [String: Any] = [
+            "holeNumber": holeNumber,
+            "par": par,
+            "courseName": courseName,
+            "green_lat": green.center.lat,
+            "green_lon": green.center.lon,
+            "front_lat": fb.front.lat,
+            "front_lon": fb.front.lon,
+            "back_lat": fb.back.lat,
+            "back_lon": fb.back.lon,
+        ]
+        send(ctx)
+    }
 
-    private func setupWatchConnectivity() {
-        guard WCSession.isSupported() else { return }
-
-        session.delegate = self
-        session.activate()
+    private func send(_ ctx: [String: Any]) {
+        // Prefer sendMessage (immediate) when reachable, fall back to applicationContext
+        if session.isReachable {
+            session.sendMessage(ctx, replyHandler: nil) { error in
+                print("[Connectivity] sendMessage failed: \(error), falling back to context")
+                try? self.session.updateApplicationContext(ctx)
+            }
+        } else {
+            do {
+                try session.updateApplicationContext(ctx)
+            } catch {
+                print("[Connectivity] updateApplicationContext failed: \(error)")
+            }
+        }
     }
 }
 
 // MARK: - WCSessionDelegate
 
 extension ConnectivityService: WCSessionDelegate {
-    nonisolated func session(
-        _ session: WCSession,
-        activationDidCompleteWith activationState: WCSessionActivationState,
-        error: Error?
-    ) {
+    nonisolated func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
         Task { @MainActor in
-            self.isWatchAvailable = activationState == .activated && session.isPaired
+            self.isWatchAvailable = state == .activated
         }
     }
 
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {
-        Task { @MainActor in
-            self.isWatchAvailable = false
-        }
+        Task { @MainActor in self.isWatchAvailable = false }
     }
 
     nonisolated func sessionDidDeactivate(_ session: WCSession) {
+        Task { @MainActor in self.isWatchAvailable = false }
+        session.activate()
+    }
+
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         Task { @MainActor in
-            self.isWatchAvailable = false
+            self.handleWatchMessage(message)
         }
     }
 
-    nonisolated func session(
-        _ session: WCSession,
-        didReceiveApplicationContext applicationContext: [String: Any]
-    ) {
-        // Handle incoming messages from Watch if needed
+    private func handleWatchMessage(_ message: [String: Any]) {
+        guard let action = message["action"] as? String else { return }
+
+        switch action {
+        case "stroke":
+            if let holeNumber = message["holeNumber"] as? Int,
+               let strokes = message["strokes"] as? Int {
+                var info: [String: Any] = ["holeNumber": holeNumber, "strokes": strokes]
+                if let putts = message["putts"] as? Int {
+                    info["putts"] = putts
+                }
+                NotificationCenter.default.post(
+                    name: .watchStrokeUpdate,
+                    object: nil,
+                    userInfo: info
+                )
+            }
+        default:
+            break
+        }
     }
+}
+
+extension Notification.Name {
+    static let watchStrokeUpdate = Notification.Name("watchStrokeUpdate")
 }

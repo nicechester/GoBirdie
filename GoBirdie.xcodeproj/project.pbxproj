@@ -369,6 +369,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = GoBirdie;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "GoBirdie uses HealthKit to track your golf workout.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "GoBirdie uses HealthKit to track your golf workout and keep GPS active.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GoBirdie needs your location to calculate distances to the green.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.github.nicechester.GoBirdie;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -402,6 +405,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = GoBirdie;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "GoBirdie uses HealthKit to track your golf workout.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "GoBirdie uses HealthKit to track your golf workout and keep GPS active.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GoBirdie needs your location to calculate distances to the green.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.github.nicechester.GoBirdie;
 				LD_RUNPATH_SEARCH_PATHS = (

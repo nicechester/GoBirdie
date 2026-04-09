@@ -103,10 +103,10 @@ final class AppState: ObservableObject {
 
         // Notify Watch of round start with initial hole coordinates
         if let startingHole = course.holes.first(where: { $0.number == startingHoleNumber }) {
-            ConnectivityService.shared.sendHoleCoordinates(startingHole, holeNumber: startingHoleNumber)
-            ConnectivityService.shared.sendRoundSummary(
+            ConnectivityService.shared.sendHoleData(
+                hole: startingHole,
+                holeNumber: startingHoleNumber,
                 courseName: course.name,
-                holesPlayed: 0,
                 totalStrokes: 0
             )
         }
