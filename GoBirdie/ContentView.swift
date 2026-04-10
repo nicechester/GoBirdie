@@ -23,6 +23,10 @@ struct ContentView: View {
             MapTab()
                 .tabItem { Label("Map", systemImage: "map") }
                 .tag(2)
+
+            SettingsView()
+                .tabItem { Label("Settings", systemImage: "gearshape") }
+                .tag(3)
         }
     }
 }
