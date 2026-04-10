@@ -1,1 +1,15 @@
 GoBirdie/GoBirdie/Config.swift
+
+# Xcode user data
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad/
+
+# Build artifacts
+DerivedData/
+build/
+*.o
+*.d
+
+# macOS
+.DS_Store
