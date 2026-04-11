@@ -436,9 +436,7 @@ class StartRoundViewModel: ObservableObject {
                 )
             }
         return Course(id: id, name: name, location: location,
-                      holes: baseHoles, allGreens: osmCourse?.allGreens ?? [],
-                      allTees: osmCourse?.allTees ?? [],
-                      downloadedAt: Date(), osmVersion: 1)
+                      holes: baseHoles, downloadedAt: Date(), osmVersion: 1)
     }
 
     func startRound(course: Course, startingHole: Int) {
@@ -468,9 +466,7 @@ class StartRoundViewModel: ObservableObject {
         let cacheId = course.id > 0 ? "gcapi-\(course.id)" : "osm-\(abs(course.id))"
         if let cached = try? store.load(id: cacheId) {
             print("[CourseStore] Loaded \(course.name) from cache")
-            isStartingRound = true
-            if let appState { _ = appState.startRound(course: cached, playerLocation: currentLocation ?? course.location) }
-            startedRound = true
+            state = .selectStartingHole(cached)
             return
         }
 
@@ -503,16 +499,14 @@ class StartRoundViewModel: ObservableObject {
                     print("[GolfCourseAPI] Got \(apiHoles.count) holes for tee: \(teeColor)")
                 }
 
-                // Build yardage map for OSM green matching
-                let targetYardages = Dictionary(uniqueKeysWithValues: apiHoles.map { ($0.number, $0.yardage) })
-
-                // 3. Download OSM geometry with yardage-guided green matching
+                // 3. Download OSM geometry
                 var osmCourse: Course?
                 if let osm = osmMatch {
                     print("[Overpass] Downloading geometry for \(osm.name) osmId=\(osm.osmId)")
                     osmCourse = try? await overpassClient.downloadCourse(
                         osmRelationId: osm.osmId, name: course.name,
-                        targetYardages: targetYardages
+                        playerLocation: currentLocation,
+                        holeCount: apiHoles.isEmpty ? 18 : apiHoles.count
                     )
                 }
 

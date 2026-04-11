@@ -94,84 +94,57 @@ out center;
     /// - Parameters:
     ///   - osmRelationId: OSM relation ID
     ///   - name: Course name
-    ///   - targetYardages: Per-hole yardages from GolfCourseAPI to guide green selection. Key = hole number.
-    public func downloadCourse(osmRelationId: Int64, name: String,
-                               targetYardages: [Int: Int] = [:]) async throws -> Course {
-        // Query relation to get bounding box
-        let relationQuery = """
+    public func downloadCourse(osmRelationId: Int64, name: String, playerLocation: GpsPoint? = nil, holeCount: Int = 18) async throws -> Course {
+        // Roosevelt-style courses are mapped as ways, not relations — try both
+        let elementQuery = """
 [out:json];
-relation(\(osmRelationId));
+(relation(\(osmRelationId));way(\(osmRelationId)););
 out geom;
 """
+        let elementData = try await post(query: elementQuery)
+        let elementResponse = try JSONDecoder().decode(OverpassResponse.self, from: elementData)
 
-        let relationData = try await post(query: relationQuery)
-        let relationResponse = try JSONDecoder().decode(OverpassResponse.self, from: relationData)
+        let element = elementResponse.elements.first(where: { $0.type == "relation" })
+                   ?? elementResponse.elements.first(where: { $0.type == "way" })
+        guard let element else { throw OverpassError.courseNotFound }
 
-        guard let relation = relationResponse.elements.first(where: { $0.type == "relation" }) else {
-            throw OverpassError.courseNotFound
+        let bounds: OverpassBounds
+        if let b = element.bounds {
+            bounds = b
+        } else if let geom = element.geometry, !geom.isEmpty {
+            bounds = OverpassBounds(
+                minlat: geom.map(\.lat).min()!, minlon: geom.map(\.lon).min()!,
+                maxlat: geom.map(\.lat).max()!, maxlon: geom.map(\.lon).max()!
+            )
+        } else {
+            throw OverpassError.invalidGeometry
         }
-
-        // Use bounds directly from the relation — geometry is on members, not the relation itself
-        guard let bounds = relation.bounds else { throw OverpassError.invalidGeometry }
         let (minLat, maxLat) = (bounds.minlat, bounds.maxlat)
         let (minLon, maxLon) = (bounds.minlon, bounds.maxlon)
 
-        // Query all golf-related ways within bounding box
         let geometryQuery = """
 [out:json][bbox:\(minLat - 0.01),\(minLon - 0.01),\(maxLat + 0.01),\(maxLon + 0.01)];
 (
-  way["golf"~"fairway|green|bunker|tee|rough"];
-  node["golf"="tee"];
-  node["golf"="pin"];
+  way["golf"="hole"];
+  way["golf"~"fairway|green|bunker|rough"];
 );
-out geom;
+out geom tags;
 """
-
         let geometryData = try await post(query: geometryQuery)
         let geometryResponse = try JSONDecoder().decode(OverpassResponse.self, from: geometryData)
 
-        // Parse and group by hole number
         let courseLocation = GpsPoint(lat: (minLat + maxLat) / 2, lon: (minLon + maxLon) / 2)
-        let holes = buildHoles(from: geometryResponse.elements, targetYardages: targetYardages)
+        let anchor = playerLocation ?? courseLocation
+        let holes = buildHoles(from: geometryResponse.elements, anchor: anchor, holeCount: holeCount)
 
-        // Store all raw greens using bounds for front/center/back — matches notebook logic
-        let allGreens: [GreenPolygon] = geometryResponse.elements
-            .filter { $0.tags?["golf"] == "green" }
-            .compactMap { e -> GreenPolygon? in
-                guard let geom = e.geometry, geom.count >= 3 else { return nil }
-                let centerLat = geom.map { $0.lat }.reduce(0, +) / Double(geom.count)
-                let centerLon = geom.map { $0.lon }.reduce(0, +) / Double(geom.count)
-                return GreenPolygon(
-                    center: GpsPoint(lat: centerLat, lon: centerLon),
-                    polygon: geom
-                )
-            }
-        print("[OSM] Stored \(allGreens.count) raw greens for yardage resolution")
-
-        let allTees: [GpsPoint] = geometryResponse.elements
-            .filter { $0.tags?["golf"] == "tee" }
-            .compactMap { e -> GpsPoint? in
-                if let geom = e.geometry, !geom.isEmpty {
-                    return centroid(of: geom)
-                }
-                if let c = e.center { return c }
-                if let lat = e.lat, let lon = e.lon { return GpsPoint(lat: lat, lon: lon) }
-                return nil
-            }
-        print("[OSM] Stored \(allTees.count) raw tees for nearest-tee snapping")
-
-        let course = Course(
+        return Course(
             id: "osm-\(osmRelationId)",
             name: name,
             location: courseLocation,
             holes: holes,
-            allGreens: allGreens,
-            allTees: allTees,
             downloadedAt: Date(),
-            osmVersion: relation.version ?? 1
+            osmVersion: element.version ?? 1
         )
-
-        return course
     }
 
     // MARK: - Private
@@ -228,231 +201,87 @@ out geom;
         }
     }
 
-    private func buildHoles(from elements: [OverpassElement], targetYardages: [Int: Int] = [:]) -> [Hole] {
-        // Separate elements by type
-        var teePolygons:    [[GpsPoint]] = []
-        var greenPolygons:  [[GpsPoint]] = []
-        var fairwayPolygons:[[GpsPoint]] = []
-        var bunkerPolygons: [[GpsPoint]] = []
-        var waterPolygons:  [[GpsPoint]] = []
-        var roughPolygons:  [[GpsPoint]] = []
+    private func buildHoles(from elements: [OverpassElement], anchor: GpsPoint, holeCount: Int) -> [Hole] {
+        let holeLines = elements.filter { $0.tags?["golf"] == "hole" }
+        let greenPolygons = elements.filter { $0.tags?["golf"] == "green" }
+        let fairwayPolygons = elements.filter { $0.tags?["golf"] == "fairway" }
+        let bunkerPolygons = elements.filter { $0.tags?["golf"] == "bunker" }
 
-        for element in elements {
-            guard let geom = element.geometry, !geom.isEmpty else { continue }
-            switch element.tags?["golf"] {
-            case "tee":     teePolygons.append(geom)
-            case "green":   greenPolygons.append(geom)
-            case "fairway": fairwayPolygons.append(geom)
-            case "bunker":  bunkerPolygons.append(geom)
-            case "rough":   roughPolygons.append(geom)
-            default:
-                if element.tags?["natural"] == "water" || element.tags?["water"] != nil {
-                    waterPolygons.append(geom)
-                }
-            }
-        }
-
-        // First try ref-based grouping
-        var holesByRef: [Int: [OverpassElement]] = [:]
-        for element in elements {
-            if let num = extractHoleNumber(from: element) {
-                holesByRef[num, default: []].append(element)
-            }
-        }
-        let hasRefTags = !holesByRef.isEmpty
-
-        if hasRefTags {
-            var holes: [Hole] = []
-            for holeNum in 1...18 {
-                holes.append(buildHole(number: holeNum, elements: holesByRef[holeNum] ?? []))
-            }
-            return holes
-        }
-
-        // No ref tags — spatially match each tee to its nearest green
-        // Deduplicate tees: cluster tees within 30m of each other into one
-        let teeCentroids = teePolygons.map { centroid(of: $0) }
-        var usedTees = Set<Int>()
-        var uniqueTees: [GpsPoint] = []
-        for (i, tee) in teeCentroids.enumerated() {
-            if usedTees.contains(i) { continue }
-            usedTees.insert(i)
-            // Merge nearby tees (same hole, multiple tee boxes)
-            for (j, other) in teeCentroids.enumerated() where j > i {
-                if tee.distanceMeters(to: other) < 50 { usedTees.insert(j) }
-            }
-            uniqueTees.append(tee)
-        }
-
-        // Match each tee to its green using yardage guidance when available,
-        // otherwise fall back to nearest-green spatial matching
-        let greenCentroids = greenPolygons.map { centroid(of: $0) }
-        var usedGreens = Set<Int>()
-        var matchedPairs: [(tee: GpsPoint, greenIdx: Int, holeNum: Int)] = []
-
-        // Sort unique tees by lat for consistent hole numbering
-        let sortedTees = uniqueTees.sorted { $0.lat < $1.lat }
-
-        for (holeIdx, tee) in sortedTees.enumerated() {
-            let holeNum = holeIdx + 1
-            let targetYards = targetYardages[holeNum]
-
-            var bestIdx = -1
-            var bestScore = Double.infinity
-
-            for (gi, green) in greenCentroids.enumerated() {
-                if usedGreens.contains(gi) { continue }
-                let distYards = tee.distanceMeters(to: green) * 1.09361
-
-                // Must be a plausible golf hole distance
-                guard distYards >= 45 && distYards <= 700 else { continue }
-
-                let score: Double
-                if let target = targetYards {
-                    // Yardage-guided: score = difference from target yardage
-                    score = abs(distYards - Double(target))
-                } else {
-                    // Fallback: nearest green
-                    score = distYards
-                }
-
-                if score < bestScore {
-                    bestScore = score
-                    bestIdx = gi
-                }
-            }
-
-            if bestIdx >= 0 {
-                usedGreens.insert(bestIdx)
-                matchedPairs.append((tee: tee, greenIdx: bestIdx, holeNum: holeNum))
-                if let target = targetYards {
-                    let actual = Int(greenCentroids[bestIdx].distanceMeters(to: tee) * 1.09361)
-                    print("[OSM] Hole \(holeNum): target=\(target)y actual=\(actual)y diff=\(abs(actual-target))y")
-                }
-            }
+        // Deduplicate by ref: multi-course complexes share a bbox and have duplicate hole numbers.
+        // Keep the way whose tee is closest to the player/course anchor.
+        var byRef: [Int: OverpassElement] = [:]
+        for line in holeLines {
+            guard let ref = line.tags?["ref"], let holeNum = Int(ref),
+                  let geom = line.geometry, geom.count >= 2 else { continue }
+            if let existing = byRef[holeNum],
+               let existingGeom = existing.geometry,
+               geom[0].distanceMeters(to: anchor) >= existingGeom[0].distanceMeters(to: anchor) { continue }
+            byRef[holeNum] = line
         }
 
         var holes: [Hole] = []
-        for pair in matchedPairs.prefix(18) {
-            let greenGeom = greenPolygons[pair.greenIdx]
-            let lats = greenGeom.map { $0.lat }
-            let lons = greenGeom.map { $0.lon }
-            let greenCenter = centroid(of: greenGeom)
-            let greenFront  = GpsPoint(lat: lats.min()!, lon: lons.reduce(0,+)/Double(lons.count))
-            let greenBack   = GpsPoint(lat: lats.max()!, lon: lons.reduce(0,+)/Double(lons.count))
+        for (holeNum, line) in byRef {
+            guard let geom = line.geometry, geom.count >= 2 else { continue }
 
-            // Find fairways/bunkers near this hole's tee-green corridor
-            let tee = pair.tee
-            let holeFairways = fairwayPolygons.filter { poly in
-                let c = centroid(of: poly)
+            let tee = geom.first!
+            let greenCenter = geom.last!
+            let par = line.tags?["par"].flatMap(Int.init) ?? 4
+            let handicap = line.tags?["handicap"].flatMap(Int.init)
+
+            // Snap to nearest green polygon for front/back
+            let nearestGreen = greenPolygons
+                .compactMap { $0.geometry }
+                .filter { $0.count >= 3 }
+                .min { centroid(of: $0).distanceMeters(to: greenCenter) < centroid(of: $1).distanceMeters(to: greenCenter) }
+
+            let (greenFront, greenBack): (GpsPoint?, GpsPoint?)
+            if let poly = nearestGreen {
+                let avgLon = poly.map { $0.lon }.reduce(0, +) / Double(poly.count)
+                greenFront = GpsPoint(lat: poly.map { $0.lat }.min()!, lon: avgLon)
+                greenBack  = GpsPoint(lat: poly.map { $0.lat }.max()!, lon: avgLon)
+            } else {
+                (greenFront, greenBack) = (nil, nil)
+            }
+
+            // Fairways/bunkers whose centroid falls within 700m of both tee and green
+            let holeFairway = fairwayPolygons.compactMap(\.geometry).filter {
+                let c = centroid(of: $0)
+                return c.distanceMeters(to: tee) < 700 && c.distanceMeters(to: greenCenter) < 700
+            }.first
+            let holeBunkers = bunkerPolygons.compactMap(\.geometry).filter {
+                let c = centroid(of: $0)
                 return c.distanceMeters(to: tee) < 700 && c.distanceMeters(to: greenCenter) < 700
             }
-            let holeBunkers = bunkerPolygons.filter { poly in
-                let c = centroid(of: poly)
-                return c.distanceMeters(to: tee) < 700 && c.distanceMeters(to: greenCenter) < 700
-            }
-
-            let geometry = HoleGeometry(
-                fairway: holeFairways.first,
-                bunkers: holeBunkers,
-                water: [],
-                rough: nil
-            )
 
             holes.append(Hole(
                 id: UUID(),
-                number: pair.holeNum,
-                par: inferPar(from: pair.holeNum),
-                handicap: nil,
+                number: holeNum,
+                par: par,
+                handicap: handicap,
                 tee: tee,
                 greenCenter: greenCenter,
                 greenFront: greenFront,
                 greenBack: greenBack,
-                geometry: geometry
+                geometry: HoleGeometry(fairway: holeFairway, bunkers: holeBunkers, water: [], rough: nil)
             ))
         }
 
-        // Fill remaining holes up to 18 with empty placeholders
-        if holes.count < 18 {
-            for holeNum in (holes.count + 1)...18 {
-                holes.append(Hole(
-                    id: UUID(), number: holeNum, par: inferPar(from: holeNum),
-                    handicap: nil, tee: nil, greenCenter: nil, greenFront: nil, greenBack: nil, geometry: nil
-                ))
-            }
+        holes.sort { $0.number < $1.number }
+
+        // Fill any missing holes up to holeCount with empty placeholders
+        let present = Set(holes.map(\.number))
+        for holeNum in 1...holeCount where !present.contains(holeNum) {
+            holes.append(Hole(id: UUID(), number: holeNum, par: 4))
         }
+        holes.sort { $0.number < $1.number }
 
         return holes
-    }
-
-    private func buildHole(number: Int, elements: [OverpassElement]) -> Hole {
-        var teePoint: GpsPoint?
-        var greenPoints: [GpsPoint] = []
-        var fairwayPoints: [GpsPoint] = []
-        var bunkerPolygons: [[GpsPoint]] = []
-        var waterPolygons: [[GpsPoint]] = []
-        var roughPoints: [GpsPoint] = []
-
-        for element in elements {
-            if element.tags?["golf"] == "tee", let node = element.geometry?.first {
-                teePoint = node
-            } else if element.tags?["golf"] == "green", let geometry = element.geometry, !geometry.isEmpty {
-                greenPoints = geometry
-            } else if element.tags?["golf"] == "fairway", let geometry = element.geometry, !geometry.isEmpty {
-                fairwayPoints = geometry
-            } else if element.tags?["golf"] == "bunker", let geometry = element.geometry, !geometry.isEmpty {
-                bunkerPolygons.append(geometry)
-            } else if element.tags?["golf"] == "rough", let geometry = element.geometry, !geometry.isEmpty {
-                roughPoints = geometry
-            } else if element.tags?["water"] != nil || element.tags?["natural"] == "water", let geometry = element.geometry, !geometry.isEmpty {
-                waterPolygons.append(geometry)
-            }
-        }
-
-        // Compute green center, front, back
-        let greenCenter = greenPoints.isEmpty ? nil : centroid(of: greenPoints)
-        let greenFront = greenPoints.isEmpty ? nil : greenPoints.min { $0.lat < $1.lat }
-        let greenBack = greenPoints.isEmpty ? nil : greenPoints.max { $0.lat < $1.lat }
-
-        let geometry = HoleGeometry(
-            fairway: fairwayPoints.isEmpty ? nil : fairwayPoints,
-            bunkers: bunkerPolygons,
-            water: waterPolygons,
-            rough: roughPoints.isEmpty ? nil : roughPoints
-        )
-
-        return Hole(
-            id: UUID(),
-            number: number,
-            par: inferPar(from: number),
-            handicap: nil,
-            tee: teePoint,
-            greenCenter: greenCenter,
-            greenFront: greenFront,
-            greenBack: greenBack,
-            geometry: geometry
-        )
     }
 
     private func centroid(of points: [GpsPoint]) -> GpsPoint {
         let avgLat = points.map { $0.lat }.reduce(0, +) / Double(points.count)
         let avgLon = points.map { $0.lon }.reduce(0, +) / Double(points.count)
         return GpsPoint(lat: avgLat, lon: avgLon)
-    }
-
-    private func extractHoleNumber(from element: OverpassElement) -> Int? {
-        if let ref = element.tags?["ref"], let num = Int(ref) { return num }
-        if let name = element.tags?["name"], let range = name.range(of: "\\d+", options: .regularExpression) {
-            return Int(name[range])
-        }
-        return nil
-    }
-
-    private func inferPar(from holeNumber: Int) -> Int {
-        // Default alternating par 4/par 3 pattern
-        // Holes 1,3,5,7,9,11,13,15,17 are par 4
-        // Holes 2,4,6,8,10,12,14,16,18 are par 3
-        return holeNumber % 2 == 1 ? 4 : 3
     }
 }
 
@@ -478,6 +307,11 @@ struct OverpassBounds: Decodable {
     let minlon: Double
     let maxlat: Double
     let maxlon: Double
+
+    init(minlat: Double, minlon: Double, maxlat: Double, maxlon: Double) {
+        self.minlat = minlat; self.minlon = minlon
+        self.maxlat = maxlat; self.maxlon = maxlon
+    }
 }
 
 struct OverpassElement: Decodable {

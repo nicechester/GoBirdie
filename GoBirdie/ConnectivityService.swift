@@ -54,22 +54,6 @@ final class ConnectivityService: NSObject, ObservableObject {
         send(ctx)
     }
 
-    /// Send resolved green coordinates (from runtime resolution) to Watch.
-    func sendResolvedGreen(_ green: GreenPolygon, tee: GpsPoint, holeNumber: Int, par: Int, courseName: String) {
-        let fb = green.frontAndBack(from: tee)
-        let ctx: [String: Any] = [
-            "holeNumber": holeNumber,
-            "par": par,
-            "courseName": courseName,
-            "green_lat": green.center.lat,
-            "green_lon": green.center.lon,
-            "front_lat": fb.front.lat,
-            "front_lon": fb.front.lon,
-            "back_lat": fb.back.lat,
-            "back_lon": fb.back.lon,
-        ]
-        send(ctx)
-    }
 
     private func send(_ ctx: [String: Any]) {
         // Prefer sendMessage (immediate) when reachable, fall back to applicationContext
