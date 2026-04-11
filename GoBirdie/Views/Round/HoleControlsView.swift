@@ -152,6 +152,7 @@ private struct MarkShotSheet: View {
                             Image(systemName: "checkmark").foregroundStyle(.green)
                         }
                     }
+                    .contentShape(Rectangle())
                 }
             }
             .navigationTitle("Select Club")

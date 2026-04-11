@@ -30,23 +30,22 @@ final class MapViewModel: ObservableObject {
     let session: RoundSession
     let course: Course
     let locationService: LocationService
-    let roundViewModel: RoundViewModel?
     let mockLocation: GpsPoint?
 
     private let distanceEngine = DistanceEngine()
     private var cancellables = Set<AnyCancellable>()
+    private var tapPlayerLocation: GpsPoint?
+    private let tapClearThresholdYards: Double = 15
 
     init(
         session: RoundSession,
         course: Course,
         locationService: LocationService,
-        roundViewModel: RoundViewModel? = nil,
         mockLocation: GpsPoint? = nil
     ) {
         self.session = session
         self.course = course
         self.locationService = locationService
-        self.roundViewModel = roundViewModel
         self.mockLocation = mockLocation
         self.currentHoleIndex = session.currentHoleIndex
 
@@ -54,6 +53,7 @@ final class MapViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] index in
                 self?.currentHoleIndex = index
+                self?.updatePlayerToGreen()
             }
             .store(in: &cancellables)
 
@@ -62,6 +62,7 @@ final class MapViewModel: ObservableObject {
             .sink { [weak self] loc in
                 self?.playerLocation = loc
                 self?.updatePlayerToGreen()
+                self?.clearTapIfPlayerMoved(loc)
             }
             .store(in: &cancellables)
     }
@@ -73,14 +74,14 @@ final class MapViewModel: ObservableObject {
         return course.holes[currentHoleIndex]
     }
 
-    /// Resolved tee for the current hole (from RoundViewModel), falling back to Hole.tee.
+    /// Tee for the current hole.
     var resolvedTee: GpsPoint? {
-        roundViewModel?.currentResolvedTee ?? currentHole?.tee
+        currentHole?.tee
     }
 
-    /// Resolved green center for the current hole, falling back to Hole.greenCenter.
+    /// Green center for the current hole.
     var resolvedGreenCenter: GpsPoint? {
-        roundViewModel?.currentResolvedGreen?.center ?? currentHole?.greenCenter
+        currentHole?.greenCenter
     }
 
     /// Bearing from tee to green in degrees (0 = north, 90 = east).
@@ -114,8 +115,8 @@ final class MapViewModel: ObservableObject {
         let maxLat = points.map(\.lat).max()!
         let minLon = points.map(\.lon).min()!
         let maxLon = points.map(\.lon).max()!
-        //let pad = 0.000003
-        let pad = 0.0
+        let pad = 0.0003
+        //let pad = 0.0
         return (
             sw: GpsPoint(lat: minLat - pad, lon: minLon - pad),
             ne: GpsPoint(lat: maxLat + pad, lon: maxLon + pad)
@@ -130,11 +131,20 @@ final class MapViewModel: ObservableObject {
         tapDistanceYards = nil
         tapToGreenYards = nil
         tapScreenPoint = nil
+        tapPlayerLocation = nil
+    }
+
+    private func clearTapIfPlayerMoved(_ newLoc: GpsPoint?) {
+        guard let origin = tapPlayerLocation, let loc = newLoc, selectedTapPoint != nil else { return }
+        if distanceEngine.distanceYards(from: origin, to: loc) > tapClearThresholdYards {
+            clearTap()
+        }
     }
 
     /// Handle a tap on the map.
     func handleTap(at tapPoint: GpsPoint) {
         selectedTapPoint = tapPoint
+        tapPlayerLocation = mockLocation ?? locationService.currentLocation
 
         let playerLocation = mockLocation ?? locationService.currentLocation ?? tapPoint
         let yardage = distanceEngine.distanceYards(from: playerLocation, to: tapPoint)

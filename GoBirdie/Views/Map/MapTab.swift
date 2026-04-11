@@ -37,14 +37,12 @@ private struct MapActiveView: View {
 
         let course = appState.activeRoundViewModel?.course ?? Self.makeTestCourse()
         let locationService = appState.getLocationService()
-        let roundViewModel = appState.activeRoundViewModel
 
         _mapViewModel = StateObject(
             wrappedValue: MapViewModel(
                 session: session,
                 course: course,
-                locationService: locationService,
-                roundViewModel: roundViewModel
+                locationService: locationService
             )
         )
     }

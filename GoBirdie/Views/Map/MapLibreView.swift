@@ -8,6 +8,7 @@
 import SwiftUI
 import MapLibre
 import CoreLocation
+import Combine
 import GoBirdieCore
 
 struct MapLibreView: UIViewRepresentable {
@@ -151,9 +152,24 @@ struct MapLibreView: UIViewRepresentable {
         var lastHoleIndex: Int = -1
         var lastSatelliteState: Bool? = nil
         weak var mapView: MLNMapView?
+        private var cancellables = Set<AnyCancellable>()
 
         init(viewModel: MapViewModel) {
             self.viewModel = viewModel
+            super.init()
+            viewModel.$currentHoleIndex
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] index in
+                    guard let self, let mapView = self.mapView, self.lastHoleIndex != index else { return }
+                    self.lastHoleIndex = index
+                    self.zoomToHole(mapView, animated: true)
+                    self.updateScreenPoints()
+                }
+                .store(in: &cancellables)
+            viewModel.$playerLocation
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in self?.updateScreenPoints() }
+                .store(in: &cancellables)
         }
 
         func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
@@ -203,7 +219,7 @@ struct MapLibreView: UIViewRepresentable {
                 let heading = viewModel.teeToPinBearing ?? 0
                 let camera = mapView.cameraThatFitsCoordinateBounds(
                     coordinateBounds,
-                    edgePadding: UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
+                    edgePadding: UIEdgeInsets(top: 5, left: 1, bottom: 5, right: 1)
                 )
                 camera.heading = heading
                 mapView.setCamera(camera, animated: animated)

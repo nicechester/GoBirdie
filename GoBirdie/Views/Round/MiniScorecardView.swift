@@ -24,15 +24,25 @@ struct MiniScorecardView: View {
                 .padding(.top, 10)
                 .padding(.bottom, 6)
 
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    ForEach(session.round.holes, id: \.id) { hole in
-                        ScorecardRow(
-                            hole: hole,
-                            isCurrent: hole.number == session.currentHoleNumber,
-                            onTap: { onHoleSelect(hole.number) }
-                        )
-                        .id(hole.number)
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        ForEach(session.round.holes, id: \.id) { hole in
+                            ScorecardRow(
+                                hole: hole,
+                                isCurrent: hole.number == session.currentHoleNumber,
+                                onTap: { onHoleSelect(hole.number) }
+                            )
+                            .id(hole.number)
+                        }
+                    }
+                }
+                .onAppear {
+                    proxy.scrollTo(session.currentHoleNumber, anchor: .top)
+                }
+                .onChange(of: session.currentHoleIndex) { _, _ in
+                    withAnimation {
+                        proxy.scrollTo(session.currentHoleNumber, anchor: .top)
                     }
                 }
             }

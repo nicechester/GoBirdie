@@ -68,6 +68,7 @@ private struct ActiveRoundView: View {
                     Image(systemName: "line.3.horizontal")
                         .font(.title3)
                         .foregroundStyle(.primary)
+                        .contentShape(Rectangle())
                 }
             }
             .padding(.horizontal, 16)
