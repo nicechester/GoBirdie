@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import UIKit
 import GoBirdieCore
 
 /// Manages global app state and round lifecycle.
@@ -16,12 +17,17 @@ final class AppState: ObservableObject {
     @Published var activeRound: RoundSession?
     @Published var activeRoundViewModel: RoundViewModel?
     @Published var selectedTab: Int = 1
+    @Published var pendingResume: InProgressSnapshot?
     @Published var teeColor: String = UserDefaults.standard.string(forKey: "teeColor") ?? "Blue" {
         didSet { UserDefaults.standard.set(teeColor, forKey: "teeColor") }
     }
 
     private let locationService = LocationService()
     private let distanceEngine = DistanceEngine()
+    private let inProgressStore = InProgressStore()
+    private var autoSaveTimer: Timer?
+    private var idleTimer: Timer?
+    @Published var showIdlePrompt = false
 
     // MARK: - Public API
 
@@ -44,17 +50,76 @@ final class AppState: ObservableObject {
         return nearest.hole
     }
 
-    /// Start a new round on the specified course.
-    /// - Creates a Round with all 18 HoleScore structs initialized from course definition.
-    /// - Auto-detects the starting hole from player's GPS location.
-    /// - Activates location tracking.
-    /// - Returns a configured RoundSession ready to use.
-    ///
-    /// - Parameters:
-    ///   - course: The Course to play.
-    ///   - playerLocation: The player's current GPS coordinates (for auto-detection).
-    /// - Throws: Any errors from round creation or storage.
-    /// - Returns: A configured RoundSession.
+    // MARK: - Resume
+
+    /// Check for an in-progress round on launch.
+    func checkForInProgressRound() {
+        if let snapshot = inProgressStore.load() {
+            print("[AppState] Found in-progress round: \(snapshot.round.courseName)")
+            pendingResume = snapshot
+        }
+    }
+
+    /// Resume a previously saved in-progress round.
+    func resumeRound(snapshot: InProgressSnapshot) {
+        let courseStore = CourseStore()
+        guard let course = try? courseStore.load(id: snapshot.courseId) else {
+            print("[AppState] Cannot resume — course \(snapshot.courseId) not found")
+            inProgressStore.clear()
+            pendingResume = nil
+            return
+        }
+
+        let session = RoundSession(round: snapshot.round, startingHoleIndex: snapshot.currentHoleIndex)
+        self.activeRound = session
+        self.selectedTab = 1
+
+        let viewModel = RoundViewModel(session: session, course: course, locationService: locationService)
+        self.activeRoundViewModel = viewModel
+        viewModel.startRound()
+
+        startAutoSave()
+        resetIdleTimer()
+        pendingResume = nil
+        print("[AppState] Resumed round on hole \(snapshot.currentHoleIndex + 1)")
+    }
+
+    /// Discard the saved in-progress round.
+    func discardInProgressRound() {
+        inProgressStore.clear()
+        pendingResume = nil
+    }
+
+    // MARK: - Auto-save
+
+    /// Save current round state to disk.
+    func saveInProgress() {
+        guard let session = activeRound,
+              let vm = activeRoundViewModel else { return }
+        let snapshot = InProgressSnapshot(
+            round: session.round,
+            courseId: vm.course.id,
+            currentHoleIndex: session.currentHoleIndex
+        )
+        try? inProgressStore.save(snapshot)
+    }
+
+    private func startAutoSave() {
+        autoSaveTimer?.invalidate()
+        autoSaveTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.saveInProgress()
+            }
+        }
+    }
+
+    private func stopAutoSave() {
+        autoSaveTimer?.invalidate()
+        autoSaveTimer = nil
+    }
+
+    // MARK: - Start Round
+
     func startRound(course: Course, playerLocation: GpsPoint) -> RoundSession {
         // Create HoleScore structs for all 18 holes from course definition
         let holeScores = course.holes.map { hole in
@@ -101,6 +166,9 @@ final class AppState: ObservableObject {
         // Start location tracking
         viewModel.startRound()
 
+        startAutoSave()
+        resetIdleTimer()
+
         // Notify Watch of round start with initial hole coordinates
         if let startingHole = course.holes.first(where: { $0.number == startingHoleNumber }) {
             ConnectivityService.shared.sendHoleData(
@@ -127,13 +195,32 @@ final class AppState: ObservableObject {
             print("[AppState] Failed to save round: \(error)")
         }
 
-        activeRoundViewModel?.stopRound()
-        activeRound = nil
-        activeRoundViewModel = nil
+        cleanupRound()
     }
 
     /// Cancel the active round without saving.
     func cancelActiveRound() {
+        cleanupRound()
+    }
+
+    /// Reset the idle timer — call on any user interaction during a round.
+    func resetIdleTimer() {
+        idleTimer?.invalidate()
+        showIdlePrompt = false
+        guard activeRound != nil else { return }
+        idleTimer = Timer.scheduledTimer(withTimeInterval: 30 * 60, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.showIdlePrompt = true
+            }
+        }
+    }
+
+    private func cleanupRound() {
+        stopAutoSave()
+        idleTimer?.invalidate()
+        idleTimer = nil
+        showIdlePrompt = false
+        inProgressStore.clear()
         activeRoundViewModel?.stopRound()
         activeRound = nil
         activeRoundViewModel = nil

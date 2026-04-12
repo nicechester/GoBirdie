@@ -40,13 +40,15 @@ struct StartRoundView: View {
                     case .requestingLocation:
                         LocationRequestingView()
 
-                    case .searching:
-                        SearchingView()
-
                     case .selectCourse(let courses):
+                        SearchBar(text: $viewModel.searchText, onCommit: { viewModel.searchByName() })
+                            .padding(.bottom, 8)
+
                         CourseListView(
                             courses: courses,
                             playerLocation: viewModel.currentLocation,
+                            isSearchingOnline: viewModel.isSearchingOnline,
+                            isSaved: { viewModel.isSaved($0) },
                             onSelect: { course in viewModel.downloadCourse(course) },
                             onRetry: { viewModel.searchNearby() }
                         )
@@ -144,25 +146,41 @@ private struct LocationRequestingView: View {
     }
 }
 
-private struct SearchingView: View {
+private struct SearchBar: View {
+    @Binding var text: String
+    let onCommit: () -> Void
+
     var body: some View {
-        VStack(spacing: 16) {
-            ProgressView().tint(.green)
-            Text("Searching for courses...")
-                .font(.headline)
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField("Search by name", text: $text)
+                .textFieldStyle(.plain)
+                .autocorrectionDisabled()
+                .onSubmit { onCommit() }
+            if !text.isEmpty {
+                Button { text = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
-        .padding(.vertical, 32)
+        .padding(10)
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
     }
 }
 
 private struct CourseListView: View {
     let courses: [GolfCourseResult]
     let playerLocation: GpsPoint?
+    let isSearchingOnline: Bool
+    let isSaved: (GolfCourseResult) -> Bool
     let onSelect: (GolfCourseResult) -> Void
     let onRetry: () -> Void
 
     var body: some View {
-        if courses.isEmpty {
+        if courses.isEmpty && !isSearchingOnline {
             VStack(spacing: 16) {
                 Image(systemName: "mappin.slash")
                     .font(.system(size: 32))
@@ -185,9 +203,18 @@ private struct CourseListView: View {
                     ForEach(courses) { course in
                         CourseCell(
                             course: course,
+                            isSaved: isSaved(course),
                             distanceString: playerLocation.map { course.location.distanceMilesString(to: $0) },
                             onTap: { onSelect(course) }
                         )
+                    }
+                    if isSearchingOnline {
+                        HStack(spacing: 8) {
+                            ProgressView().tint(.green)
+                            Text("Searching for more courses...")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 8)
                     }
                 }
                 .padding(.vertical, 12)
@@ -198,24 +225,30 @@ private struct CourseListView: View {
 
 private struct CourseCell: View {
     let course: GolfCourseResult
+    let isSaved: Bool
     let distanceString: String?
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(course.name)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                HStack(spacing: 6) {
-                    Image(systemName: "mappin.circle.fill")
-                        .font(.caption).foregroundStyle(.green)
-                    Text(course.city)
-                        .font(.caption).foregroundStyle(.secondary)
-                    if let dist = distanceString {
-                        Text("· \(dist)")
-                            .font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(course.name)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    HStack(spacing: 6) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.caption).foregroundStyle(.green)
+                        if let dist = distanceString {
+                            Text(dist)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     }
+                }
+                Spacer()
+                if isSaved {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -321,6 +354,8 @@ class StartRoundViewModel: ObservableObject {
     @Published var state: ViewState = .requestingLocation
     @Published var isStartingRound = false
     @Published var startedRound = false
+    @Published var isSearchingOnline = false
+    @Published var searchText = ""
 
     var appState: AppState?
 
@@ -328,16 +363,16 @@ class StartRoundViewModel: ObservableObject {
     private let overpassClient = OverpassClient()
     private let golfCourseAPI = GolfCourseAPIClient(apiKey: Config.golfCourseAPIKey)
     var currentLocation: GpsPoint?
-    private var searchAttempts = 0
-    private var lastSearchResults: [GolfCourseResult] = []
     private var lastFailedCourse: GolfCourseResult?
+    private var displayedCourses: [GolfCourseResult] = []
+    private var savedCourseIds: Set<Int> = []
+    private var cacheIdMap: [Int: String] = [:]  // GolfCourseResult.id -> CourseStore ID
 
     enum ViewState {
         case requestingLocation
-        case searching
         case selectCourse([GolfCourseResult])
         case downloading(String)
-        case selectStartingHole(Course)   // ask user which hole to start on
+        case selectStartingHole(Course)
         case error(String)
     }
 
@@ -350,26 +385,74 @@ class StartRoundViewModel: ObservableObject {
     func requestLocation() {
         locationService.start()
 
-        // Wait for location update with timeout
         Task {
             let startTime = Date()
-
             while self.currentLocation == nil && Date().timeIntervalSince(startTime) < 20 {
-                // Poll current location every 0.5 seconds
                 if let location = locationService.currentLocation {
                     self.currentLocation = location
-                    await MainActor.run {
-                        self.searchNearby()
-                    }
+                    await MainActor.run { self.showCoursesForLocation(location) }
                     return
                 }
-                try await Task.sleep(nanoseconds: 500_000_000)  // 0.5 seconds
+                try await Task.sleep(nanoseconds: 500_000_000)
             }
-
-            // Timeout
             if self.currentLocation == nil {
                 await MainActor.run {
                     self.state = .error("Could not get location. Check Settings.")
+                }
+            }
+        }
+    }
+
+    private func showCoursesForLocation(_ location: GpsPoint) {
+        // 1. Show saved courses immediately, sorted by distance
+        let store = CourseStore()
+        let saved = (try? store.loadAll()) ?? []
+        let savedResults = saved
+            .sorted { $0.location.distanceMeters(to: location) < $1.location.distanceMeters(to: location) }
+            .prefix(20)
+            .map { c -> GolfCourseResult in
+                let intId = stableId(from: c.id)
+                cacheIdMap[intId] = c.id
+                return GolfCourseResult(id: intId, name: c.name, location: c.location, city: "")
+            }
+
+        savedCourseIds = Set(savedResults.map { $0.id })
+        displayedCourses = savedResults
+        state = .selectCourse(displayedCourses)
+
+        // 2. Search online in background
+        isSearchingOnline = true
+        Task {
+            defer { Task { @MainActor in self.isSearchingOnline = false } }
+            do {
+                var osmResults = try await overpassClient.searchCourses(location: location, radius: 15_000)
+                if osmResults.isEmpty {
+                    osmResults = try await overpassClient.searchCourses(location: location, radius: 30_000)
+                }
+                print("[Overpass] Found \(osmResults.count) nearby courses")
+
+                let newResults = osmResults
+                    .map { r -> GolfCourseResult in
+                        let intId = -Int(r.osmId)
+                        self.cacheIdMap[intId] = "osm-\(r.osmId)"
+                        return GolfCourseResult(id: intId, name: r.name, location: r.location, city: "")
+                    }
+                    .filter { !self.savedCourseIds.contains($0.id) }
+
+                await MainActor.run {
+                    self.displayedCourses.append(contentsOf: newResults)
+                    // Re-check state — user may have navigated away
+                    if case .selectCourse = self.state {
+                        self.state = .selectCourse(self.displayedCourses)
+                    }
+                }
+            } catch {
+                print("[Search] Online search failed: \(error)")
+                // Saved courses are already showing, so don't overwrite with error
+                await MainActor.run {
+                    if self.displayedCourses.isEmpty {
+                        self.state = .error("No courses found. \(error.localizedDescription)")
+                    }
                 }
             }
         }
@@ -380,39 +463,45 @@ class StartRoundViewModel: ObservableObject {
             state = .error("Location not available")
             return
         }
+        showCoursesForLocation(location)
+    }
 
-        if !lastSearchResults.isEmpty {
-            print("[Search] Using cached results (\(lastSearchResults.count) courses)")
-            state = .selectCourse(lastSearchResults)
+    func isSaved(_ course: GolfCourseResult) -> Bool {
+        savedCourseIds.contains(course.id)
+    }
+
+    func searchByName() {
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else {
+            // Clear search — restore location-based results
+            if let loc = currentLocation { showCoursesForLocation(loc) }
             return
         }
 
-        state = .searching
-        print("[Search] Searching near \(location.lat), \(location.lon)")
+        isSearchingOnline = true
+        state = .selectCourse([])
 
         Task {
+            defer { Task { @MainActor in self.isSearchingOnline = false } }
             do {
-                var osmResults = try await overpassClient.searchCourses(location: location, radius: 15_000)
-                if osmResults.isEmpty {
-                    osmResults = try await overpassClient.searchCourses(location: location, radius: 30_000)
-                }
-                print("[Overpass] Found \(osmResults.count) nearby courses")
-
-                let results = osmResults.map {
-                    GolfCourseResult(id: -Int($0.osmId), name: $0.name, location: $0.location, city: "")
-                }
+                let searchCenter = currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
+                let results = try await overpassClient.searchCoursesByName(query, near: searchCenter)
+                let filtered = results
+                    .map { r -> GolfCourseResult in
+                        let intId = -Int(r.osmId)
+                        self.cacheIdMap[intId] = "osm-\(r.osmId)"
+                        return GolfCourseResult(id: intId, name: r.name, location: r.location, city: "")
+                    }
 
                 await MainActor.run {
-                    if results.isEmpty {
-                        self.state = .error("No golf courses found nearby.")
-                    } else {
-                        self.lastSearchResults = results
-                        self.state = .selectCourse(results)
-                    }
+                    self.displayedCourses = filtered
+                    self.state = .selectCourse(filtered)
                 }
             } catch {
-                print("[Search] Error: \(error)")
-                await MainActor.run { self.state = .error(error.localizedDescription) }
+                print("[Search] Name search failed: \(error)")
+                await MainActor.run {
+                    self.state = .error("Search failed: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -454,8 +543,6 @@ class StartRoundViewModel: ObservableObject {
     func retry() {
         if let course = lastFailedCourse {
             downloadCourse(course)
-        } else if !lastSearchResults.isEmpty {
-            state = .selectCourse(lastSearchResults)
         } else {
             searchNearby()
         }
@@ -463,7 +550,7 @@ class StartRoundViewModel: ObservableObject {
 
     func downloadCourse(_ course: GolfCourseResult) {
         let store = CourseStore()
-        let cacheId = course.id > 0 ? "gcapi-\(course.id)" : "osm-\(abs(course.id))"
+        let cacheId = cacheIdMap[course.id] ?? (course.id > 0 ? "gcapi-\(course.id)" : "osm-\(abs(course.id))")
         if let cached = try? store.load(id: cacheId) {
             print("[CourseStore] Loaded \(course.name) from cache")
             state = .selectStartingHole(cached)
@@ -501,16 +588,71 @@ class StartRoundViewModel: ObservableObject {
 
                 // 3. Download OSM geometry
                 var osmCourse: Course?
+                var osmCourses: [Course] = []
                 if let osm = osmMatch {
                     print("[Overpass] Downloading geometry for \(osm.name) osmId=\(osm.osmId)")
-                    osmCourse = try? await overpassClient.downloadCourse(
+                    osmCourses = (try? await overpassClient.downloadCourse(
                         osmRelationId: osm.osmId, name: course.name,
                         playerLocation: currentLocation,
                         holeCount: apiHoles.isEmpty ? 18 : apiHoles.count
-                    )
+                    )) ?? []
                 }
 
-                // 3. Merge
+                // Multi-course complex: match to GolfCourseAPI by yardage, save all, let user pick
+                if osmCourses.count > 1 {
+                    // Fetch all GolfCourseAPI courses for this club
+                    let apiResults = (try? await golfCourseAPI.searchCourses(
+                        query: course.name, playerLocation: course.location
+                    ))?.filter { $0.location.distanceMeters(to: course.location) < 5_000 } ?? []
+
+                    // Fetch hole data for each API course
+                    var apiCourseHoles: [(name: String, id: Int, holes: [GolfCourseHole])] = []
+                    for api in apiResults {
+                        if let holes = try? await golfCourseAPI.fetchHoles(courseId: api.id, teeColor: teeColor), !holes.isEmpty {
+                            apiCourseHoles.append((name: api.name, id: api.id, holes: holes))
+                        }
+                    }
+                    print("[MultiCourse] \(osmCourses.count) OSM clusters, \(apiResults.count) API results, \(apiCourseHoles.count) with holes")
+
+                    // Match each OSM cluster to best API course by yardage
+                    var usedApiIdx = Set<Int>()
+                    var subCourses: [GolfCourseResult] = []
+                    for osc in osmCourses {
+                        let osmTotal = osc.holes.compactMap { h -> Double? in
+                            guard let t = h.tee, let g = h.greenCenter else { return nil }
+                            return t.distanceMeters(to: g) * 1.09361
+                        }.reduce(0, +)
+                        let bestMatch = matchByYardage(osmCourse: osc, apiCourses: apiCourseHoles, excluding: usedApiIdx)
+                        let matchedHoles = bestMatch.map { apiCourseHoles[$0].holes } ?? []
+                        let matchedName = bestMatch.map { apiCourseHoles[$0].name } ?? osc.name
+                        if let idx = bestMatch { usedApiIdx.insert(idx) }
+                        print("[MultiCourse] OSM '\(osc.name)' (\(Int(osmTotal)) yds) -> matched '\(matchedName)' (idx=\(bestMatch.map(String.init) ?? "nil"), used=\(usedApiIdx))")
+
+                        let merged = mergeCourse(name: matchedName, id: osc.id,
+                                                 location: osc.location,
+                                                 apiHoles: matchedHoles, osmCourse: osc)
+                        try? store.save(merged)
+                    }
+                    // Reload from store so user sees properly named courses
+                    let saved = (try? store.loadAll()) ?? []
+                    subCourses = saved
+                        .filter { $0.id.hasPrefix("osm-\(osmMatch!.osmId)-") }
+                        .map { c -> GolfCourseResult in
+                            let intId = stableId(from: c.id)
+                            self.cacheIdMap[intId] = c.id
+                            return GolfCourseResult(id: intId, name: c.name, location: c.location, city: "")
+                        }
+                    print("[CourseStore] Saved \(osmCourses.count) sub-courses")
+                    await MainActor.run {
+                        self.lastFailedCourse = nil
+                        self.displayedCourses = subCourses
+                        self.state = .selectCourse(subCourses)
+                    }
+                    return
+                }
+
+                // Single course
+                osmCourse = osmCourses.first
                 let mergedCourse = mergeCourse(
                     name: course.name, id: cacheId,
                     location: course.location,
@@ -531,7 +673,44 @@ class StartRoundViewModel: ObservableObject {
         }
     }
 
-    // Simple Levenshtein for fuzzy name matching
+    /// Stable negative Int ID from a course store string ID.
+    private func stableId(from courseId: String) -> Int {
+        // "osm-16307627" -> -16307627, "osm-16307627-1" -> hash-based
+        let stripped = courseId
+            .replacingOccurrences(of: "osm-", with: "")
+            .replacingOccurrences(of: "gcapi-", with: "")
+        if let num = Int(stripped) { return -num }
+        return -abs(courseId.hashValue)
+    }
+
+    /// Match an OSM course to the best GolfCourseAPI course by comparing
+    /// tee-to-green distances against actual yardages.
+    private func matchByYardage(osmCourse: Course, apiCourses: [(name: String, id: Int, holes: [GolfCourseHole])], excluding: Set<Int>) -> Int? {
+        guard !apiCourses.isEmpty else { return nil }
+        let osmYards: [Int: Double] = Dictionary(uniqueKeysWithValues:
+            osmCourse.holes.compactMap { hole -> (Int, Double)? in
+                guard let tee = hole.tee, let green = hole.greenCenter else { return nil }
+                return (hole.number, tee.distanceMeters(to: green) * 1.09361)
+            }
+        )
+        guard !osmYards.isEmpty else { return nil }
+
+        var bestIdx: Int?
+        var bestError = Double.infinity
+        for (idx, api) in apiCourses.enumerated() where !excluding.contains(idx) {
+            var totalError = 0.0
+            for (i, h) in api.holes.enumerated() {
+                let holeNum = i + 1
+                if let osmYd = osmYards[holeNum] {
+                    let diff = osmYd - Double(h.yardage)
+                    totalError += diff * diff
+                }
+            }
+            if totalError < bestError { bestError = totalError; bestIdx = idx }
+        }
+        return bestIdx
+    }
+
     private func levenshtein(_ a: String, _ b: String) -> Int {
         let a = a.lowercased(), b = b.lowercased()
         var dp = Array(0...b.count)

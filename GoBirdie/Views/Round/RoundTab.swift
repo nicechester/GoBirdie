@@ -19,6 +19,8 @@ struct RoundTab: View {
                 appState: appState,
                 showMenu: $showMenu
             )
+        } else if let snapshot = appState.pendingResume {
+            ResumeRoundView(snapshot: snapshot, appState: appState)
         } else {
             EmptyRoundStateView(onStartRound: { showStartRoundSheet = true })
                 .sheet(isPresented: $showStartRoundSheet) { StartRoundView() }
@@ -30,7 +32,7 @@ struct RoundTab: View {
 private struct ActiveRoundView: View {
     @ObservedObject var session: RoundSession
     @ObservedObject var viewModel: RoundViewModel
-    let appState: AppState
+    @ObservedObject var appState: AppState
     @Binding var showMenu: Bool
     @State private var showEndConfirm = false
 
@@ -100,6 +102,17 @@ private struct ActiveRoundView: View {
         } message: {
             Text("Save and finish this round?")
         }
+        .alert("Are you still playing?", isPresented: $appState.showIdlePrompt) {
+            Button("Yes, still playing") {
+                appState.resetIdleTimer()
+            }
+            Button("End Round", role: .destructive) {
+                session.endRound()
+                appState.endActiveRound()
+            }
+        } message: {
+            Text("No activity for 30 minutes.")
+        }
     }
 }
 
@@ -126,6 +139,62 @@ private struct EmptyRoundStateView: View {
                     .cornerRadius(14)
             }
             .padding(.horizontal, 32)
+            .padding(.bottom, 32)
+        }
+    }
+}
+
+private struct ResumeRoundView: View {
+    let snapshot: InProgressSnapshot
+    let appState: AppState
+
+    private var elapsed: String {
+        let mins = Int(Date().timeIntervalSince(snapshot.round.startedAt) / 60)
+        if mins < 60 { return "\(mins)m ago" }
+        return "\(mins / 60)h \(mins % 60)m ago"
+    }
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            Image(systemName: "arrow.counterclockwise.circle.fill")
+                .font(.system(size: 56)).foregroundStyle(.orange)
+
+            Text("Round In Progress").font(.title2).fontWeight(.bold)
+
+            VStack(spacing: 6) {
+                Text(snapshot.round.courseName)
+                    .font(.headline)
+                Text("Hole \(snapshot.currentHoleIndex + 1)  ·  Started \(elapsed)")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                if snapshot.round.totalStrokes > 0 {
+                    Text("\(snapshot.round.totalStrokes) strokes")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Button {
+                appState.resumeRound(snapshot: snapshot)
+            } label: {
+                Label("Resume Round", systemImage: "play.fill")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.green)
+                    .foregroundStyle(.white)
+                    .cornerRadius(14)
+            }
+            .padding(.horizontal, 32)
+
+            Button {
+                appState.discardInProgressRound()
+            } label: {
+                Text("Discard")
+                    .foregroundStyle(.red)
+            }
             .padding(.bottom, 32)
         }
     }

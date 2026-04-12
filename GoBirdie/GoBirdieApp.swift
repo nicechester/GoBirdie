@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct GoBirdieApp: App {
     @StateObject private var appState = AppState()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -17,6 +18,12 @@ struct GoBirdieApp: App {
                 .environmentObject(appState)
                 .onAppear {
                     appState.getLocationService().requestPermission()
+                    appState.checkForInProgressRound()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .background || phase == .inactive {
+                        appState.saveInProgress()
+                    }
                 }
         }
     }

@@ -6,6 +6,7 @@ import SwiftUI
 import GoBirdieCore
 
 struct HoleControlsView: View {
+    @EnvironmentObject var appState: AppState
     @ObservedObject var session: RoundSession
     let course: Course
     let locationService: LocationService
@@ -28,7 +29,10 @@ struct HoleControlsView: View {
                     .cornerRadius(8)
                 }
 
-                Button { session.addStroke() } label: {
+                Button {
+                    session.addStroke()
+                    appState.resetIdleTimer()
+                } label: {
                     Text("+Stroke")
                         .font(.subheadline).fontWeight(.semibold)
                         .padding(.horizontal, 16).padding(.vertical, 10)
@@ -44,6 +48,7 @@ struct HoleControlsView: View {
             HStack(spacing: 12) {
                 Button {
                     session.navigateTo(holeNumber: session.currentHoleNumber - 1, course: course)
+                    appState.resetIdleTimer()
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
@@ -62,6 +67,7 @@ struct HoleControlsView: View {
                     } else {
                         session.navigateTo(holeNumber: session.currentHoleNumber + 1, course: course)
                     }
+                    appState.resetIdleTimer()
                 } label: {
                     HStack(spacing: 4) {
                         Text(session.currentHoleNumber == 18 ? "Finish" : "Next")
@@ -82,6 +88,7 @@ struct HoleControlsView: View {
                 let loc = locationService.currentLocation ?? GpsPoint(lat: 0, lon: 0)
                 session.markShot(at: loc, club: club)
                 selectedClub = .unknown
+                appState.resetIdleTimer()
             }
         }
     }
@@ -90,6 +97,7 @@ struct HoleControlsView: View {
 // MARK: - Putt Stepper
 
 private struct PuttStepper: View {
+    @EnvironmentObject var appState: AppState
     @ObservedObject var session: RoundSession
 
     var putts: Int { session.currentHole?.putts ?? 0 }
@@ -102,7 +110,10 @@ private struct PuttStepper: View {
 
             HStack(spacing: 16) {
                 Button {
-                    if putts > 0 { session.setPutts(putts - 1) }
+                    if putts > 0 {
+                        session.setPutts(putts - 1)
+                        appState.resetIdleTimer()
+                    }
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title2)
@@ -116,6 +127,7 @@ private struct PuttStepper: View {
 
                 Button {
                     session.setPutts(putts + 1)
+                    appState.resetIdleTimer()
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)

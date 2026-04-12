@@ -8,22 +8,23 @@ import GoBirdieCore
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
-
     var body: some View {
         NavigationStack {
             List {
+                Section("Courses") {
+                    NavigationLink {
+                        CourseManagerView()
+                    } label: {
+                        Label("Manage Courses", systemImage: "map")
+                    }
+                }
+
                 TeeSection()
                 TipJarSection()
                 AboutSection()
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
         }
     }
 }
