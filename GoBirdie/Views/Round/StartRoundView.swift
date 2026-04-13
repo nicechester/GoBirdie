@@ -508,12 +508,15 @@ class StartRoundViewModel: ObservableObject {
 
     private func mergeCourse(name: String, id: String, location: GpsPoint,
                              apiHoles: [GolfCourseHole], osmCourse: Course?) -> Course {
-        let osmHoleMap = Dictionary(uniqueKeysWithValues:
-            (osmCourse?.holes ?? []).map { ($0.number, $0) }
-        )
-        let baseHoles: [Hole] = apiHoles.isEmpty
-            ? (osmCourse?.holes ?? [])
-            : apiHoles.map { api in
+        let osmHoles = osmCourse?.holes ?? []
+        let osmHoleMap = Dictionary(uniqueKeysWithValues: osmHoles.map { ($0.number, $0) })
+        // OSM is ground truth for hole count (9-hole courses have 18 API holes)
+        let effectiveApiHoles = !apiHoles.isEmpty && !osmHoles.isEmpty
+            ? Array(apiHoles.prefix(osmHoles.count))
+            : apiHoles
+        let baseHoles: [Hole] = effectiveApiHoles.isEmpty
+            ? osmHoles
+            : effectiveApiHoles.map { api in
                 let osm = osmHoleMap[api.number]
                 return Hole(
                     id: osm?.id ?? UUID(), number: api.number,
@@ -593,8 +596,7 @@ class StartRoundViewModel: ObservableObject {
                     print("[Overpass] Downloading geometry for \(osm.name) osmId=\(osm.osmId)")
                     osmCourses = (try? await overpassClient.downloadCourse(
                         osmRelationId: osm.osmId, name: course.name,
-                        playerLocation: currentLocation,
-                        holeCount: apiHoles.isEmpty ? 18 : apiHoles.count
+                        playerLocation: currentLocation
                     )) ?? []
                 }
 

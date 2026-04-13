@@ -119,7 +119,7 @@ out center;
     /// - Parameters:
     ///   - osmRelationId: OSM relation ID
     ///   - name: Course name
-    public func downloadCourse(osmRelationId: Int64, name: String, playerLocation: GpsPoint? = nil, holeCount: Int = 18) async throws -> [Course] {
+    public func downloadCourse(osmRelationId: Int64, name: String, playerLocation: GpsPoint? = nil) async throws -> [Course] {
         // Roosevelt-style courses are mapped as ways, not relations — try both
         let elementQuery = """
 [out:json];
@@ -174,7 +174,7 @@ out geom tags;
                 let groupElements = geometryResponse.elements.filter { el in
                     el.tags?["golf"] == "hole" ? groupIds.contains(el.id) : true
                 }
-                let holes = buildHoles(from: groupElements, anchor: anchor, holeCount: holeCount)
+                let holes = buildHoles(from: groupElements, anchor: anchor)
                 let suffix = groups.count > 1 ? " #\(idx + 1)" : ""
                 return Course(
                     id: "osm-\(osmRelationId)-\(idx + 1)",
@@ -187,7 +187,7 @@ out geom tags;
             }
         }
 
-        let holes = buildHoles(from: geometryResponse.elements, anchor: anchor, holeCount: holeCount)
+        let holes = buildHoles(from: geometryResponse.elements, anchor: anchor)
         return [Course(
             id: "osm-\(osmRelationId)",
             name: name,
@@ -271,7 +271,7 @@ out geom tags;
         }
     }
 
-    private func buildHoles(from elements: [OverpassElement], anchor: GpsPoint, holeCount: Int) -> [Hole] {
+    private func buildHoles(from elements: [OverpassElement], anchor: GpsPoint) -> [Hole] {
         let holeLines = elements.filter { $0.tags?["golf"] == "hole" }
         let greenPolygons = elements.filter { $0.tags?["golf"] == "green" }
         let fairwayPolygons = elements.filter { $0.tags?["golf"] == "fairway" }
@@ -336,13 +336,6 @@ out geom tags;
             ))
         }
 
-        holes.sort { $0.number < $1.number }
-
-        // Fill any missing holes up to holeCount with empty placeholders
-        let present = Set(holes.map(\.number))
-        for holeNum in 1...holeCount where !present.contains(holeNum) {
-            holes.append(Hole(id: UUID(), number: holeNum, par: 4))
-        }
         holes.sort { $0.number < $1.number }
 
         return holes

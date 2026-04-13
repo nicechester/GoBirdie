@@ -200,9 +200,10 @@ struct CourseManagerView: View {
                     let courseName = bestMatch?.name ?? osmCourse.name
 
                     let osmHoleMap = Dictionary(uniqueKeysWithValues: osmCourse.holes.map { ($0.number, $0) })
-                    let holes: [Hole] = matchedHoles.isEmpty
+                    let cappedHoles = !matchedHoles.isEmpty ? Array(matchedHoles.prefix(osmCourse.holes.count)) : matchedHoles
+                    let holes: [Hole] = cappedHoles.isEmpty
                         ? osmCourse.holes
-                        : matchedHoles.map { api in
+                        : cappedHoles.map { api in
                             let osm = osmHoleMap[api.number]
                             return Hole(
                                 id: osm?.id ?? UUID(), number: api.number,

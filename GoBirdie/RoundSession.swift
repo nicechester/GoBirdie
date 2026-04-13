@@ -100,15 +100,13 @@ final class RoundSession: ObservableObject {
         recomputeTotals()
     }
 
-    /// Move to the next hole, or complete the round if on hole 18.
+    /// Move to the next hole, or complete the round if on the last hole.
     func endHole() {
-        guard currentHoleIndex < 17 else {
-            // Last hole completed, mark round complete
+        guard currentHoleIndex < round.holes.count - 1 else {
             round.endedAt = Date()
             isComplete = true
             return
         }
-        // Move to next hole
         currentHoleIndex += 1
     }
 

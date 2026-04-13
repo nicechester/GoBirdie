@@ -62,21 +62,22 @@ struct HoleControlsView: View {
                 .disabled(session.currentHoleNumber <= 1)
 
                 Button {
-                    if session.currentHoleNumber == 18 {
+                    if session.currentHoleNumber == session.round.holes.count {
                         session.endRound()
                     } else {
                         session.navigateTo(holeNumber: session.currentHoleNumber + 1, course: course)
                     }
                     appState.resetIdleTimer()
                 } label: {
+                    let isLast = session.currentHoleNumber == session.round.holes.count
                     HStack(spacing: 4) {
-                        Text(session.currentHoleNumber == 18 ? "Finish" : "Next")
-                        Image(systemName: session.currentHoleNumber == 18 ? "flag.checkered" : "chevron.right")
+                        Text(isLast ? "Finish" : "Next")
+                        Image(systemName: isLast ? "flag.checkered" : "chevron.right")
                     }
                     .font(.subheadline).fontWeight(.semibold)
                     .frame(maxWidth: .infinity).padding(10)
-                    .background(session.currentHoleNumber == 18 ? Color.orange : Color(.systemGray6))
-                    .foregroundStyle(session.currentHoleNumber == 18 ? .white : .primary)
+                    .background(isLast ? Color.orange : Color(.systemGray6))
+                    .foregroundStyle(isLast ? .white : .primary)
                     .cornerRadius(8)
                 }
             }
