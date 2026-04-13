@@ -91,8 +91,8 @@ struct ShotMapView: UIViewRepresentable {
                     coords.append(CLLocationCoordinate2D(latitude: green.lat, longitude: green.lon))
                 }
 
-                // Line segments colored by the shot's club
-                var prevCoord = coords.first
+                // Line segments colored by the shot's club (skip tee → first shot)
+                var prevCoord: CLLocationCoordinate2D? = nil
                 for shot in sortedShots {
                     let shotCoord = CLLocationCoordinate2D(latitude: shot.location.lat, longitude: shot.location.lon)
                     if let from = prevCoord {
