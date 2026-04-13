@@ -441,7 +441,7 @@ class StartRoundViewModel: ObservableObject {
 
                 await MainActor.run {
                     self.displayedCourses.append(contentsOf: newResults)
-                    // Re-check state — user may have navigated away
+                    self.displayedCourses.sort { $0.location.distanceMeters(to: location) < $1.location.distanceMeters(to: location) }
                     if case .selectCourse = self.state {
                         self.state = .selectCourse(self.displayedCourses)
                     }
