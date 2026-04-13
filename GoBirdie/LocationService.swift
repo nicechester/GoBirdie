@@ -16,6 +16,7 @@ import GoBirdieCore
 @MainActor
 final class LocationService: NSObject, ObservableObject {
     @Published var currentLocation: GpsPoint?
+    @Published var currentAltitude: Double?
     @Published var isRunning: Bool = false
 
     private let locationManager = CLLocationManager()
@@ -97,9 +98,11 @@ extension LocationService: CLLocationManagerDelegate {
         guard let location = locations.last else { return }
 
         let gpsPoint = GpsPoint(lat: location.coordinate.latitude, lon: location.coordinate.longitude)
+        let altitude = location.verticalAccuracy >= 0 ? location.altitude : nil
 
         Task { @MainActor in
             self.currentLocation = gpsPoint
+            self.currentAltitude = altitude
         }
     }
 

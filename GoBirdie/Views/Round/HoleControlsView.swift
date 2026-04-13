@@ -87,7 +87,8 @@ struct HoleControlsView: View {
         .sheet(isPresented: $showMarkShotSheet) {
             MarkShotSheet(selectedClub: $selectedClub) { club in
                 let loc = locationService.currentLocation ?? GpsPoint(lat: 0, lon: 0)
-                session.markShot(at: loc, club: club)
+                let alt = locationService.currentAltitude
+                session.markShot(at: loc, club: club, altitudeMeters: alt)
                 selectedClub = .unknown
                 appState.resetIdleTimer()
             }

@@ -36,6 +36,33 @@ final class RoundSession: ObservableObject {
             }
             self.recomputeTotals()
         }
+
+        NotificationCenter.default.addObserver(
+            forName: .watchShotMarked, object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let info = notification.userInfo,
+                  let holeNumber = info["holeNumber"] as? Int,
+                  let idx = self.round.holes.firstIndex(where: { $0.number == holeNumber })
+            else { return }
+            let lat = info["lat"] as? Double ?? 0
+            let lon = info["lon"] as? Double ?? 0
+            let shot = Shot(
+                sequence: self.round.holes[idx].shots.count + 1,
+                location: GpsPoint(lat: lat, lon: lon),
+                timestamp: Date(),
+                altitudeMeters: info["altitude"] as? Double,
+                heartRateBpm: info["heartRate"] as? Int
+            )
+            self.round.holes[idx].shots.append(shot)
+            if let strokes = info["strokes"] as? Int {
+                self.round.holes[idx].strokes = strokes
+            }
+            if let putts = info["putts"] as? Int {
+                self.round.holes[idx].putts = putts
+            }
+            self.recomputeTotals()
+        }
     }
 
     // MARK: - Computed Properties
@@ -70,14 +97,18 @@ final class RoundSession: ObservableObject {
     ///   - location: The GPS coordinates of the shot.
     ///   - club: The club used (defaults to unknown).
     ///   - distanceToPinYards: Optional distance to pin at time of recording.
-    func markShot(at location: GpsPoint, club: ClubType = .unknown, distanceToPinYards: Int? = nil) {
+    func markShot(at location: GpsPoint, club: ClubType = .unknown, distanceToPinYards: Int? = nil,
+                   altitudeMeters: Double? = nil, heartRateBpm: Int? = nil, temperatureCelsius: Double? = nil) {
         guard currentHole != nil else { return }
         let shot = Shot(
             sequence: round.holes[currentHoleIndex].shots.count + 1,
             location: location,
             timestamp: Date(),
             club: club,
-            distanceToPinYards: distanceToPinYards
+            distanceToPinYards: distanceToPinYards,
+            altitudeMeters: altitudeMeters,
+            heartRateBpm: heartRateBpm,
+            temperatureCelsius: temperatureCelsius
         )
         round.holes[currentHoleIndex].shots.append(shot)
         round.holes[currentHoleIndex].strokes += 1
