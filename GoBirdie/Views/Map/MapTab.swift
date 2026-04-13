@@ -56,9 +56,15 @@ private struct MapActiveView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
 
-            // Clear button when tap is active
-            if mapViewModel.selectedTapPoint != nil {
-                VStack {
+            VStack {
+                HoleInfoBar(viewModel: mapViewModel)
+                    .padding(.top, 50)
+                    .padding(.horizontal, 16)
+
+                Spacer()
+
+                // Clear button when tap is active
+                if mapViewModel.selectedTapPoint != nil {
                     HStack {
                         Spacer()
                         Button {
@@ -70,9 +76,8 @@ private struct MapActiveView: View {
                                 .shadow(color: .black.opacity(0.5), radius: 2)
                         }
                         .padding(.trailing, 16)
-                        .padding(.top, 50)
+                        .padding(.bottom, 16)
                     }
-                    Spacer()
                 }
             }
         }
@@ -93,6 +98,60 @@ private struct MapActiveView: View {
             )
         }
         return Course(id: "test", name: "Test Course", location: pebbleBeach, holes: holes)
+    }
+}
+
+/// Hole info bar with prev/next arrows and hole details.
+private struct HoleInfoBar: View {
+    @ObservedObject var viewModel: MapViewModel
+
+    private var hole: Hole? { viewModel.currentHole }
+    private var isFirst: Bool { viewModel.currentHoleIndex == 0 }
+    private var isLast: Bool { viewModel.currentHoleIndex >= viewModel.course.holes.count - 1 }
+
+    var body: some View {
+        HStack {
+            Button { viewModel.navigatePrevious() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(isFirst ? .gray : .white)
+            }
+            .disabled(isFirst)
+
+            Spacer()
+
+            if let hole {
+                VStack(spacing: 2) {
+                    Text("Hole \(hole.number)")
+                        .font(.headline)
+                    HStack(spacing: 8) {
+                        Text("Par \(hole.par)")
+                        if let yds = hole.yardage {
+                            Text("\(yds) yd")
+                        }
+                        if let hcp = hole.handicap {
+                            Text("HCP \(hcp)")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.85))
+                }
+            }
+
+            Spacer()
+
+            Button { viewModel.navigateNext() } label: {
+                Image(systemName: "chevron.right")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(isLast ? .gray : .white)
+            }
+            .disabled(isLast)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .foregroundStyle(.white)
+        .background(.black.opacity(0.6))
+        .cornerRadius(12)
     }
 }
 
