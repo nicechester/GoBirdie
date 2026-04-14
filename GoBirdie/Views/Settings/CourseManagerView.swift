@@ -49,7 +49,8 @@ struct CourseManagerView: View {
             if !searchResults.isEmpty {
                 Section("Search Results") {
                     ForEach(searchResults, id: \.id) { result in
-                        let alreadySaved = savedCourses.contains { $0.id == "osm-\(result.osmId)" }
+                        let apiId = Int(result.osmId)
+                        let alreadySaved = savedCourses.contains { $0.golfCourseApiId == apiId }
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(result.name).font(.subheadline)
@@ -146,7 +147,7 @@ struct CourseManagerView: View {
         }
     }
 
-    private func matchByYardage(osmCourse: Course, apiCourses: [(name: String, holes: [GolfCourseHole])], excluding usedIdx: inout Set<Int>) -> (name: String, holes: [GolfCourseHole])? {
+    private func matchByYardage(osmCourse: Course, apiCourses: [(name: String, id: Int, holes: [GolfCourseHole])], excluding usedIdx: inout Set<Int>) -> (name: String, id: Int, holes: [GolfCourseHole])? {
         let osmYards: [Int: Double] = Dictionary(uniqueKeysWithValues:
             osmCourse.holes.compactMap { hole -> (Int, Double)? in
                 guard let tee = hole.tee, let green = hole.greenCenter else { return nil }
@@ -209,10 +210,10 @@ struct CourseManagerView: View {
                     query: result.name, playerLocation: location
                 ))?.filter { $0.location.distanceMeters(to: location) < 5_000 } ?? []
 
-                var apiCourseHoles: [(name: String, holes: [GolfCourseHole])] = []
+                var apiCourseHoles: [(name: String, id: Int, holes: [GolfCourseHole])] = []
                 for api in apiResults {
                     if let holes = try? await golfCourseAPI.fetchHoles(courseId: api.id, teeColor: teeColor), !holes.isEmpty {
-                        apiCourseHoles.append((name: api.name, holes: holes))
+                        apiCourseHoles.append((name: api.name, id: api.id, holes: holes))
                     }
                 }
 
@@ -238,7 +239,8 @@ struct CourseManagerView: View {
                             )
                         }
                     let course = Course(id: osmCourse.id, name: courseName, location: location,
-                                        holes: holes, downloadedAt: Date(), osmVersion: 1)
+                                        holes: holes, downloadedAt: Date(), osmVersion: 1,
+                                        golfCourseApiId: bestMatch?.id)
                     try? CourseStore().save(course)
                 }
 

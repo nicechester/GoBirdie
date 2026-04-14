@@ -512,7 +512,8 @@ class StartRoundViewModel: ObservableObject {
     }
 
     private func mergeCourse(name: String, id: String, location: GpsPoint,
-                             apiHoles: [GolfCourseHole], osmCourse: Course?) -> Course {
+                             apiHoles: [GolfCourseHole], osmCourse: Course?,
+                             golfCourseApiId: Int? = nil) -> Course {
         let osmHoles = osmCourse?.holes ?? []
         let osmHoleMap = Dictionary(uniqueKeysWithValues: osmHoles.map { ($0.number, $0) })
         // OSM is ground truth for hole count (9-hole courses have 18 API holes)
@@ -533,7 +534,8 @@ class StartRoundViewModel: ObservableObject {
                 )
             }
         return Course(id: id, name: name, location: location,
-                      holes: baseHoles, downloadedAt: Date(), osmVersion: 1)
+                      holes: baseHoles, downloadedAt: Date(), osmVersion: 1,
+                      golfCourseApiId: golfCourseApiId)
     }
 
     func startRound(course: Course, startingHole: Int) {
@@ -632,12 +634,14 @@ class StartRoundViewModel: ObservableObject {
                         let bestMatch = matchByYardage(osmCourse: osc, apiCourses: apiCourseHoles, excluding: usedApiIdx)
                         let matchedHoles = bestMatch.map { apiCourseHoles[$0].holes } ?? []
                         let matchedName = bestMatch.map { apiCourseHoles[$0].name } ?? osc.name
+                        let matchedApiId = bestMatch.map { apiCourseHoles[$0].id }
                         if let idx = bestMatch { usedApiIdx.insert(idx) }
                         print("[MultiCourse] OSM '\(osc.name)' (\(Int(osmTotal)) yds) -> matched '\(matchedName)' (idx=\(bestMatch.map(String.init) ?? "nil"), used=\(usedApiIdx))")
 
                         let merged = mergeCourse(name: matchedName, id: osc.id,
                                                  location: osc.location,
-                                                 apiHoles: matchedHoles, osmCourse: osc)
+                                                 apiHoles: matchedHoles, osmCourse: osc,
+                                                 golfCourseApiId: matchedApiId)
                         try? store.save(merged)
                     }
                     // Reload from store so user sees properly named courses
@@ -663,7 +667,8 @@ class StartRoundViewModel: ObservableObject {
                 let mergedCourse = mergeCourse(
                     name: course.name, id: cacheId,
                     location: course.location,
-                    apiHoles: apiHoles, osmCourse: osmCourse
+                    apiHoles: apiHoles, osmCourse: osmCourse,
+                    golfCourseApiId: gcapiId
                 )
 
                 try? store.save(mergedCourse)
