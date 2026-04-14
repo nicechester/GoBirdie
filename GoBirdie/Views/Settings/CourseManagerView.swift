@@ -53,12 +53,16 @@ struct CourseManagerView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(result.name).font(.subheadline)
+                                if let subtitle = resultSubtitle(result) {
+                                    Text(subtitle)
+                                        .font(.caption2).foregroundStyle(.secondary)
+                                }
                             }
                             Spacer()
                             if alreadySaved {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundStyle(.green)
-                            } else if downloadingId == "osm-\(result.osmId)" {
+                            } else if downloadingId == result.id {
                                 ProgressView().tint(.green)
                             } else {
                                 Button {
@@ -125,7 +129,7 @@ struct CourseManagerView: View {
                 let location = appState.getLocationService().currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
                 let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: location)
                 let results = apiResults.map { r in
-                    CourseSearchResult(id: "api-\(r.id)", name: r.name, location: r.location, osmType: "api", osmId: Int64(r.id))
+                    CourseSearchResult(id: "api-\(r.id)", name: r.name, location: r.location, osmType: "api", osmId: Int64(r.id), city: r.city)
                 }
 
                 await MainActor.run {
@@ -166,6 +170,17 @@ struct CourseManagerView: View {
         guard let idx = bestIdx else { return nil }
         usedIdx.insert(idx)
         return apiCourses[idx]
+    }
+
+    private func resultSubtitle(_ result: CourseSearchResult) -> String? {
+        let location = appState.getLocationService().currentLocation
+        var parts: [String] = []
+        if !result.city.isEmpty { parts.append(result.city) }
+        if let loc = location {
+            let mi = result.location.distanceMeters(to: loc) / 1609.34
+            parts.append(mi < 1 ? "< 1 mi away" : String(format: "%.0f mi away", mi))
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private func downloadCourse(_ result: CourseSearchResult) {

@@ -40,6 +40,7 @@ public actor GolfCourseAPIClient {
 
         let decoded = try JSONDecoder().decode(SearchResponse.self, from: data)
         return decoded.courses
+            .filter { $0.location.latitude != nil && $0.location.longitude != nil }
             .map { GolfCourseResult(from: $0) }
             .sorted { $0.location.distanceMeters(to: playerLocation) < $1.location.distanceMeters(to: playerLocation) }
     }
@@ -97,7 +98,7 @@ public struct GolfCourseResult: Sendable, Identifiable {
     fileprivate init(from api: APICourse) {
         self.id       = api.id
         self.name     = api.course_name
-        self.location = GpsPoint(lat: api.location.latitude, lon: api.location.longitude)
+        self.location = GpsPoint(lat: api.location.latitude ?? 0, lon: api.location.longitude ?? 0)
         self.city     = [api.location.city, api.location.state].compactMap { $0 }.joined(separator: ", ")
     }
 }
@@ -124,8 +125,8 @@ private struct APICourse: Decodable {
 private struct APILocation: Decodable {
     let city: String?
     let state: String?
-    let latitude: Double
-    let longitude: Double
+    let latitude: Double?
+    let longitude: Double?
 }
 
 private struct APITees: Decodable {

@@ -357,10 +357,11 @@ public struct CourseSearchResult: Sendable, Identifiable {
     public var location: GpsPoint
     public var osmType: String
     public var osmId: Int64
+    public var city: String
 
-    public init(id: String, name: String, location: GpsPoint, osmType: String, osmId: Int64) {
+    public init(id: String, name: String, location: GpsPoint, osmType: String, osmId: Int64, city: String = "") {
         self.id = id; self.name = name; self.location = location
-        self.osmType = osmType; self.osmId = osmId
+        self.osmType = osmType; self.osmId = osmId; self.city = city
     }
 }
 

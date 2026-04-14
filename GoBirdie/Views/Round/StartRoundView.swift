@@ -243,6 +243,10 @@ private struct CourseCell: View {
                             Text(dist)
                                 .font(.caption).foregroundStyle(.secondary)
                         }
+                        if !course.city.isEmpty {
+                            Text(course.city)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                 }
                 Spacer()
@@ -486,9 +490,13 @@ class StartRoundViewModel: ObservableObject {
             do {
                 let searchCenter = currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
                 let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: searchCenter)
-                let filtered = apiResults.map { r -> GolfCourseResult in
-                    GolfCourseResult(id: r.id, name: r.name, location: r.location, city: r.city)
-                }
+                let loc = self.currentLocation
+                let filtered = apiResults
+                    .map { GolfCourseResult(id: $0.id, name: $0.name, location: $0.location, city: $0.city) }
+                    .sorted { a, b in
+                        guard let loc else { return false }
+                        return a.location.distanceMeters(to: loc) < b.location.distanceMeters(to: loc)
+                    }
 
                 await MainActor.run {
                     self.displayedCourses = filtered
