@@ -357,6 +357,11 @@ public struct CourseSearchResult: Sendable, Identifiable {
     public var location: GpsPoint
     public var osmType: String
     public var osmId: Int64
+
+    public init(id: String, name: String, location: GpsPoint, osmType: String, osmId: Int64) {
+        self.id = id; self.name = name; self.location = location
+        self.osmType = osmType; self.osmId = osmId
+    }
 }
 
 // MARK: - Overpass API Types

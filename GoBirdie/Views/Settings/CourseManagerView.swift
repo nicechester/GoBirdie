@@ -123,13 +123,15 @@ struct CourseManagerView: View {
         Task {
             do {
                 let location = appState.getLocationService().currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
-                let results = try await overpassClient.searchCoursesByName(query, near: location)
-                let filtered = results
+                let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: location)
+                let results = apiResults.map { r in
+                    CourseSearchResult(id: "api-\(r.id)", name: r.name, location: r.location, osmType: "api", osmId: Int64(r.id))
+                }
 
                 await MainActor.run {
-                    searchResults = filtered
+                    searchResults = results
                     isSearching = false
-                    if filtered.isEmpty { errorMessage = "No courses found for \"\(query)\"" }
+                    if results.isEmpty { errorMessage = "No courses found for \"\(query)\"" }
                 }
             } catch {
                 await MainActor.run {
@@ -167,7 +169,7 @@ struct CourseManagerView: View {
     }
 
     private func downloadCourse(_ result: CourseSearchResult) {
-        let cacheId = "osm-\(result.osmId)"
+        let cacheId = result.id
         downloadingId = cacheId
 
         Task {
@@ -175,10 +177,17 @@ struct CourseManagerView: View {
                 let teeColor = appState.teeColor
                 let location = result.location
 
-                // OSM geometry
-                let osmCourses = (try? await overpassClient.downloadCourse(
-                    osmRelationId: result.osmId, name: result.name
-                )) ?? []
+                // Find OSM relation near this course's location
+                let nearbyOsm = try await overpassClient.searchCourses(location: location, radius: 2_000)
+                let osmMatch = nearbyOsm.first
+
+                // OSM geometry (if found)
+                var osmCourses: [Course] = []
+                if let osm = osmMatch {
+                    osmCourses = (try? await overpassClient.downloadCourse(
+                        osmRelationId: osm.osmId, name: result.name
+                    )) ?? []
+                }
 
                 // GolfCourseAPI: fetch all matching courses at this location
                 let apiResults = (try? await golfCourseAPI.searchCourses(

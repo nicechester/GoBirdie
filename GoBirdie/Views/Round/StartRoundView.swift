@@ -485,13 +485,10 @@ class StartRoundViewModel: ObservableObject {
             defer { Task { @MainActor in self.isSearchingOnline = false } }
             do {
                 let searchCenter = currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
-                let results = try await overpassClient.searchCoursesByName(query, near: searchCenter)
-                let filtered = results
-                    .map { r -> GolfCourseResult in
-                        let intId = -Int(r.osmId)
-                        self.cacheIdMap[intId] = "osm-\(r.osmId)"
-                        return GolfCourseResult(id: intId, name: r.name, location: r.location, city: "")
-                    }
+                let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: searchCenter)
+                let filtered = apiResults.map { r -> GolfCourseResult in
+                    GolfCourseResult(id: r.id, name: r.name, location: r.location, city: r.city)
+                }
 
                 await MainActor.run {
                     self.displayedCourses = filtered
