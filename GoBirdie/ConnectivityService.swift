@@ -113,6 +113,23 @@ extension ConnectivityService: WCSessionDelegate {
                     userInfo: info
                 )
             }
+        case "shot":
+            if let holeNumber = message["holeNumber"] as? Int {
+                var info: [String: Any] = ["holeNumber": holeNumber]
+                if let strokes = message["strokes"] as? Int { info["strokes"] = strokes }
+                if let putts = message["putts"] as? Int { info["putts"] = putts }
+                if let lat = message["lat"] as? Double, let lon = message["lon"] as? Double {
+                    info["lat"] = lat
+                    info["lon"] = lon
+                }
+                if let alt = message["altitude"] as? Double { info["altitude"] = alt }
+                if let hr = message["heartRate"] as? Int { info["heartRate"] = hr }
+                NotificationCenter.default.post(
+                    name: .watchShotMarked,
+                    object: nil,
+                    userInfo: info
+                )
+            }
         default:
             break
         }
@@ -121,4 +138,5 @@ extension ConnectivityService: WCSessionDelegate {
 
 extension Notification.Name {
     static let watchStrokeUpdate = Notification.Name("watchStrokeUpdate")
+    static let watchShotMarked = Notification.Name("watchShotMarked")
 }

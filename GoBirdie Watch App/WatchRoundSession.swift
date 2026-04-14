@@ -20,6 +20,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
     @Published var isActive: Bool = false
     @Published var hasHoleData: Bool = false
     @Published var courseName: String = ""
+    @Published var latestHeartRate: Int?
 
     private var greenFront: CLLocation?
     private var greenCenter: CLLocation?
@@ -41,7 +42,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
 
     func markShot() {
         strokes += 1
-        sendStrokesToPhone()
+        sendShotToPhone()
     }
 
     func addStroke() {
@@ -100,6 +101,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
             let session = try HKWorkoutSession(healthStore: healthStore, configuration: config)
             let builder = session.associatedWorkoutBuilder()
             builder.dataSource = HKLiveWorkoutDataSource(healthStore: healthStore, workoutConfiguration: config)
+            builder.delegate = self
             self.workoutSession = session
             self.workoutBuilder = builder
             session.startActivity(with: Date())
@@ -147,6 +149,27 @@ final class WatchRoundSession: NSObject, ObservableObject {
         guard WCSession.isSupported() else { return }
         WCSession.default.delegate = self
         WCSession.default.activate()
+    }
+
+    private func sendShotToPhone() {
+        guard WCSession.default.isReachable else { return }
+        var msg: [String: Any] = [
+            "action": "shot",
+            "holeNumber": holeNumber,
+            "strokes": strokes,
+            "putts": putts
+        ]
+        if let loc = currentLocation {
+            msg["lat"] = loc.coordinate.latitude
+            msg["lon"] = loc.coordinate.longitude
+            if loc.verticalAccuracy >= 0 {
+                msg["altitude"] = loc.altitude
+            }
+        }
+        if let hr = latestHeartRate {
+            msg["heartRate"] = hr
+        }
+        WCSession.default.sendMessage(msg, replyHandler: nil)
     }
 
     private func sendStrokesToPhone() {
@@ -226,4 +249,21 @@ extension WatchRoundSession: WCSessionDelegate {
             self.handleContext(message)
         }
     }
+}
+
+// MARK: - HKLiveWorkoutBuilderDelegate
+
+extension WatchRoundSession: HKLiveWorkoutBuilderDelegate {
+    nonisolated func workoutBuilder(_ workoutBuilder: HKLiveWorkoutBuilder, didCollectDataOf collectedTypes: Set<HKSampleType>) {
+        guard let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate),
+              collectedTypes.contains(hrType),
+              let stats = workoutBuilder.statistics(for: hrType),
+              let value = stats.mostRecentQuantity() else { return }
+        let bpm = Int(value.doubleValue(for: HKUnit.count().unitDivided(by: .minute())).rounded())
+        Task { @MainActor in
+            self.latestHeartRate = bpm
+        }
+    }
+
+    nonisolated func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {}
 }

@@ -101,10 +101,14 @@ private struct RoundRow: View {
 private struct ScorecardDetailView: View {
     let round: Round
     @Environment(\.dismiss) var dismiss
+    @State private var shotMapHole: HoleScore?
 
     private var parTotal: Int { round.holes.reduce(0) { $0 + $1.par } }
     private var frontNine: [HoleScore] { Array(round.holes.prefix(9)) }
     private var backNine: [HoleScore] { Array(round.holes.dropFirst(9).prefix(9)) }
+    private var courseHoles: [Hole] {
+        (try? CourseStore().load(id: round.courseId))?.holes ?? []
+    }
 
     var body: some View {
         NavigationStack {
@@ -114,10 +118,10 @@ private struct ScorecardDetailView: View {
                         .padding(.horizontal, 16)
 
                     if !frontNine.isEmpty {
-                        NineSection(title: "Front 9", holes: frontNine)
+                        NineSection(title: "Front 9", holes: frontNine, onHoleTap: showHoleMap)
                     }
                     if !backNine.isEmpty {
-                        NineSection(title: "Back 9", holes: backNine)
+                        NineSection(title: "Back 9", holes: backNine, onHoleTap: showHoleMap)
                     }
                 }
                 .padding(.vertical, 12)
@@ -129,6 +133,126 @@ private struct ScorecardDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .sheet(item: $shotMapHole) { hole in
+                ShotMapSheet(allHoles: round.holes, courseHoles: courseHoles, initialHole: hole)
+            }
+        }
+    }
+
+    private func showHoleMap(_ hole: HoleScore) {
+        guard !hole.shots.isEmpty else { return }
+        shotMapHole = hole
+    }
+}
+
+private struct ShotMapSheet: View {
+    let allHoles: [HoleScore]
+    let courseHoles: [Hole]
+    let initialHole: HoleScore
+    @Environment(\.dismiss) var dismiss
+    @State private var currentIndex: Int = 0
+
+    private var holesWithShots: [HoleScore] {
+        allHoles.filter { !$0.shots.isEmpty }
+    }
+    private var hole: HoleScore { holesWithShots[currentIndex] }
+
+    private var sortedShots: [Shot] {
+        hole.shots.sorted { $0.sequence < $1.sequence }
+    }
+
+    private var scoreName: String {
+        let diff = hole.strokes - hole.par
+        switch diff {
+        case ...(-2): return "Eagle"
+        case -1: return "Birdie"
+        case 0: return "Par"
+        case 1: return "Bogey"
+        case 2: return "Dbl Bogey"
+        default: return "+\(diff)"
+        }
+    }
+
+    private var scoreColor: Color {
+        let diff = hole.strokes - hole.par
+        if diff <= -2 { return .yellow }
+        if diff == -1 { return .green }
+        if diff == 0 { return .primary }
+        if diff == 1 { return .orange }
+        return .red
+    }
+
+    private func shotDistance(_ shot: Shot) -> Int? {
+        let sorted = sortedShots
+        guard let idx = sorted.firstIndex(where: { $0.id == shot.id }) else { return nil }
+        let nextPoint: GpsPoint?
+        if idx + 1 < sorted.count {
+            nextPoint = sorted[idx + 1].location
+        } else {
+            nextPoint = courseHoles.first { $0.number == hole.number }?.greenCenter
+        }
+        guard let to = nextPoint else { return nil }
+        let meters = shot.location.distanceMeters(to: to)
+        return Int((meters * 1.09361).rounded())
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                ShotMapView(holes: [hole], courseHoles: courseHoles)
+                    .id(hole.id)
+
+                // Score bar
+                HStack(spacing: 16) {
+                    Text("Par \(hole.par)").font(.caption).foregroundStyle(.secondary)
+                    Text("\(hole.strokes)").font(.title3).fontWeight(.bold).foregroundStyle(scoreColor)
+                    Text(scoreName).font(.caption).fontWeight(.semibold).foregroundStyle(scoreColor)
+                    Spacer()
+                    Text("\(hole.putts) Putts").font(.caption).foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 8)
+                .background(Color(.systemGray6))
+
+                // Shot list
+                List(sortedShots) { shot in
+                    HStack {
+                        Text("\(shot.sequence)")
+                            .font(.caption).fontWeight(.bold)
+                            .frame(width: 22, height: 22)
+                            .background(Color.green).foregroundStyle(.white)
+                            .clipShape(Circle())
+                        Text(shot.club.displayName)
+                            .font(.subheadline)
+                        Spacer()
+                        if let dist = shotDistance(shot) {
+                            Text("\(dist) yds")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .listStyle(.plain)
+                .id(hole.id)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 16) {
+                        Button { currentIndex -= 1 } label: {
+                            Image(systemName: "chevron.left")
+                        }.disabled(currentIndex <= 0)
+                        Text("Hole \(hole.number)").fontWeight(.semibold)
+                        Button { currentIndex += 1 } label: {
+                            Image(systemName: "chevron.right")
+                        }.disabled(currentIndex >= holesWithShots.count - 1)
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .onAppear {
+            currentIndex = holesWithShots.firstIndex { $0.id == initialHole.id } ?? 0
         }
     }
 }
@@ -176,6 +300,7 @@ private struct StatColumn: View {
 private struct NineSection: View {
     let title: String
     let holes: [HoleScore]
+    let onHoleTap: (HoleScore) -> Void
 
     private var totalStrokes: Int { holes.reduce(0) { $0 + $1.strokes } }
     private var totalPar: Int { holes.reduce(0) { $0 + $1.par } }
@@ -193,7 +318,8 @@ private struct NineSection: View {
             .padding(.bottom, 6)
 
             ForEach(holes, id: \.id) { hole in
-                HoleRow(hole: hole)
+                HoleRow(hole: hole, hasShotMap: !hole.shots.isEmpty)
+                    .onTapGesture { onHoleTap(hole) }
                 if hole.number != holes.last?.number {
                     Divider().padding(.leading, 16)
                 }
@@ -204,6 +330,7 @@ private struct NineSection: View {
 
 private struct HoleRow: View {
     let hole: HoleScore
+    var hasShotMap: Bool = false
 
     private var diff: Int { hole.strokes - hole.par }
     private var scoreColor: Color {
@@ -247,6 +374,11 @@ private struct HoleRow: View {
                     .font(.caption).foregroundStyle(scoreColor)
 
                 Spacer()
+
+                if hasShotMap {
+                    Image(systemName: "map")
+                        .font(.caption).foregroundStyle(.green)
+                }
 
                 if hole.putts > 0 {
                     Text("\(hole.putts)P")

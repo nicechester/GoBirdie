@@ -41,12 +41,8 @@ public actor OverpassClient {
     // MARK: - Course Search
 
     /// Search for golf courses near a location within a given radius.
-    /// - Parameters:
-    ///   - location: Center point for search
-    ///   - radius: Search radius in meters
-    /// - Returns: Array of nearby courses, up to 20 results
     public func searchCourses(location: GpsPoint, radius: Int) async throws -> [CourseSearchResult] {
-        let latDelta = Double(radius) / 111_000.0  // meters to degrees (roughly 111km per degree)
+        let latDelta = Double(radius) / 111_000.0
         let lonDelta = Double(radius) / (111_000.0 * cos(location.lat * .pi / 180))
 
         let bbox = (
@@ -66,6 +62,37 @@ public actor OverpassClient {
 out center;
 """
 
+        return try await runCourseSearch(query: query, sortBy: location)
+    }
+
+    /// Search for golf courses by name within a bbox around a location.
+    /// Uses server-side regex filtering so the query stays fast.
+    public func searchCoursesByName(_ name: String, near location: GpsPoint, radiusKm: Int = 200) async throws -> [CourseSearchResult] {
+        let latDelta = Double(radiusKm) / 111.0
+        let lonDelta = Double(radiusKm) / (111.0 * cos(location.lat * .pi / 180))
+
+        let bbox = (
+            south: location.lat - latDelta,
+            west: location.lon - lonDelta,
+            north: location.lat + latDelta,
+            east: location.lon + lonDelta
+        )
+
+        let escaped = name.replacingOccurrences(of: "\"", with: "")
+        let query = """
+[out:json][timeout:15][bbox:\(bbox.south),\(bbox.west),\(bbox.north),\(bbox.east)];
+(
+  node["leisure"="golf_course"]["name"~"\(escaped)",i];
+  way["leisure"="golf_course"]["name"~"\(escaped)",i];
+  relation["leisure"="golf_course"]["name"~"\(escaped)",i];
+);
+out center;
+"""
+
+        return try await runCourseSearch(query: query, sortBy: location)
+    }
+
+    private func runCourseSearch(query: String, sortBy location: GpsPoint) async throws -> [CourseSearchResult] {
         let data = try await post(query: query)
         let response = try JSONDecoder().decode(OverpassResponse.self, from: data)
 
@@ -81,9 +108,7 @@ out center;
                     osmId: element.id
                 )
             }
-            .sorted { a, b in
-                a.location.distanceMeters(to: location) < b.location.distanceMeters(to: location)
-            }
+            .sorted { $0.location.distanceMeters(to: location) < $1.location.distanceMeters(to: location) }
             .prefix(20)
             .map { $0 }
     }
@@ -94,7 +119,7 @@ out center;
     /// - Parameters:
     ///   - osmRelationId: OSM relation ID
     ///   - name: Course name
-    public func downloadCourse(osmRelationId: Int64, name: String, playerLocation: GpsPoint? = nil, holeCount: Int = 18) async throws -> Course {
+    public func downloadCourse(osmRelationId: Int64, name: String, playerLocation: GpsPoint? = nil) async throws -> [Course] {
         // Roosevelt-style courses are mapped as ways, not relations — try both
         let elementQuery = """
 [out:json];
@@ -135,16 +160,61 @@ out geom tags;
 
         let courseLocation = GpsPoint(lat: (minLat + maxLat) / 2, lon: (minLon + maxLon) / 2)
         let anchor = playerLocation ?? courseLocation
-        let holes = buildHoles(from: geometryResponse.elements, anchor: anchor, holeCount: holeCount)
+        let version = element.version ?? 1
 
-        return Course(
+        // Check for multi-course complex (duplicate hole refs)
+        let holeLines = geometryResponse.elements.filter { $0.tags?["golf"] == "hole" }
+        let refCounts = Dictionary(grouping: holeLines.compactMap { $0.tags?["ref"].flatMap(Int.init) }, by: { $0 })
+        let hasDuplicates = refCounts.values.contains { $0.count > 1 }
+
+        if hasDuplicates {
+            let groups = splitCoursesByWayIdGap(holeLines)
+            print("[Overpass] Multi-course complex: \(groups.count) courses detected")
+            return groups.enumerated().map { idx, groupIds in
+                let groupElements = geometryResponse.elements.filter { el in
+                    el.tags?["golf"] == "hole" ? groupIds.contains(el.id) : true
+                }
+                let holes = buildHoles(from: groupElements, anchor: anchor)
+                let suffix = groups.count > 1 ? " #\(idx + 1)" : ""
+                return Course(
+                    id: "osm-\(osmRelationId)-\(idx + 1)",
+                    name: "\(name)\(suffix)",
+                    location: courseLocation,
+                    holes: holes,
+                    downloadedAt: Date(),
+                    osmVersion: version
+                )
+            }
+        }
+
+        let holes = buildHoles(from: geometryResponse.elements, anchor: anchor)
+        return [Course(
             id: "osm-\(osmRelationId)",
             name: name,
             location: courseLocation,
             holes: holes,
             downloadedAt: Date(),
-            osmVersion: element.version ?? 1
-        )
+            osmVersion: version
+        )]
+    }
+
+    /// Split hole ways into groups by finding the largest gap in sorted way IDs.
+    /// OSM mappers typically trace one course's holes in sequence, producing contiguous ID blocks.
+    private func splitCoursesByWayIdGap(_ holeLines: [OverpassElement]) -> [Set<Int64>] {
+        let ids = holeLines.map(\.id).sorted()
+        guard ids.count > 1 else { return [Set(ids)] }
+
+        // Find the largest gap
+        var maxGap: Int64 = 0
+        var splitIdx = 0
+        for i in 1..<ids.count {
+            let gap = ids[i] - ids[i - 1]
+            if gap > maxGap { maxGap = gap; splitIdx = i }
+        }
+
+        let group1 = Set(ids[..<splitIdx])
+        let group2 = Set(ids[splitIdx...])
+        return [group1, group2]
     }
 
     // MARK: - Private
@@ -201,7 +271,7 @@ out geom tags;
         }
     }
 
-    private func buildHoles(from elements: [OverpassElement], anchor: GpsPoint, holeCount: Int) -> [Hole] {
+    private func buildHoles(from elements: [OverpassElement], anchor: GpsPoint) -> [Hole] {
         let holeLines = elements.filter { $0.tags?["golf"] == "hole" }
         let greenPolygons = elements.filter { $0.tags?["golf"] == "green" }
         let fairwayPolygons = elements.filter { $0.tags?["golf"] == "fairway" }
@@ -268,13 +338,6 @@ out geom tags;
 
         holes.sort { $0.number < $1.number }
 
-        // Fill any missing holes up to holeCount with empty placeholders
-        let present = Set(holes.map(\.number))
-        for holeNum in 1...holeCount where !present.contains(holeNum) {
-            holes.append(Hole(id: UUID(), number: holeNum, par: 4))
-        }
-        holes.sort { $0.number < $1.number }
-
         return holes
     }
 
@@ -294,6 +357,12 @@ public struct CourseSearchResult: Sendable, Identifiable {
     public var location: GpsPoint
     public var osmType: String
     public var osmId: Int64
+    public var city: String
+
+    public init(id: String, name: String, location: GpsPoint, osmType: String, osmId: Int64, city: String = "") {
+        self.id = id; self.name = name; self.location = location
+        self.osmType = osmType; self.osmId = osmId; self.city = city
+    }
 }
 
 // MARK: - Overpass API Types
