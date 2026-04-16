@@ -156,7 +156,8 @@ final class RoundSession: ObservableObject {
                 hole: hole,
                 holeNumber: holeNumber,
                 courseName: course.name,
-                totalStrokes: round.totalStrokes
+                totalStrokes: round.totalStrokes,
+                totalHoles: course.holes.count
             )
         }
     }

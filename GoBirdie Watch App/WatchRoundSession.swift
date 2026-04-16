@@ -21,6 +21,11 @@ final class WatchRoundSession: NSObject, ObservableObject {
     @Published var hasHoleData: Bool = false
     @Published var courseName: String = ""
     @Published var latestHeartRate: Int?
+    @Published var totalHoles: Int = 18
+
+    @Published var isRoundEnded: Bool = false
+
+    private var heartRateSamples: [[String: Any]] = []
 
     private var greenFront: CLLocation?
     private var greenCenter: CLLocation?
@@ -39,6 +44,11 @@ final class WatchRoundSession: NSObject, ObservableObject {
     }
 
     // MARK: - Public API
+
+    var totalStrokes: Int {
+        accumulatedStrokes + strokes
+    }
+    private var accumulatedStrokes: Int = 0
 
     func markShot() {
         strokes += 1
@@ -65,16 +75,49 @@ final class WatchRoundSession: NSObject, ObservableObject {
 
     func previousHole() {
         guard holeNumber > 1 else { return }
+        accumulatedStrokes += strokes
         holeNumber -= 1
         strokes = 0
-        requestHoleFromPhone()
+        putts = 0
+        sendNavigateToPhone()
     }
 
     func nextHole() {
-        guard holeNumber < 18 else { return }
+        guard holeNumber < totalHoles else { return }
+        accumulatedStrokes += strokes
         holeNumber += 1
         strokes = 0
-        requestHoleFromPhone()
+        putts = 0
+        sendNavigateToPhone()
+    }
+
+    func navigateToHole(_ number: Int) {
+        guard number >= 1, number <= totalHoles, number != holeNumber else { return }
+        accumulatedStrokes += strokes
+        holeNumber = number
+        strokes = 0
+        putts = 0
+        sendNavigateToPhone()
+    }
+
+    func confirmHole() {
+        if holeNumber >= totalHoles {
+            finishRound()
+        } else {
+            nextHole()
+        }
+    }
+
+    func finishRound() {
+        accumulatedStrokes += strokes
+        endWorkout()
+        isRoundEnded = true
+        sendEndRoundToPhone()
+    }
+
+    func cancelRound() {
+        endWorkout()
+        isRoundEnded = true
     }
 
     func startWorkout() {
@@ -180,12 +223,28 @@ final class WatchRoundSession: NSObject, ObservableObject {
         )
     }
 
-    private func requestHoleFromPhone() {
-        guard WCSession.default.isReachable else { return }
-        WCSession.default.sendMessage(
-            ["action": "requestHole", "holeNumber": holeNumber],
-            replyHandler: nil
-        )
+    private func sendNavigateToPhone() {
+        let msg: [String: Any] = ["action": "navigate", "holeNumber": holeNumber]
+        if WCSession.default.isReachable {
+            WCSession.default.sendMessage(msg, replyHandler: nil) { error in
+                print("[Watch] navigate sendMessage failed: \(error)")
+                try? WCSession.default.updateApplicationContext(msg)
+            }
+        } else {
+            try? WCSession.default.updateApplicationContext(msg)
+        }
+    }
+
+    private func sendEndRoundToPhone() {
+        var msg: [String: Any] = ["action": "endRound"]
+        if !heartRateSamples.isEmpty {
+            msg["heartRateTimeline"] = heartRateSamples
+        }
+        if WCSession.default.isReachable {
+            WCSession.default.sendMessage(msg, replyHandler: nil) { error in
+                print("[Watch] endRound sendMessage failed: \(error)")
+            }
+        }
     }
 
     private func handleContext(_ context: [String: Any]) {
@@ -207,6 +266,15 @@ final class WatchRoundSession: NSObject, ObservableObject {
         }
         if let lat = context["back_lat"] as? Double, let lon = context["back_lon"] as? Double {
             greenBack = CLLocation(latitude: lat, longitude: lon)
+        }
+
+        if let ts = context["totalStrokes"] as? Int {
+            accumulatedStrokes = ts
+        }
+        if let th = context["totalHoles"] as? Int {
+            totalHoles = th
+        } else {
+            totalHoles = max(totalHoles, holeNumber)
         }
 
         strokes = 0
@@ -262,6 +330,11 @@ extension WatchRoundSession: HKLiveWorkoutBuilderDelegate {
         let bpm = Int(value.doubleValue(for: HKUnit.count().unitDivided(by: .minute())).rounded())
         Task { @MainActor in
             self.latestHeartRate = bpm
+            var sample: [String: Any] = ["timestamp": Date().timeIntervalSince1970, "bpm": bpm]
+            if let loc = self.currentLocation, loc.verticalAccuracy >= 0 {
+                sample["altitude"] = loc.altitude
+            }
+            self.heartRateSamples.append(sample)
         }
     }
 

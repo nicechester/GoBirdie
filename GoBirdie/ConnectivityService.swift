@@ -26,12 +26,13 @@ final class ConnectivityService: NSObject, ObservableObject {
     }
 
     /// Send hole + round data to Watch as a single context.
-    func sendHoleData(hole: Hole, holeNumber: Int, courseName: String, totalStrokes: Int) {
+    func sendHoleData(hole: Hole, holeNumber: Int, courseName: String, totalStrokes: Int, totalHoles: Int = 18) {
         var ctx: [String: Any] = [
             "holeNumber": holeNumber,
             "par": hole.par,
             "courseName": courseName,
             "totalStrokes": totalStrokes,
+            "totalHoles": totalHoles,
         ]
 
         if let tee = hole.tee {
@@ -96,6 +97,12 @@ extension ConnectivityService: WCSessionDelegate {
         }
     }
 
+    nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        Task { @MainActor in
+            self.handleWatchMessage(applicationContext)
+        }
+    }
+
     private func handleWatchMessage(_ message: [String: Any]) {
         guard let action = message["action"] as? String else { return }
 
@@ -113,6 +120,20 @@ extension ConnectivityService: WCSessionDelegate {
                     userInfo: info
                 )
             }
+        case "navigate":
+            if let holeNumber = message["holeNumber"] as? Int {
+                NotificationCenter.default.post(
+                    name: .watchNavigateHole,
+                    object: nil,
+                    userInfo: ["holeNumber": holeNumber]
+                )
+            }
+        case "endRound":
+            var info: [String: Any] = [:]
+            if let timeline = message["heartRateTimeline"] as? [[String: Any]] {
+                info["heartRateTimeline"] = timeline
+            }
+            NotificationCenter.default.post(name: .watchEndRound, object: nil, userInfo: info.isEmpty ? nil : info)
         case "shot":
             if let holeNumber = message["holeNumber"] as? Int {
                 var info: [String: Any] = ["holeNumber": holeNumber]
@@ -139,4 +160,6 @@ extension ConnectivityService: WCSessionDelegate {
 extension Notification.Name {
     static let watchStrokeUpdate = Notification.Name("watchStrokeUpdate")
     static let watchShotMarked = Notification.Name("watchShotMarked")
+    static let watchNavigateHole = Notification.Name("watchNavigateHole")
+    static let watchEndRound = Notification.Name("watchEndRound")
 }
