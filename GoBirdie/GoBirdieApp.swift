@@ -32,8 +32,11 @@ struct GoBirdieApp: App {
                     appState.checkForInProgressRound()
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .background || phase == .inactive {
+                    if phase == .background {
                         appState.saveInProgress()
+                        if appState.syncServerEnabled { appState.stopSyncServer() }
+                    } else if phase == .active {
+                        if appState.syncServerEnabled { appState.startSyncServer() }
                     }
                 }
                 .onReceive(appState.$activeRound) { round in

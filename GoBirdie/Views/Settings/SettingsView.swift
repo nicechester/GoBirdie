@@ -19,12 +19,36 @@ struct SettingsView: View {
                     }
                 }
 
+                SyncServerSection()
                 TeeSection()
                 TipJarSection()
                 AboutSection()
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
+// MARK: - Sync Server Section
+
+private struct SyncServerSection: View {
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        Section {
+            Toggle(isOn: $appState.syncServerEnabled) {
+                Label("Desktop Sync", systemImage: "antenna.radiowaves.left.and.right")
+            }
+            if appState.syncServerEnabled {
+                LabeledContent("Status", value: appState.syncServerRunning ? "Discoverable" : "Starting…")
+                    .foregroundStyle(appState.syncServerRunning ? .green : .secondary)
+            }
+        } header: {
+            Text("Sync")
+        } footer: {
+            Text("Makes this iPhone discoverable to the GoBirdie desktop app nearby — no shared WiFi needed.")
+                .font(.caption)
         }
     }
 }

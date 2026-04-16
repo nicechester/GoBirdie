@@ -45,9 +45,22 @@
 		45985F392F86F41C00EB0B97 /* GoBirdie Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GoBirdie Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		45E795282F8DFEC9007EED1D /* Exceptions for "GoBirdie" folder in "GoBirdie" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 45985F2B2F86F41A00EB0B97 /* GoBirdie */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		456AA3402F88B12300AC1A95 /* GoBirdie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				45E795282F8DFEC9007EED1D /* Exceptions for "GoBirdie" folder in "GoBirdie" target */,
+			);
 			path = GoBirdie;
 			sourceTree = "<group>";
 		};
@@ -445,7 +458,9 @@
 				DEVELOPMENT_TEAM = ZQLSUECJ46;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GoBirdie/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GoBirdie;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "GoBirdie uses the local network to sync golf rounds with your desktop.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "GoBirdie uses your location in the background to track your round and update distances on your Apple Watch.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GoBirdie uses your location to show distances to the green and find nearby courses.\n";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -482,7 +497,9 @@
 				DEVELOPMENT_TEAM = ZQLSUECJ46;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GoBirdie/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GoBirdie;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "GoBirdie uses the local network to sync golf rounds with your desktop.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "GoBirdie uses your location in the background to track your round and update distances on your Apple Watch.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GoBirdie uses your location to show distances to the green and find nearby courses.\n";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
