@@ -30,6 +30,14 @@ final class RoundViewModel: ObservableObject {
             .sink { [weak self] _ in self?.recomputeDistances() }
             .store(in: &cancellables)
 
+        NotificationCenter.default.addObserver(
+            forName: .watchNavigateHole, object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let holeNumber = notification.userInfo?["holeNumber"] as? Int else { return }
+            self.session.navigateTo(holeNumber: holeNumber, course: self.course)
+        }
+
         locationTask = Task {
             while !Task.isCancelled {
                 self.recomputeDistances()

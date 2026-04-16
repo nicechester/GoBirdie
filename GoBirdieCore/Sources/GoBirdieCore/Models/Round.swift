@@ -1,5 +1,23 @@
 import Foundation
 
+/// A timestamped health reading from Apple Watch during a round.
+public struct HeartRateSample: Codable, Sendable {
+    public var timestamp: Date
+    public var bpm: Int
+    public var altitudeMeters: Double?
+
+    public init(timestamp: Date, bpm: Int, altitudeMeters: Double? = nil) {
+        self.timestamp = timestamp
+        self.bpm = bpm
+        self.altitudeMeters = altitudeMeters
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case timestamp, bpm
+        case altitudeMeters = "altitude_meters"
+    }
+}
+
 /// A complete or in-progress golf round.
 public struct Round: Codable, Sendable, Identifiable {
     public var id: String
@@ -12,6 +30,7 @@ public struct Round: Codable, Sendable, Identifiable {
     public var holes: [HoleScore]
     public var totalStrokes: Int
     public var totalPutts: Int
+    public var heartRateTimeline: [HeartRateSample]
 
     public init(
         id: String,
@@ -23,7 +42,8 @@ public struct Round: Codable, Sendable, Identifiable {
         holesPlayed: Int = 0,
         holes: [HoleScore] = [],
         totalStrokes: Int = 0,
-        totalPutts: Int = 0
+        totalPutts: Int = 0,
+        heartRateTimeline: [HeartRateSample] = []
     ) {
         self.id = id
         self.source = source
@@ -35,6 +55,22 @@ public struct Round: Codable, Sendable, Identifiable {
         self.holes = holes
         self.totalStrokes = totalStrokes
         self.totalPutts = totalPutts
+        self.heartRateTimeline = heartRateTimeline
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        source = try c.decode(String.self, forKey: .source)
+        courseId = try c.decode(String.self, forKey: .courseId)
+        courseName = try c.decode(String.self, forKey: .courseName)
+        startedAt = try c.decode(Date.self, forKey: .startedAt)
+        endedAt = try c.decodeIfPresent(Date.self, forKey: .endedAt)
+        holesPlayed = try c.decode(Int.self, forKey: .holesPlayed)
+        holes = try c.decode([HoleScore].self, forKey: .holes)
+        totalStrokes = try c.decode(Int.self, forKey: .totalStrokes)
+        totalPutts = try c.decode(Int.self, forKey: .totalPutts)
+        heartRateTimeline = (try? c.decode([HeartRateSample].self, forKey: .heartRateTimeline)) ?? []
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -48,5 +84,6 @@ public struct Round: Codable, Sendable, Identifiable {
         case holes
         case totalStrokes = "total_strokes"
         case totalPutts   = "total_putts"
+        case heartRateTimeline = "heart_rate_timeline"
     }
 }

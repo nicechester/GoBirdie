@@ -57,6 +57,25 @@ final class AppState: ObservableObject {
                 }
             }
         }
+        NotificationCenter.default.addObserver(
+            forName: .watchEndRound, object: nil, queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                if let timeline = notification.userInfo?["heartRateTimeline"] as? [[String: Any]],
+                   let session = self?.activeRound {
+                    session.round.heartRateTimeline = timeline.compactMap { dict in
+                        guard let ts = dict["timestamp"] as? Double,
+                              let bpm = dict["bpm"] as? Int else { return nil }
+                        return HeartRateSample(
+                            timestamp: Date(timeIntervalSince1970: ts),
+                            bpm: bpm,
+                            altitudeMeters: dict["altitude"] as? Double
+                        )
+                    }
+                }
+                self?.endActiveRound()
+            }
+        }
     }
 
     // MARK: - Sync Server
@@ -219,7 +238,8 @@ final class AppState: ObservableObject {
                 hole: startingHole,
                 holeNumber: startingHoleNumber,
                 courseName: course.name,
-                totalStrokes: 0
+                totalStrokes: 0,
+                totalHoles: course.holes.count
             )
         }
 
