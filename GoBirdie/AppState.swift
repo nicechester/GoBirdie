@@ -8,7 +8,10 @@
 import Foundation
 import Combine
 import UIKit
+import OSLog
 import GoBirdieCore
+
+private let appStateLogger = Logger(subsystem: "com.gobirdie", category: "AppState")
 
 /// Manages global app state and round lifecycle.
 /// Handles auto-detection of starting hole and creation of new rounds.
@@ -21,13 +24,54 @@ final class AppState: ObservableObject {
     @Published var teeColor: String = UserDefaults.standard.string(forKey: "teeColor") ?? "Blue" {
         didSet { UserDefaults.standard.set(teeColor, forKey: "teeColor") }
     }
+    @Published var syncServerEnabled: Bool = false {
+        didSet {
+            if syncServerEnabled {
+                syncServer.start()
+                syncServerRunning = true
+            } else {
+                syncServer.stop()
+                syncServerRunning = false
+            }
+            UserDefaults.standard.set(syncServerEnabled, forKey: "syncServerEnabled")
+        }
+    }
+    @Published var syncServerRunning: Bool = false
 
     private let locationService = LocationService()
     private let distanceEngine = DistanceEngine()
     private let inProgressStore = InProgressStore()
+    private let roundStore = RoundStore()
+    private let syncServer: SyncServer
     private var autoSaveTimer: Timer?
     private var idleTimer: Timer?
     @Published var showIdlePrompt = false
+
+    init() {
+        syncServer = SyncServer(roundStore: roundStore)
+        syncServer.onStateChange = { [weak self] running in
+            appStateLogger.info("onStateChange callback: running=\(running)")
+            if !running {
+                Task { @MainActor [weak self] in
+                    self?.syncServerRunning = false
+                }
+            }
+        }
+    }
+
+    // MARK: - Sync Server
+
+    func startSyncServer() {
+        appStateLogger.info("startSyncServer() called")
+        syncServer.start()
+        syncServerRunning = true
+    }
+
+    func stopSyncServer() {
+        appStateLogger.info("stopSyncServer() called")
+        syncServer.stop()
+        syncServerRunning = false
+    }
 
     // MARK: - Public API
 
@@ -187,9 +231,8 @@ final class AppState: ObservableObject {
         guard let session = activeRound else { return }
         session.endRound()
 
-        let store = RoundStore()
         do {
-            try store.save(session.round)
+            try roundStore.save(session.round)
             print("[AppState] Round saved: \(session.round.id)")
         } catch {
             print("[AppState] Failed to save round: \(error)")
