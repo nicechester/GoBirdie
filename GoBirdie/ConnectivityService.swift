@@ -57,17 +57,16 @@ final class ConnectivityService: NSObject, ObservableObject {
 
 
     private func send(_ ctx: [String: Any]) {
-        // Prefer sendMessage (immediate) when reachable, fall back to applicationContext
+        // Always persist to applicationContext so Watch gets it on launch
+        do {
+            try session.updateApplicationContext(ctx)
+        } catch {
+            print("[Connectivity] updateApplicationContext failed: \(error)")
+        }
+        // Also sendMessage for immediate delivery if Watch is reachable
         if session.isReachable {
             session.sendMessage(ctx, replyHandler: nil) { error in
-                print("[Connectivity] sendMessage failed: \(error), falling back to context")
-                try? self.session.updateApplicationContext(ctx)
-            }
-        } else {
-            do {
-                try session.updateApplicationContext(ctx)
-            } catch {
-                print("[Connectivity] updateApplicationContext failed: \(error)")
+                print("[Connectivity] sendMessage failed: \(error)")
             }
         }
     }
