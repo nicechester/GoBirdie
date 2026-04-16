@@ -304,7 +304,13 @@ extension WatchRoundSession: CLLocationManagerDelegate {
 // MARK: - WCSessionDelegate
 
 extension WatchRoundSession: WCSessionDelegate {
-    nonisolated func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {}
+    nonisolated func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
+        guard state == .activated else { return }
+        let ctx = session.receivedApplicationContext
+        if !ctx.isEmpty {
+            Task { @MainActor in self.handleContext(ctx) }
+        }
+    }
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         Task { @MainActor in
