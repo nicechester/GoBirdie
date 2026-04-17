@@ -164,8 +164,9 @@ struct ShotMapView: UIViewRepresentable {
                 return
             }
 
-            // Compute tee-to-pin bearing for rotation (use first hole's tee/green)
+            // Compute tee-to-pin bearing and distance for camera
             let heading: CLLocationDirection
+            let teeGreenDist: Double // meters
             if let firstHole = holes.first,
                let ch = courseHoles.first(where: { $0.number == firstHole.number }),
                let tee = ch.tee, let green = ch.greenCenter {
@@ -175,25 +176,23 @@ struct ShotMapView: UIViewRepresentable {
                 let y = sin(dLon) * cos(lat2)
                 let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon)
                 heading = (atan2(y, x) * 180 / .pi + 360).truncatingRemainder(dividingBy: 360)
+                teeGreenDist = tee.distanceMeters(to: green)
             } else {
                 heading = 0
+                // Estimate from coordinate span
+                let latSpan = allCoords.map(\.latitude).max()! - allCoords.map(\.latitude).min()!
+                let lonSpan = allCoords.map(\.longitude).max()! - allCoords.map(\.longitude).min()!
+                teeGreenDist = max(latSpan, lonSpan) * 111_000
             }
 
-            let bounds = MLNCoordinateBounds(
-                sw: CLLocationCoordinate2D(
-                    latitude: allCoords.map(\.latitude).min()!,
-                    longitude: allCoords.map(\.longitude).min()!
-                ),
-                ne: CLLocationCoordinate2D(
-                    latitude: allCoords.map(\.latitude).max()!,
-                    longitude: allCoords.map(\.longitude).max()!
-                )
+            let center = CLLocationCoordinate2D(
+                latitude: (allCoords.map(\.latitude).min()! + allCoords.map(\.latitude).max()!) / 2,
+                longitude: (allCoords.map(\.longitude).min()! + allCoords.map(\.longitude).max()!) / 2
             )
-            let camera = mapView.cameraThatFitsCoordinateBounds(
-                bounds,
-                edgePadding: UIEdgeInsets(top: 40, left: 40, bottom: 40, right: 40)
+            let altitude = max(teeGreenDist * 2.5, 200)
+            let camera = MLNMapCamera(
+                lookingAtCenter: center, altitude: altitude, pitch: 0, heading: heading
             )
-            camera.heading = heading
             mapView.setCamera(camera, animated: false)
         }
 

@@ -223,18 +223,7 @@ struct MapLibreView: UIViewRepresentable {
         }
 
         func zoomToHole(_ mapView: MLNMapView, animated: Bool) {
-            if let bounds = viewModel.holeBounds {
-                let sw = CLLocationCoordinate2D(latitude: bounds.sw.lat, longitude: bounds.sw.lon)
-                let ne = CLLocationCoordinate2D(latitude: bounds.ne.lat, longitude: bounds.ne.lon)
-                let coordinateBounds = MLNCoordinateBounds(sw: sw, ne: ne)
-                let heading = viewModel.teeToPinBearing ?? 0
-                let camera = mapView.cameraThatFitsCoordinateBounds(
-                    coordinateBounds,
-                    edgePadding: UIEdgeInsets(top: 5, left: 1, bottom: 5, right: 1)
-                )
-                camera.heading = heading
-                mapView.setCamera(camera, animated: animated)
-            } else {
+            guard let tee = viewModel.resolvedTee, let green = viewModel.resolvedGreenCenter else {
                 let target = viewModel.cameraBounds
                 guard target.lat != 0 || target.lon != 0 else { return }
                 let camera = MLNMapCamera(
@@ -242,7 +231,19 @@ struct MapLibreView: UIViewRepresentable {
                     altitude: 400, pitch: 0, heading: 0
                 )
                 mapView.setCamera(camera, animated: animated)
+                return
             }
+            let center = CLLocationCoordinate2D(
+                latitude: (tee.lat + green.lat) / 2,
+                longitude: (tee.lon + green.lon) / 2
+            )
+            let dist = tee.distanceMeters(to: green)
+            let altitude = max(dist * 3.5, 200)
+            let heading = viewModel.teeToPinBearing ?? 0
+            let camera = MLNMapCamera(
+                lookingAtCenter: center, altitude: altitude, pitch: 0, heading: heading
+            )
+            mapView.setCamera(camera, animated: animated)
         }
 
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
