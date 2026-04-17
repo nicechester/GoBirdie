@@ -10,6 +10,7 @@ public struct HoleScore: Codable, Sendable, Identifiable {
     public var fairwayHit: Bool?
     public var gir: Bool
     public var shots: [Shot]
+    public var greenCenter: GpsPoint?
 
     public init(
         id: UUID = UUID(),
@@ -19,7 +20,8 @@ public struct HoleScore: Codable, Sendable, Identifiable {
         putts: Int = 0,
         fairwayHit: Bool? = nil,
         gir: Bool = false,
-        shots: [Shot] = []
+        shots: [Shot] = [],
+        greenCenter: GpsPoint? = nil
     ) {
         self.id = id
         self.number = number
@@ -29,6 +31,7 @@ public struct HoleScore: Codable, Sendable, Identifiable {
         self.fairwayHit = fairwayHit
         self.gir = gir
         self.shots = shots
+        self.greenCenter = greenCenter
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -40,6 +43,7 @@ public struct HoleScore: Codable, Sendable, Identifiable {
         case fairwayHit = "fairway_hit"
         case gir
         case shots
+        case greenCenter = "green_center"
     }
 
     /// Net strokes vs par for this hole. Negative = under par.

@@ -205,7 +205,8 @@ final class AppState: ObservableObject {
                 putts: 0,
                 fairwayHit: nil,
                 gir: false,
-                shots: []
+                shots: [],
+                greenCenter: hole.greenCenter
             )
         }
 
