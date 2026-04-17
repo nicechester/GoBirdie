@@ -17,16 +17,29 @@ struct MapOverlayView: View {
             let playerPt = viewModel.playerScreenPoint
             let flagPt = viewModel.flagScreenPoint
             let tapPt = viewModel.tapScreenPoint
+            let shotPts = viewModel.shotScreenPoints
+
+            // Shot connecting lines
+            let allPts = shotPts.map(\.point)
+            ForEach(Array(allPts.enumerated()), id: \.offset) { i, pt in
+                if i > 0 {
+                    DashedLine(from: allPts[i - 1], to: pt)
+                        .stroke(Color.yellow.opacity(0.8), style: StrokeStyle(lineWidth: 1.5, dash: [5, 3]))
+                }
+            }
+
+            // Shot dots with club + distance labels
+            ForEach(shotPts, id: \.shot.id) { item in
+                ShotDot(item: item)
+            }
 
             if hasTap {
-                // Tapped state: player → tap + tap → green
                 if let from = playerPt, let to = tapPt {
                     DottedLineWithLabel(from: from, to: to, yardage: viewModel.tapDistanceYards, color: .white)
                 }
                 if let from = tapPt, let to = flagPt {
                     DottedLineWithLabel(from: from, to: to, yardage: viewModel.tapToGreenYards, color: .green)
                 }
-                // Tap point dot
                 if let pt = tapPt {
                     Circle()
                         .fill(Color.red)
@@ -35,7 +48,6 @@ struct MapOverlayView: View {
                         .position(pt)
                 }
             } else {
-                // Default: player → green
                 if let from = playerPt, let to = flagPt {
                     DottedLineWithLabel(from: from, to: to, yardage: viewModel.playerToGreenYards, color: .white)
                 }
@@ -74,6 +86,53 @@ struct MapOverlayView: View {
                 }
             }
         }
+    }
+}
+
+private struct ShotDot: View {
+    let item: (point: CGPoint, shot: Shot)
+
+    private var dotColor: Color {
+        switch item.shot.club {
+        case .driver: return .red
+        case .wood3, .wood5: return .orange
+        case .iron4, .iron5, .iron6, .iron7, .iron8, .iron9: return .yellow
+        case .pitchingWedge, .gapWedge, .sandWedge, .lobWedge: return .cyan
+        case .putter: return .white
+        case .unknown: return .gray
+        }
+    }
+
+    private var label: String {
+        var parts: [String] = []
+        if item.shot.club != .unknown { parts.append(item.shot.club.displayName) }
+        if let dist = item.shot.distanceToPinYards { parts.append("\(dist)y") }
+        return parts.joined(separator: " · ")
+    }
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Circle()
+                .fill(dotColor)
+                .frame(width: 12, height: 12)
+                .overlay(Circle().stroke(Color.black.opacity(0.6), lineWidth: 1))
+                .overlay(
+                    Text("\(item.shot.sequence)")
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundStyle(.black)
+                )
+
+            if !label.isEmpty {
+                Text(label)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 4).padding(.vertical, 2)
+                    .background(Color.black.opacity(0.7))
+                    .cornerRadius(3)
+                    .offset(y: 18)
+            }
+        }
+        .position(item.point)
     }
 }
 

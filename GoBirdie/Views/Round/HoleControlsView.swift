@@ -63,11 +63,11 @@ struct HoleControlsView: View {
 
                 Button {
                     if session.currentHoleNumber == session.round.holes.count {
-                        session.endRound()
+                        appState.endActiveRound()
                     } else {
                         session.navigateTo(holeNumber: session.currentHoleNumber + 1, course: course)
+                        appState.resetIdleTimer()
                     }
-                    appState.resetIdleTimer()
                 } label: {
                     let isLast = session.currentHoleNumber == session.round.holes.count
                     HStack(spacing: 4) {
