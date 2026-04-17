@@ -170,6 +170,11 @@ struct MapLibreView: UIViewRepresentable {
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] _ in self?.updateScreenPoints() }
                 .store(in: &cancellables)
+
+            viewModel.session.$round
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in self?.updateScreenPoints() }
+                .store(in: &cancellables)
         }
 
         func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
@@ -208,6 +213,12 @@ struct MapLibreView: UIViewRepresentable {
                 viewModel.tapScreenPoint = pt
             } else {
                 viewModel.tapScreenPoint = nil
+            }
+
+            viewModel.shotScreenPoints = viewModel.currentHoleShots.compactMap { shot in
+                let coord = CLLocationCoordinate2D(latitude: shot.location.lat, longitude: shot.location.lon)
+                let pt = mapView.convert(coord, toPointTo: mapView)
+                return (point: pt, shot: shot)
             }
         }
 

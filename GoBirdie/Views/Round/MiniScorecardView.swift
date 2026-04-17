@@ -15,14 +15,26 @@ struct MiniScorecardView: View {
         VStack(alignment: .leading, spacing: 0) {
             Divider()
 
-            Text("SCORECARD")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
-                .tracking(1.5)
-                .padding(.horizontal, 16)
-                .padding(.top, 10)
-                .padding(.bottom, 6)
+            HStack {
+                Text("SCORECARD")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .tracking(1.5)
+                Spacer()
+                let totalStrokes = session.round.totalStrokes
+                let totalPar = session.round.holes.filter { $0.strokes > 0 }.reduce(0) { $0 + $1.par }
+                let diff = totalStrokes - totalPar
+                if totalStrokes > 0 {
+                    Text(diff == 0 ? "E" : diff > 0 ? "+\(diff)" : "\(diff)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(diff < 0 ? .green : diff == 0 ? .primary : .red)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
+            .padding(.bottom, 6)
 
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {

@@ -26,6 +26,7 @@ final class MapViewModel: ObservableObject {
     @Published var playerScreenPoint: CGPoint?
     @Published var flagScreenPoint: CGPoint?
     @Published var tapScreenPoint: CGPoint?
+    @Published var shotScreenPoints: [(point: CGPoint, shot: Shot)] = []
 
     let session: RoundSession
     let course: Course
@@ -72,6 +73,10 @@ final class MapViewModel: ObservableObject {
     var currentHole: Hole? {
         guard course.holes.indices.contains(currentHoleIndex) else { return nil }
         return course.holes[currentHoleIndex]
+    }
+
+    var currentHoleShots: [Shot] {
+        session.round.holes.first(where: { $0.number == currentHoleIndex + 1 })?.shots ?? []
     }
 
     /// Tee for the current hole.
