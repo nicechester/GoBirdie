@@ -40,6 +40,26 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		454B1F9E2F92F80200DF34A3 /* H01-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H01-S3.gpx"; path = "GPX/H01-S3.gpx"; sourceTree = "<group>"; };
+		454B1F9F2F92F80200DF34A3 /* H08-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H08-S3.gpx"; path = "GPX/H08-S3.gpx"; sourceTree = "<group>"; };
+		454B1FA02F92F80200DF34A3 /* H09-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H09-S1.gpx"; path = "GPX/H09-S1.gpx"; sourceTree = "<group>"; };
+		454B1FA12F92F80300DF34A3 /* H06-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H06-S1.gpx"; path = "GPX/H06-S1.gpx"; sourceTree = "<group>"; };
+		454B1FA22F92F80300DF34A3 /* H04-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H04-S3.gpx"; path = "GPX/H04-S3.gpx"; sourceTree = "<group>"; };
+		454B1FA32F92F80300DF34A3 /* H05-S2.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H05-S2.gpx"; path = "GPX/H05-S2.gpx"; sourceTree = "<group>"; };
+		454B1FA42F92F80300DF34A3 /* H05-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H05-S3.gpx"; path = "GPX/H05-S3.gpx"; sourceTree = "<group>"; };
+		454B1FA52F92F80300DF34A3 /* H02-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H02-S3.gpx"; path = "GPX/H02-S3.gpx"; sourceTree = "<group>"; };
+		454B1FA62F92F80300DF34A3 /* H01-S2.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H01-S2.gpx"; path = "GPX/H01-S2.gpx"; sourceTree = "<group>"; };
+		454B1FA72F92F80300DF34A3 /* H07-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H07-S1.gpx"; path = "GPX/H07-S1.gpx"; sourceTree = "<group>"; };
+		454B1FA82F92F80300DF34A3 /* H04-S2.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H04-S2.gpx"; path = "GPX/H04-S2.gpx"; sourceTree = "<group>"; };
+		454B1FA92F92F80300DF34A3 /* H05-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H05-S1.gpx"; path = "GPX/H05-S1.gpx"; sourceTree = "<group>"; };
+		454B1FAA2F92F80300DF34A3 /* H01-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H01-S1.gpx"; path = "GPX/H01-S1.gpx"; sourceTree = "<group>"; };
+		454B1FAB2F92F80300DF34A3 /* H02-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H02-S1.gpx"; path = "GPX/H02-S1.gpx"; sourceTree = "<group>"; };
+		454B1FAC2F92F80300DF34A3 /* H08-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H08-S1.gpx"; path = "GPX/H08-S1.gpx"; sourceTree = "<group>"; };
+		454B1FAD2F92F80300DF34A3 /* H02-S2.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H02-S2.gpx"; path = "GPX/H02-S2.gpx"; sourceTree = "<group>"; };
+		454B1FAE2F92F80300DF34A3 /* H06-S2.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H06-S2.gpx"; path = "GPX/H06-S2.gpx"; sourceTree = "<group>"; };
+		454B1FAF2F92F80300DF34A3 /* H08-S2.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H08-S2.gpx"; path = "GPX/H08-S2.gpx"; sourceTree = "<group>"; };
+		454B1FB02F92F80300DF34A3 /* H04-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H04-S1.gpx"; path = "GPX/H04-S1.gpx"; sourceTree = "<group>"; };
+		454B1FB12F92F80300DF34A3 /* H03-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H03-S1.gpx"; path = "GPX/H03-S1.gpx"; sourceTree = "<group>"; };
 		456AA47E2F88BAB800AC1A95 /* tip.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = tip.storekit; sourceTree = "<group>"; };
 		45985F2C2F86F41A00EB0B97 /* GoBirdie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GoBirdie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45985F392F86F41C00EB0B97 /* GoBirdie Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GoBirdie Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -96,6 +116,26 @@
 		45985F232F86F41A00EB0B97 = {
 			isa = PBXGroup;
 			children = (
+				454B1FAA2F92F80300DF34A3 /* H01-S1.gpx */,
+				454B1FA62F92F80300DF34A3 /* H01-S2.gpx */,
+				454B1F9E2F92F80200DF34A3 /* H01-S3.gpx */,
+				454B1FAB2F92F80300DF34A3 /* H02-S1.gpx */,
+				454B1FAD2F92F80300DF34A3 /* H02-S2.gpx */,
+				454B1FA52F92F80300DF34A3 /* H02-S3.gpx */,
+				454B1FB12F92F80300DF34A3 /* H03-S1.gpx */,
+				454B1FB02F92F80300DF34A3 /* H04-S1.gpx */,
+				454B1FA82F92F80300DF34A3 /* H04-S2.gpx */,
+				454B1FA22F92F80300DF34A3 /* H04-S3.gpx */,
+				454B1FA92F92F80300DF34A3 /* H05-S1.gpx */,
+				454B1FA32F92F80300DF34A3 /* H05-S2.gpx */,
+				454B1FA42F92F80300DF34A3 /* H05-S3.gpx */,
+				454B1FA12F92F80300DF34A3 /* H06-S1.gpx */,
+				454B1FAE2F92F80300DF34A3 /* H06-S2.gpx */,
+				454B1FA72F92F80300DF34A3 /* H07-S1.gpx */,
+				454B1FAC2F92F80300DF34A3 /* H08-S1.gpx */,
+				454B1FAF2F92F80300DF34A3 /* H08-S2.gpx */,
+				454B1F9F2F92F80200DF34A3 /* H08-S3.gpx */,
+				454B1FA02F92F80200DF34A3 /* H09-S1.gpx */,
 				456AA47E2F88BAB800AC1A95 /* tip.storekit */,
 				456AA3402F88B12300AC1A95 /* GoBirdie */,
 				45985F3D2F86F41C00EB0B97 /* GoBirdie Watch App */,

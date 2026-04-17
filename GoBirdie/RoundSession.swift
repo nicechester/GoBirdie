@@ -63,6 +63,21 @@ final class RoundSession: ObservableObject {
             }
             self.recomputeTotals()
         }
+
+        NotificationCenter.default.addObserver(
+            forName: .watchClubSelection, object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let info = notification.userInfo,
+                  let holeNumber = info["holeNumber"] as? Int,
+                  let clubRaw = info["club"] as? String,
+                  let club = ClubType(rawValue: clubRaw),
+                  let idx = self.round.holes.firstIndex(where: { $0.number == holeNumber }),
+                  !self.round.holes[idx].shots.isEmpty
+            else { return }
+            let lastIdx = self.round.holes[idx].shots.count - 1
+            self.round.holes[idx].shots[lastIdx].club = club
+        }
     }
 
     // MARK: - Computed Properties

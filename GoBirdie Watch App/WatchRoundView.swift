@@ -8,16 +8,22 @@ struct WatchRoundView: View {
     @EnvironmentObject var session: WatchRoundSession
 
     var body: some View {
-        if session.isRoundEnded {
-            RoundEndedView()
-        } else if session.hasHoleData {
-            TabView {
-                ActiveRoundView()
-                EndRoundPage()
+        ZStack {
+            if session.isRoundEnded {
+                RoundEndedView()
+            } else if session.hasHoleData {
+                TabView {
+                    ActiveRoundView()
+                    EndRoundPage()
+                }
+                .tabViewStyle(.verticalPage)
+            } else {
+                StartView()
             }
-            .tabViewStyle(.verticalPage)
-        } else {
-            StartView()
+
+            if session.showClubPicker {
+                ClubPickerOverlay()
+            }
         }
     }
 }
@@ -45,15 +51,6 @@ private struct StartView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
             }
-
-            Button {
-                session.startWorkout()
-            } label: {
-                Label("Start", systemImage: "play.fill")
-                    .font(.body).fontWeight(.semibold)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
         }
     }
 }
@@ -274,6 +271,63 @@ private struct RoundEndedView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.green)
+        }
+    }
+}
+
+// MARK: - Club Picker Overlay
+
+private struct ClubPickerOverlay: View {
+    @EnvironmentObject var session: WatchRoundSession
+    @State private var crownIndex: Int = 0
+
+    private var clubDisplayName: String {
+        guard !session.clubBag.isEmpty else { return "?" }
+        let raw = session.selectedClub
+        // Map raw values to short display names
+        let names: [String: String] = [
+            "driver": "Driver", "3w": "3W", "5w": "5W",
+            "3h": "3H", "4h": "4H", "5h": "5H",
+            "4i": "4i", "5i": "5i", "6i": "6i",
+            "7i": "7i", "8i": "8i", "9i": "9i",
+            "pw": "PW", "gw": "GW", "sw": "SW",
+            "lw": "LW", "putter": "Putter",
+        ]
+        return names[raw] ?? raw
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("Club")
+                .font(.caption2).foregroundStyle(.secondary)
+
+            Text(clubDisplayName)
+                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .foregroundStyle(.green)
+
+            Button {
+                session.confirmClub()
+            } label: {
+                Image(systemName: "checkmark")
+                    .font(.title3).fontWeight(.bold)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.black.opacity(0.92))
+        .focusable()
+        .digitalCrownRotation(
+            detent: $crownIndex,
+            from: 0, through: max(session.clubBag.count - 1, 0), by: 1,
+            sensitivity: .low
+        ) { _ in } onIdle: { }
+        .onAppear {
+            crownIndex = session.clubBag.firstIndex(of: session.selectedClub) ?? 0
+        }
+        .onChange(of: crownIndex) { _, newValue in
+            guard session.clubBag.indices.contains(newValue) else { return }
+            session.selectedClub = session.clubBag[newValue]
         }
     }
 }

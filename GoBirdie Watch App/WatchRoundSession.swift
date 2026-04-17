@@ -24,6 +24,10 @@ final class WatchRoundSession: NSObject, ObservableObject {
     @Published var totalHoles: Int = 18
 
     @Published var isRoundEnded: Bool = false
+    @Published var showClubPicker: Bool = false
+    @Published var selectedClub: String = "unknown"
+    var clubBag: [String] = []
+    private var clubPickerTimer: Timer?
 
     private var heartRateSamples: [[String: Any]] = []
 
@@ -53,6 +57,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
     func markShot() {
         strokes += 1
         sendShotToPhone()
+        showClubPickerAfterShot()
     }
 
     func addStroke() {
@@ -139,6 +144,8 @@ final class WatchRoundSession: NSObject, ObservableObject {
         greenFront = nil
         greenCenter = nil
         greenBack = nil
+        dismissClubPicker()
+        clubBag = []
     }
 
     func startWorkout() {
@@ -181,6 +188,67 @@ final class WatchRoundSession: NSObject, ObservableObject {
         workoutBuilder?.finishWorkout { _, _ in }
         locationManager.stopUpdatingLocation()
         isActive = false
+    }
+
+    // MARK: - Club Picker
+
+    private func showClubPickerAfterShot() {
+        guard !clubBag.isEmpty else { return }
+        selectedClub = defaultClubForDistance(pinYards)
+        showClubPicker = true
+        clubPickerTimer?.invalidate()
+        clubPickerTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.confirmClub()
+            }
+        }
+    }
+
+    func confirmClub() {
+        guard showClubPicker else { return }
+        clubPickerTimer?.invalidate()
+        clubPickerTimer = nil
+        showClubPicker = false
+        sendClubToPhone()
+    }
+
+    func dismissClubPicker() {
+        clubPickerTimer?.invalidate()
+        clubPickerTimer = nil
+        showClubPicker = false
+    }
+
+    private func defaultClubForDistance(_ yards: Int?) -> String {
+        guard let y = yards, !clubBag.isEmpty else {
+            return clubBag.first ?? "unknown"
+        }
+        let table: [(String, Int)] = [
+            ("driver", 230), ("3w", 210), ("5w", 195),
+            ("3h", 190), ("4h", 180), ("5h", 170),
+            ("4i", 170), ("5i", 160), ("6i", 150),
+            ("7i", 140), ("8i", 130), ("9i", 120),
+            ("pw", 110), ("gw", 95), ("sw", 80),
+            ("lw", 60), ("putter", 0),
+        ]
+        for (club, minDist) in table {
+            if clubBag.contains(club) && y >= minDist {
+                return club
+            }
+        }
+        return clubBag.last ?? "unknown"
+    }
+
+    private func sendClubToPhone() {
+        let msg: [String: Any] = [
+            "action": "clubSelection",
+            "holeNumber": holeNumber,
+            "club": selectedClub,
+        ]
+        if WCSession.default.isReachable {
+            WCSession.default.sendMessage(msg, replyHandler: nil) { error in
+                print("[Watch] clubSelection sendMessage failed: \(error)")
+            }
+        }
     }
 
     // MARK: - Distance Computation
@@ -325,6 +393,10 @@ final class WatchRoundSession: NSObject, ObservableObject {
             totalHoles = th
         } else {
             totalHoles = max(totalHoles, holeNumber)
+        }
+
+        if let clubs = context["clubBag"] as? [String], !clubs.isEmpty {
+            clubBag = clubs
         }
 
         strokes = 0
