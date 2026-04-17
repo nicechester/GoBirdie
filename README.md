@@ -1,38 +1,15 @@
 # GoBirdie
 
-A golf GPS and shot tracking app for iPhone and Apple Watch, with desktop sync via [GoBirdie Desktop](../../desktop/GoBirdie-Desktop).
+A golf GPS and shot tracking app for iPhone and Apple Watch, with desktop sync via [GoBirdie Desktop](https://github.com/nicechester/GoBirdie-Desktop).
 
 Course data is sourced from OpenStreetMap (Overpass API) and enriched with yardage/handicap from GolfCourseAPI. Rounds sync to the desktop companion over MultipeerConnectivity (Bluetooth + WiFi peer-to-peer).
 
-## Screenshots
-
-### iPhone
-
-| Start Round | Search by Name | Select Start Hole |
-|:-:|:-:|:-:|
-| ![](screenshots/start-round.png) | ![](screenshots/search-by-name.png) | ![](screenshots/select-start-hole.png) |
-
-| Round View | Map View | Tap to Measure |
-|:-:|:-:|:-:|
-| ![](screenshots/rounding-view.png) | ![](screenshots/map-view.png) | ![](screenshots/map-view-tap-to-distance.png) |
-
-| Club Selection | Round Initial | |
-|:-:|:-:|:-:|
-| ![](screenshots/select-club.png) | ![](screenshots/round-initial.png) | |
-
-| Scorecards | Scorecard Detail | Shot Map |
-|:-:|:-:|:-:|
-| ![](screenshots/score-cards-view.png) | ![](screenshots/score-card-detail.png) | ![](screenshots/score-card-shot-map.png) |
-
-| Swipe to Delete | | |
-|:-:|:-:|:-:|
-| ![](screenshots/scorecard-view-swipe-delete.png) | | |
-
-### Apple Watch
-
-| Waiting for iPhone | Rounding | Second Page | Round Saved |
-|:-:|:-:|:-:|:-:|
-| ![](screenshots/watch-waiting-for-iphone.png) | ![](screenshots/watch-rounding.png) | ![](screenshots/watch-second-page.png) | ![](screenshots/watch-saved.png) |
+<table>
+  <tr>
+    <td valign="center" width=300><img src="screenshots/rounding-view.png" width="200"><br>iPhone</td>
+    <td valign="center" width=300><img src="screenshots/watch-rounding.png" width="100"><br>Apple Watch</td>
+  </tr>
+</table>
 
 ## Features
 

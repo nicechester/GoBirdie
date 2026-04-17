@@ -7,9 +7,10 @@
 3. [Using the Map](#3-using-the-map)
 4. [Putting & Finishing a Hole](#4-putting--finishing-a-hole)
 5. [Reviewing Scorecards](#5-reviewing-scorecards)
-6. [Apple Watch](#6-apple-watch)
-7. [Syncing to Desktop](#7-syncing-to-desktop)
-8. [Tips](#tips)
+6. [Settings](#6-settings)
+7. [Apple Watch](#7-apple-watch)
+8. [Syncing to Desktop](#8-syncing-to-desktop)
+9. [Tips](#tips)
 
 ---
 
@@ -18,11 +19,21 @@
 <table>
 <tr><td valign="top" width="60%">
 
+### Step 0: Open GoBirdie
+
+Open the app and you'll see the inistial screen with No Active Round.
+
+</td><td valign="top"><img src="screenshots/round-initial.png" width="220"></td></tr>
+</table>
+
+<table>
+<tr><td valign="top"><img src="screenshots/start-round.png" width="220"></td><td valign="top" width="60%">
+
 ### Step 1: Find Your Course
 
-Open the app and you'll see the **Start Round** screen. Nearby courses are listed automatically, sorted by distance. Previously downloaded courses appear instantly while online results load in the background.
+Once you clicked Start a round button, nearby courses are listed automatically, sorted by distance. Previously downloaded courses appear instantly while online results load in the background.
 
-</td><td valign="top"><img src="screenshots/start-round.png" width="220"></td></tr>
+</td></tr>
 </table>
 
 <table>
@@ -36,13 +47,13 @@ If your course isn't listed, tap the search bar and type the course name. Result
 </table>
 
 <table>
-<tr><td valign="top" width="60%">
+<tr><td valign="top"><img src="screenshots/select-start-hole.png" width="220"></td><td valign="top" width="60%">
 
 ### Step 3: Select Your Starting Hole
 
 After selecting a course, choose which hole to start from. This is useful if you're starting on the back nine or a specific hole.
 
-</td><td valign="top"><img src="screenshots/select-start-hole.png" width="220"></td></tr>
+</td></tr>
 </table>
 
 <table>
@@ -52,7 +63,7 @@ After selecting a course, choose which hole to start from. This is useful if you
 
 Once you've selected the course and starting hole, the round begins. You'll see the hole info bar at the top and the mini scorecard at the bottom.
 
-</td><td valign="top"><img src="screenshots/round-initial.png" width="220"></td></tr>
+</td><td valign="top"><img src="screenshots/rounding-view.png" width="220"></td></tr>
 </table>
 
 ---
@@ -60,13 +71,13 @@ Once you've selected the course and starting hole, the round begins. You'll see 
 ## 2. Playing a Hole
 
 <table>
-<tr><td valign="top" width="60%">
+<tr><td valign="top"><img src="screenshots/select-club.png" width="220"></td><td valign="top" width="60%">
 
 ### Step 5: Select Your Club
 
 After each shot, tap **Mark Shot** to drop a GPS pin at your current location. A club selection sheet appears — pick the club you used. You can customize the club list in Settings → Clubs.
 
-</td><td valign="top"><img src="screenshots/select-club.png" width="220"></td></tr>
+</td></tr>
 </table>
 
 <table>
@@ -84,13 +95,13 @@ Your shots appear on the map as colored dots connected by lines. Each line shows
 ## 3. Using the Map
 
 <table>
-<tr><td valign="top" width="60%">
+<tr><td valign="top"><img src="screenshots/map-view.png" width="220"></td><td valign="top" width="60%">
 
 ### Step 7: Read Distances
 
 The map automatically rotates and zooms to show the hole from tee to green. Your position is shown as a blue pulsing dot, and the green is marked with a green dot. A dashed line shows the distance from you to the pin.
 
-</td><td valign="top"><img src="screenshots/map-view.png" width="220"></td></tr>
+</td></tr>
 </table>
 
 <table>
@@ -111,26 +122,38 @@ This is useful for planning layups or checking carry distances over hazards.
 
 ## 4. Putting & Finishing a Hole
 
+<table>
+<tr><td valign="top"><img src="screenshots/round-menu.png" width="220"></td><td valign="top" width="60%">
+
 ### Step 9: Enter Putts
 
-When you're within 30 yards of the pin, the app detects you're on the green. A green dashed line appears from your last shot to the flag. Use the putt controls to enter your putt count, then advance to the next hole.
+Enter number of putts with + / − buttons and click next to move to next hole. Finish button shows up at the last hole. You can click on it to finish and save the game. Optionally, the menu button on the top-right corner shows End Round / Cancel Round which can be used any time during the round.
+
+</td></tr>
+</table>
+
+<table>
+<tr><td valign="top" width="60%">
 
 ### Step 10: Navigate Between Holes
 
 Use the **< >** arrows in the hole info bar to move between holes. You can go back to a previous hole to correct a score if needed. On the last hole, advancing ends the round.
+
+</td><td valign="top"></td></tr>
+</table>
 
 ---
 
 ## 5. Reviewing Scorecards
 
 <table>
-<tr><td valign="top" width="60%">
+<tr><td valign="top"><img src="screenshots/score-cards-view.png" width="220"></td><td valign="top" width="60%">
 
 ### Step 11: View Past Rounds
 
 Tap the **Scorecards** tab to see all completed rounds. Each card shows the course name, date, total score, and score vs par.
 
-</td><td valign="top"><img src="screenshots/score-cards-view.png" width="220"></td></tr>
+</td></tr>
 </table>
 
 <table>
@@ -144,13 +167,13 @@ Tap a round to see the full scorecard with per-hole breakdown: score, putts, fai
 </table>
 
 <table>
-<tr><td valign="top" width="60%">
+<tr><td valign="top"><img src="screenshots/score-card-shot-map.png" width="220"></td><td valign="top" width="60%">
 
 ### Step 13: Shot Map
 
 Scroll down in the scorecard detail to see the shot map. Each hole's shots are plotted on the map with club-colored dots, distance lines, and a putt count at the green. The map is rotated to align tee-to-green vertically.
 
-</td><td valign="top"><img src="screenshots/score-card-shot-map.png" width="220"></td></tr>
+</td></tr>
 </table>
 
 <table>
@@ -165,24 +188,58 @@ On the scorecards list, swipe left on any round to delete it.
 
 ---
 
-## 6. Apple Watch
-
-The Apple Watch app works as a companion to the iPhone — it receives hole data via WatchConnectivity and provides quick distance checks and shot tracking from your wrist.
+## 6. Settings
 
 <table>
-<tr><td valign="top" width="60%">
+<tr><td valign="top"><img src="screenshots/settings-view.png" width="220"></td><td valign="top" width="60%">
 
-### Step 15: Start on Watch
+### Step 15: Settings Overview
 
-When you start a round on the iPhone, the Watch shows the course name. Tap **Start** to begin the workout session (enables background GPS and always-on display).
+Tap the **Settings** tab to access app configuration. From here you can manage your clubs, download courses, toggle desktop sync, and more.
 
-</td><td valign="top"><img src="screenshots/watch-waiting-for-iphone.png" width="160"></td></tr>
+</td></tr>
 </table>
 
 <table>
 <tr><td valign="top" width="60%">
 
-### Step 16: Distances & Shot Tracking
+### Step 16: Manage Courses
+
+Search and pre-download courses for offline use. View saved courses and swipe to delete ones you no longer need.
+
+</td><td valign="top"><img src="screenshots/manage-courses.png" width="220"></td></tr>
+</table>
+
+<table>
+<tr><td valign="top"><img src="screenshots/my-clubs.png" width="220"></td><td valign="top" width="60%">
+
+### Step 17: Customize Your Clubs
+
+Add or remove clubs from your bag. The club list is used when marking shots during a round. For example, add a 4-Hybrid and remove a 4-Iron to match your actual bag.
+
+</td></tr>
+</table>
+
+---
+
+## 7. Apple Watch
+
+The Apple Watch app works as a companion to the iPhone — it receives hole data via WatchConnectivity and provides quick distance checks and shot tracking from your wrist.
+
+<table>
+<tr><td valign="top"><img src="screenshots/watch-waiting-for-iphone.png" width="160"></td><td valign="top" width="60%">
+
+### Step 18: Start on Watch
+
+When you start a round on the iPhone, the Watch shows the course name. Tap **Start** to begin the workout session (enables background GPS and always-on display).
+
+</td></tr>
+</table>
+
+<table>
+<tr><td valign="top" width="60%">
+
+### Step 19: Distances & Shot Tracking
 
 The Watch displays live distances to the **Front**, **Pin**, and **Back** of the green, updated continuously from Watch GPS. Use the buttons to:
 - **Shot** — mark a shot at your current GPS location
@@ -194,19 +251,19 @@ Rotate the **Digital Crown** to navigate between holes.
 </table>
 
 <table>
-<tr><td valign="top" width="60%">
+<tr><td valign="top"><img src="screenshots/watch-second-page.png" width="160"></td><td valign="top" width="60%">
 
-### Step 17: End the Round
+### Step 20: End the Round
 
 Swipe to the second page to see your total score and access **End Round** or **Cancel Round**.
 
-</td><td valign="top"><img src="screenshots/watch-second-page.png" width="160"></td></tr>
+</td></tr>
 </table>
 
 <table>
 <tr><td valign="top" width="60%">
 
-### Step 18: Round Saved
+### Step 21: Round Saved
 
 After ending the round, the Watch confirms the save with your final score. The round data is sent back to the iPhone.
 
@@ -215,11 +272,11 @@ After ending the round, the Watch confirms the save with your final score. The r
 
 ---
 
-## 7. Syncing to Desktop
+## 8. Syncing to Desktop
 
 GoBirdie syncs rounds to the [GoBirdie Desktop](../../desktop/GoBirdie-Desktop) companion app over MultipeerConnectivity (Bluetooth + WiFi peer-to-peer). No network configuration is needed — it works even if your iPhone and desktop are on different WiFi networks.
 
-### Step 19: Enable Sync
+### Step 22: Enable Sync
 
 1. Open **Settings** on the iPhone app
 2. Toggle **Desktop Sync** on
