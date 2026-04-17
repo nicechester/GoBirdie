@@ -265,6 +265,15 @@ private struct RoundEndedView: View {
 
             Text("Round Saved")
                 .font(.caption).foregroundStyle(.secondary)
+
+            Button {
+                session.resetToWaiting()
+            } label: {
+                Text("Done")
+                    .font(.caption).fontWeight(.semibold)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
         }
     }
 }

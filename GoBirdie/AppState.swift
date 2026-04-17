@@ -73,7 +73,14 @@ final class AppState: ObservableObject {
                         )
                     }
                 }
-                self?.endActiveRound()
+                self?.endActiveRound(fromWatch: true)
+            }
+        }
+        NotificationCenter.default.addObserver(
+            forName: .watchCancelRound, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.cancelActiveRound(fromWatch: true)
             }
         }
     }
@@ -260,7 +267,7 @@ final class AppState: ObservableObject {
     }
 
     /// End the active round, save it, and clean up.
-    func endActiveRound() {
+    func endActiveRound(fromWatch: Bool = false) {
         guard let session = activeRound else { return }
         session.endRound()
 
@@ -271,11 +278,17 @@ final class AppState: ObservableObject {
             print("[AppState] Failed to save round: \(error)")
         }
 
+        if !fromWatch {
+            ConnectivityService.shared.sendRoundEnded()
+        }
         cleanupRound()
     }
 
     /// Cancel the active round without saving.
-    func cancelActiveRound() {
+    func cancelActiveRound(fromWatch: Bool = false) {
+        if !fromWatch {
+            ConnectivityService.shared.sendRoundCancelled()
+        }
         cleanupRound()
     }
 

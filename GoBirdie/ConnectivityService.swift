@@ -26,6 +26,15 @@ final class ConnectivityService: NSObject, ObservableObject {
     }
 
     /// Send hole + round data to Watch as a single context.
+    func sendRoundEnded() {
+        send(["action": "roundEnded"])
+    }
+
+    func sendRoundCancelled() {
+        send(["action": "roundCancelled"])
+    }
+
+    /// Send hole + round data to Watch as a single context.
     func sendHoleData(hole: Hole, holeNumber: Int, courseName: String, totalStrokes: Int, totalHoles: Int = 18) {
         var ctx: [String: Any] = [
             "holeNumber": holeNumber,
@@ -133,6 +142,8 @@ extension ConnectivityService: WCSessionDelegate {
                 info["heartRateTimeline"] = timeline
             }
             NotificationCenter.default.post(name: .watchEndRound, object: nil, userInfo: info.isEmpty ? nil : info)
+        case "cancelRound":
+            NotificationCenter.default.post(name: .watchCancelRound, object: nil)
         case "shot":
             if let holeNumber = message["holeNumber"] as? Int {
                 var info: [String: Any] = ["holeNumber": holeNumber]
@@ -161,4 +172,5 @@ extension Notification.Name {
     static let watchShotMarked = Notification.Name("watchShotMarked")
     static let watchNavigateHole = Notification.Name("watchNavigateHole")
     static let watchEndRound = Notification.Name("watchEndRound")
+    static let watchCancelRound = Notification.Name("watchCancelRound")
 }
