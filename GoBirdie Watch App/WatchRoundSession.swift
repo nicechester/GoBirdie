@@ -117,7 +117,28 @@ final class WatchRoundSession: NSObject, ObservableObject {
 
     func cancelRound() {
         endWorkout()
-        isRoundEnded = true
+        sendCancelRoundToPhone()
+        resetToWaiting()
+    }
+
+    func resetToWaiting() {
+        isRoundEnded = false
+        hasHoleData = false
+        holeNumber = 1
+        par = 4
+        strokes = 0
+        putts = 0
+        accumulatedStrokes = 0
+        frontYards = nil
+        pinYards = nil
+        backYards = nil
+        courseName = ""
+        latestHeartRate = nil
+        totalHoles = 18
+        heartRateSamples = []
+        greenFront = nil
+        greenCenter = nil
+        greenBack = nil
     }
 
     func startWorkout() {
@@ -235,6 +256,15 @@ final class WatchRoundSession: NSObject, ObservableObject {
         }
     }
 
+    private func sendCancelRoundToPhone() {
+        let msg: [String: Any] = ["action": "cancelRound"]
+        if WCSession.default.isReachable {
+            WCSession.default.sendMessage(msg, replyHandler: nil) { error in
+                print("[Watch] cancelRound sendMessage failed: \(error)")
+            }
+        }
+    }
+
     private func sendEndRoundToPhone() {
         var msg: [String: Any] = ["action": "endRound"]
         if !heartRateSamples.isEmpty {
@@ -247,7 +277,27 @@ final class WatchRoundSession: NSObject, ObservableObject {
         }
     }
 
-    private func handleContext(_ context: [String: Any]) {
+    private func handleMessage(_ context: [String: Any]) {
+        if let action = context["action"] as? String {
+            switch action {
+            case "roundCancelled":
+                endWorkout()
+                resetToWaiting()
+                return
+            case "roundEnded":
+                endWorkout()
+                isRoundEnded = true
+                return
+            default:
+                break
+            }
+        }
+
+        // Hole data from iPhone
+        handleHoleData(context)
+    }
+
+    private func handleHoleData(_ context: [String: Any]) {
         if let hole = context["holeNumber"] as? Int {
             holeNumber = hole
         }
@@ -280,6 +330,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
         strokes = 0
         putts = 0
         hasHoleData = true
+        isRoundEnded = false
         recomputeDistances()
 
         // Auto-start workout when we receive hole data from iPhone
@@ -308,19 +359,19 @@ extension WatchRoundSession: WCSessionDelegate {
         guard state == .activated else { return }
         let ctx = session.receivedApplicationContext
         if !ctx.isEmpty {
-            Task { @MainActor in self.handleContext(ctx) }
+            Task { @MainActor in self.handleMessage(ctx) }
         }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         Task { @MainActor in
-            self.handleContext(applicationContext)
+            self.handleMessage(applicationContext)
         }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         Task { @MainActor in
-            self.handleContext(message)
+            self.handleMessage(message)
         }
     }
 }
