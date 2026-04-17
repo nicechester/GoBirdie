@@ -149,11 +149,12 @@ private struct PuttStepper: View {
 private struct MarkShotSheet: View {
     @Environment(\.dismiss) var dismiss
     @Binding var selectedClub: ClubType
+    @ObservedObject private var bag = ClubBag.shared
     let onConfirm: (ClubType) -> Void
 
     var body: some View {
         NavigationStack {
-            List(ClubType.allCases, id: \.self) { club in
+            List(bag.enabledClubs, id: \.self) { club in
                 Button {
                     selectedClub = club
                     onConfirm(club)

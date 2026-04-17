@@ -141,10 +141,22 @@ final class AppState: ObservableObject {
         self.activeRoundViewModel = viewModel
         viewModel.startRound()
 
+        // Notify Watch of resumed hole
+        let holeNumber = snapshot.currentHoleIndex + 1
+        if let hole = course.holes.first(where: { $0.number == holeNumber }) {
+            ConnectivityService.shared.sendHoleData(
+                hole: hole,
+                holeNumber: holeNumber,
+                courseName: course.name,
+                totalStrokes: session.round.totalStrokes,
+                totalHoles: course.holes.count
+            )
+        }
+
         startAutoSave()
         resetIdleTimer()
         pendingResume = nil
-        print("[AppState] Resumed round on hole \(snapshot.currentHoleIndex + 1)")
+        print("[AppState] Resumed round on hole \(holeNumber)")
     }
 
     /// Discard the saved in-progress round.

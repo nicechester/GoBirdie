@@ -19,12 +19,46 @@ struct MapOverlayView: View {
             let tapPt = viewModel.tapScreenPoint
             let shotPts = viewModel.shotScreenPoints
 
-            // Shot connecting lines
+            // Shot connecting lines with distance labels
             let allPts = shotPts.map(\.point)
             ForEach(Array(allPts.enumerated()), id: \.offset) { i, pt in
                 if i > 0 {
-                    DashedLine(from: allPts[i - 1], to: pt)
+                    let from = allPts[i - 1]
+                    DashedLine(from: from, to: pt)
                         .stroke(Color.yellow.opacity(0.8), style: StrokeStyle(lineWidth: 1.5, dash: [5, 3]))
+                    // Distance label between shots
+                    let prevShot = shotPts[i - 1].shot
+                    let curShot = shotPts[i].shot
+                    let meters = prevShot.location.distanceMeters(to: curShot.location)
+                    let yards = Int((meters * 1.09361).rounded())
+                    let mid = CGPoint(x: (from.x + pt.x) / 2, y: (from.y + pt.y) / 2)
+                    Text("\(yards)y")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 4).padding(.vertical, 2)
+                        .background(Color.black.opacity(0.7))
+                        .cornerRadius(3)
+                        .position(mid)
+                }
+            }
+
+            // Last shot → green line (visible when shots exist)
+            if let lastPt = allPts.last, let greenPt = flagPt, !allPts.isEmpty {
+                DashedLine(from: lastPt, to: greenPt)
+                    .stroke(Color.green.opacity(0.8), style: StrokeStyle(lineWidth: 1.5, dash: [5, 3]))
+                // Distance label for last shot to green
+                if let lastShot = shotPts.last?.shot,
+                   let greenCenter = viewModel.resolvedGreenCenter {
+                    let meters = lastShot.location.distanceMeters(to: greenCenter)
+                    let yards = Int((meters * 1.09361).rounded())
+                    let mid = CGPoint(x: (lastPt.x + greenPt.x) / 2, y: (lastPt.y + greenPt.y) / 2)
+                    Text("\(yards)y")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 4).padding(.vertical, 2)
+                        .background(Color.green.opacity(0.7))
+                        .cornerRadius(3)
+                        .position(mid)
                 }
             }
 
@@ -96,6 +130,7 @@ private struct ShotDot: View {
         switch item.shot.club {
         case .driver: return .red
         case .wood3, .wood5: return .orange
+        case .hybrid3, .hybrid4, .hybrid5: return .teal
         case .iron4, .iron5, .iron6, .iron7, .iron8, .iron9: return .yellow
         case .pitchingWedge, .gapWedge, .sandWedge, .lobWedge: return .cyan
         case .putter: return .white

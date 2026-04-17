@@ -26,7 +26,8 @@ struct MiniScorecardView: View {
                 let totalPar = session.round.holes.filter { $0.strokes > 0 }.reduce(0) { $0 + $1.par }
                 let diff = totalStrokes - totalPar
                 if totalStrokes > 0 {
-                    Text(diff == 0 ? "E" : diff > 0 ? "+\(diff)" : "\(diff)")
+                    let parStr = diff == 0 ? "E" : diff > 0 ? "+\(diff)" : "\(diff)"
+                    Text("\(totalStrokes) (\(parStr))")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundStyle(diff < 0 ? .green : diff == 0 ? .primary : .red)

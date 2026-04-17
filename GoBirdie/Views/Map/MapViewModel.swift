@@ -105,12 +105,11 @@ final class MapViewModel: ObservableObject {
         resolvedTee ?? currentHole?.greenCenter ?? course.location
     }
 
-    /// Bounding box that fits tee, green, and player location.
+    /// Bounding box that fits tee and green for the current hole.
     var holeBounds: (sw: GpsPoint, ne: GpsPoint)? {
         var points: [GpsPoint] = []
         if let tee = resolvedTee { points.append(tee) }
         if let green = resolvedGreenCenter { points.append(green) }
-        if let loc = mockLocation ?? locationService.currentLocation { points.append(loc) }
         // Fall back to hole data
         if points.count < 2, let hole = currentHole {
             points.append(contentsOf: [hole.tee, hole.greenCenter].compactMap { $0 })
@@ -121,7 +120,6 @@ final class MapViewModel: ObservableObject {
         let minLon = points.map(\.lon).min()!
         let maxLon = points.map(\.lon).max()!
         let pad = 0.0003
-        //let pad = 0.0
         return (
             sw: GpsPoint(lat: minLat - pad, lon: minLon - pad),
             ne: GpsPoint(lat: maxLat + pad, lon: maxLon + pad)

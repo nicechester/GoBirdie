@@ -198,11 +198,12 @@ private struct ShotMapSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
                 ShotMapView(holes: [hole], courseHoles: courseHoles)
                     .id(hole.id)
+                    .ignoresSafeArea()
 
-                // Score bar
+                // Score bar overlay at bottom
                 HStack(spacing: 16) {
                     Text("Par \(hole.par)").font(.caption).foregroundStyle(.secondary)
                     Text("\(hole.strokes)").font(.title3).fontWeight(.bold).foregroundStyle(scoreColor)
@@ -211,27 +212,7 @@ private struct ShotMapSheet: View {
                     Text("\(hole.putts) Putts").font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 16).padding(.vertical, 8)
-                .background(Color(.systemGray6))
-
-                // Shot list
-                List(sortedShots) { shot in
-                    HStack {
-                        Text("\(shot.sequence)")
-                            .font(.caption).fontWeight(.bold)
-                            .frame(width: 22, height: 22)
-                            .background(Color.green).foregroundStyle(.white)
-                            .clipShape(Circle())
-                        Text(shot.club.displayName)
-                            .font(.subheadline)
-                        Spacer()
-                        if let dist = shotDistance(shot) {
-                            Text("\(dist) yds")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .listStyle(.plain)
-                .id(hole.id)
+                .background(.ultraThinMaterial)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

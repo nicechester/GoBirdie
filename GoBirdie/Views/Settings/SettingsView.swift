@@ -19,6 +19,14 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Equipment") {
+                    NavigationLink {
+                        MyClubsView()
+                    } label: {
+                        Label("My Clubs", systemImage: "figure.golf")
+                    }
+                }
+
                 SyncServerSection()
                 TeeSection()
                 TipJarSection()
