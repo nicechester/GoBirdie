@@ -31,6 +31,9 @@ public struct Round: Codable, Sendable, Identifiable {
     public var totalStrokes: Int
     public var totalPutts: Int
     public var heartRateTimeline: [HeartRateSample]
+    public var temperatureMinF: Double?
+    public var temperatureMaxF: Double?
+    public var weatherCondition: String?
 
     public init(
         id: String,
@@ -43,7 +46,10 @@ public struct Round: Codable, Sendable, Identifiable {
         holes: [HoleScore] = [],
         totalStrokes: Int = 0,
         totalPutts: Int = 0,
-        heartRateTimeline: [HeartRateSample] = []
+        heartRateTimeline: [HeartRateSample] = [],
+        temperatureMinF: Double? = nil,
+        temperatureMaxF: Double? = nil,
+        weatherCondition: String? = nil
     ) {
         self.id = id
         self.source = source
@@ -56,6 +62,9 @@ public struct Round: Codable, Sendable, Identifiable {
         self.totalStrokes = totalStrokes
         self.totalPutts = totalPutts
         self.heartRateTimeline = heartRateTimeline
+        self.temperatureMinF = temperatureMinF
+        self.temperatureMaxF = temperatureMaxF
+        self.weatherCondition = weatherCondition
     }
 
     public init(from decoder: Decoder) throws {
@@ -71,6 +80,9 @@ public struct Round: Codable, Sendable, Identifiable {
         totalStrokes = try c.decode(Int.self, forKey: .totalStrokes)
         totalPutts = try c.decode(Int.self, forKey: .totalPutts)
         heartRateTimeline = (try? c.decode([HeartRateSample].self, forKey: .heartRateTimeline)) ?? []
+        temperatureMinF = try c.decodeIfPresent(Double.self, forKey: .temperatureMinF)
+        temperatureMaxF = try c.decodeIfPresent(Double.self, forKey: .temperatureMaxF)
+        weatherCondition = try c.decodeIfPresent(String.self, forKey: .weatherCondition)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -85,5 +97,8 @@ public struct Round: Codable, Sendable, Identifiable {
         case totalStrokes = "total_strokes"
         case totalPutts   = "total_putts"
         case heartRateTimeline = "heart_rate_timeline"
+        case temperatureMinF = "temperature_min_f"
+        case temperatureMaxF = "temperature_max_f"
+        case weatherCondition = "weather_condition"
     }
 }

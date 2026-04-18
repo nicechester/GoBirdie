@@ -1,7 +1,7 @@
 import Foundation
 
 /// The player's score record for a single hole in a round.
-public struct HoleScore: Codable, Sendable, Identifiable {
+public struct HoleScore: Codable, Sendable, Identifiable, Equatable {
     public var id: UUID
     public var number: Int
     public var par: Int
@@ -9,6 +9,7 @@ public struct HoleScore: Codable, Sendable, Identifiable {
     public var putts: Int
     public var fairwayHit: Bool?
     public var gir: Bool
+    public var penalties: Int
     public var shots: [Shot]
     public var greenCenter: GpsPoint?
 
@@ -20,6 +21,7 @@ public struct HoleScore: Codable, Sendable, Identifiable {
         putts: Int = 0,
         fairwayHit: Bool? = nil,
         gir: Bool = false,
+        penalties: Int = 0,
         shots: [Shot] = [],
         greenCenter: GpsPoint? = nil
     ) {
@@ -30,8 +32,23 @@ public struct HoleScore: Codable, Sendable, Identifiable {
         self.putts = putts
         self.fairwayHit = fairwayHit
         self.gir = gir
+        self.penalties = penalties
         self.shots = shots
         self.greenCenter = greenCenter
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        number = try c.decode(Int.self, forKey: .number)
+        par = try c.decode(Int.self, forKey: .par)
+        strokes = try c.decode(Int.self, forKey: .strokes)
+        putts = try c.decode(Int.self, forKey: .putts)
+        fairwayHit = try c.decodeIfPresent(Bool.self, forKey: .fairwayHit)
+        gir = try c.decode(Bool.self, forKey: .gir)
+        penalties = (try? c.decode(Int.self, forKey: .penalties)) ?? 0
+        shots = try c.decode([Shot].self, forKey: .shots)
+        greenCenter = try c.decodeIfPresent(GpsPoint.self, forKey: .greenCenter)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -42,6 +59,7 @@ public struct HoleScore: Codable, Sendable, Identifiable {
         case putts
         case fairwayHit = "fairway_hit"
         case gir
+        case penalties
         case shots
         case greenCenter = "green_center"
     }
