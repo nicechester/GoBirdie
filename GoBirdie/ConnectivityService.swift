@@ -42,6 +42,7 @@ final class ConnectivityService: NSObject, ObservableObject {
             "courseName": courseName,
             "totalStrokes": totalStrokes,
             "totalHoles": totalHoles,
+            "clubBag": ClubBag.shared.enabledClubs.map(\.rawValue),
         ]
 
         if let tee = hole.tee {
@@ -64,8 +65,17 @@ final class ConnectivityService: NSObject, ObservableObject {
         send(ctx)
     }
 
+    func sendStrokeUpdate(holeNumber: Int, strokes: Int, putts: Int) {
+        send([
+            "action": "strokeUpdate",
+            "holeNumber": holeNumber,
+            "strokes": strokes,
+            "putts": putts,
+        ])
+    }
 
     private func send(_ ctx: [String: Any]) {
+        guard WCSession.isSupported() else { return }
         // Always persist to applicationContext so Watch gets it on launch
         do {
             try session.updateApplicationContext(ctx)
@@ -144,6 +154,15 @@ extension ConnectivityService: WCSessionDelegate {
             NotificationCenter.default.post(name: .watchEndRound, object: nil, userInfo: info.isEmpty ? nil : info)
         case "cancelRound":
             NotificationCenter.default.post(name: .watchCancelRound, object: nil)
+        case "clubSelection":
+            if let holeNumber = message["holeNumber"] as? Int,
+               let clubRaw = message["club"] as? String {
+                NotificationCenter.default.post(
+                    name: .watchClubSelection,
+                    object: nil,
+                    userInfo: ["holeNumber": holeNumber, "club": clubRaw]
+                )
+            }
         case "shot":
             if let holeNumber = message["holeNumber"] as? Int {
                 var info: [String: Any] = ["holeNumber": holeNumber]
@@ -173,4 +192,5 @@ extension Notification.Name {
     static let watchNavigateHole = Notification.Name("watchNavigateHole")
     static let watchEndRound = Notification.Name("watchEndRound")
     static let watchCancelRound = Notification.Name("watchCancelRound")
+    static let watchClubSelection = Notification.Name("watchClubSelection")
 }

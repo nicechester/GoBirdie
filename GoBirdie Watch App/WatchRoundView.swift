@@ -8,16 +8,22 @@ struct WatchRoundView: View {
     @EnvironmentObject var session: WatchRoundSession
 
     var body: some View {
-        if session.isRoundEnded {
-            RoundEndedView()
-        } else if session.hasHoleData {
-            TabView {
-                ActiveRoundView()
-                EndRoundPage()
+        ZStack {
+            if session.isRoundEnded {
+                RoundEndedView()
+            } else if session.hasHoleData {
+                TabView {
+                    ActiveRoundView()
+                    EndRoundPage()
+                }
+                .tabViewStyle(.verticalPage)
+            } else {
+                StartView()
             }
-            .tabViewStyle(.verticalPage)
-        } else {
-            StartView()
+
+            if session.showClubPicker {
+                ClubPickerOverlay()
+            }
         }
     }
 }
@@ -45,15 +51,6 @@ private struct StartView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
             }
-
-            Button {
-                session.startWorkout()
-            } label: {
-                Label("Start", systemImage: "play.fill")
-                    .font(.body).fontWeight(.semibold)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
         }
     }
 }
@@ -63,11 +60,6 @@ private struct StartView: View {
 private struct ActiveRoundView: View {
     @EnvironmentObject var session: WatchRoundSession
     @State private var crownHole: Int = 1
-
-    private var onGreen: Bool {
-        guard let pin = session.pinYards else { return false }
-        return pin <= 30
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -81,11 +73,7 @@ private struct ActiveRoundView: View {
             .padding(.horizontal, 4)
             .padding(.bottom, 4)
 
-            if onGreen {
-                PuttModeView()
-            } else {
-                DistanceModeView()
-            }
+            DistanceModeView()
         }
         .focusable()
         .digitalCrownRotation(
@@ -113,45 +101,83 @@ private struct DistanceModeView: View {
     @EnvironmentObject var session: WatchRoundSession
 
     var body: some View {
-        VStack(spacing: 2) {
-            DistanceRow(label: "F", yards: session.frontYards, style: .secondary)
-            DistanceRow(label: "PIN", yards: session.pinYards, style: .primary)
-            DistanceRow(label: "B", yards: session.backYards, style: .secondary)
-        }
+        VStack(spacing: 3) {
+            HStack(spacing: 4) {
+                VStack(spacing: 0) {
+                    Text("F")
+                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text("\(session.frontYards ?? 0)")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                .frame(maxWidth: .infinity)
 
-        Spacer(minLength: 4)
+                VStack(spacing: 0) {
+                    Text("PIN")
+                        .font(.system(size: 14)).foregroundStyle(.secondary)
+                    Text("\(session.pinYards ?? 0)")
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .foregroundStyle(.green)
+                }
+                .frame(maxWidth: .infinity)
 
-        Text("\(session.strokes)")
-            .font(.caption).fontWeight(.bold)
-            .foregroundStyle(.secondary)
-
-        HStack(spacing: 8) {
-            Button {
-                session.markShot()
-            } label: {
-                VStack(spacing: 2) {
-                    Image(systemName: "location.fill")
-                        .font(.body)
-                    Text("Shot")
-                        .font(.system(size: 10))
+                VStack(spacing: 0) {
+                    Text("B")
+                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text("\(session.backYards ?? 0)")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
                 }
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
 
-            Button {
-                session.addStroke()
-            } label: {
-                VStack(spacing: 2) {
-                    Text("+1")
-                        .font(.body).fontWeight(.bold)
-                    Text("Stroke")
-                        .font(.system(size: 10))
+            HStack(spacing: 12) {
+                VStack(spacing: 1) {
+                    Text("\(session.strokes)")
+                        .font(.system(size: 16, weight: .bold))
+                    Text("Strokes")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+
+                VStack(spacing: 1) {
+                    Text("\(session.putts)")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(.green)
+                    Text("Putts")
+                        .font(.caption2).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+
+            HStack(spacing: 6) {
+                Button {
+                    session.markShot()
+                } label: {
+                    VStack(spacing: 1) {
+                        Image(systemName: "location.fill")
+                            .font(.body)
+                        Text("Shot")
+                            .font(.system(size: 10))
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+
+                Button {
+                    session.addPutt()
+                } label: {
+                    VStack(spacing: 1) {
+                        Text("+1")
+                            .font(.body).fontWeight(.bold)
+                        Text("Putt")
+                            .font(.system(size: 10))
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
         }
         .padding(.horizontal, 2)
     }
@@ -274,6 +300,74 @@ private struct RoundEndedView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.green)
+        }
+    }
+}
+
+// MARK: - Club Picker Overlay
+
+private struct ClubPickerOverlay: View {
+    @EnvironmentObject var session: WatchRoundSession
+    @State private var crownIndex: Int = 0
+
+    private var clubDisplayName: String {
+        guard !session.clubBag.isEmpty else { return "?" }
+        let raw = session.selectedClub
+        let names: [String: String] = [
+            "driver": "Driver", "3w": "3W", "5w": "5W",
+            "3h": "3H", "4h": "4H", "5h": "5H",
+            "4i": "4i", "5i": "5i", "6i": "6i",
+            "7i": "7i", "8i": "8i", "9i": "9i",
+            "pw": "PW", "gw": "GW", "sw": "SW",
+            "lw": "LW", "putter": "Putter",
+        ]
+        return names[raw] ?? raw
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("Club")
+                .font(.caption2).foregroundStyle(.secondary)
+
+            Text(clubDisplayName)
+                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .foregroundStyle(.green)
+
+            Button {
+                session.confirmClub()
+            } label: {
+                Image(systemName: "checkmark")
+                    .font(.title3).fontWeight(.bold)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.black.opacity(0.92))
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    let threshold: CGFloat = 20
+                    if value.translation.width > threshold, crownIndex > 0 {
+                        crownIndex -= 1
+                    } else if value.translation.width < -threshold, crownIndex < session.clubBag.count - 1 {
+                        crownIndex += 1
+                    }
+                }
+        )
+        .focusable()
+        .digitalCrownRotation(
+            detent: $crownIndex,
+            from: 0, through: max(session.clubBag.count - 1, 0), by: 1,
+            sensitivity: .low
+        ) { _ in } onIdle: { }
+        .onAppear {
+            crownIndex = session.clubBag.firstIndex(of: session.selectedClub) ?? 0
+        }
+        .onChange(of: crownIndex) { _, newValue in
+            guard session.clubBag.indices.contains(newValue) else { return }
+            session.selectedClub = session.clubBag[newValue]
         }
     }
 }
