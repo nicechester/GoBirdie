@@ -189,7 +189,7 @@ struct ShotMapView: UIViewRepresentable {
                 latitude: (allCoords.map(\.latitude).min()! + allCoords.map(\.latitude).max()!) / 2,
                 longitude: (allCoords.map(\.longitude).min()! + allCoords.map(\.longitude).max()!) / 2
             )
-            let altitude = max(teeGreenDist * 2.5, 200)
+            let altitude = max(teeGreenDist * 3.5, 200)
             let camera = MLNMapCamera(
                 lookingAtCenter: center, altitude: altitude, pitch: 0, heading: heading
             )

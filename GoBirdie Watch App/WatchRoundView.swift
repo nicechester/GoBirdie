@@ -83,6 +83,22 @@ private struct ActiveRoundView: View {
         ) { _ in
         } onIdle: {
         }
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.width > 30 {
+                        // Swiped right - go to previous hole
+                        if session.holeNumber > 1 {
+                            session.navigateToHole(session.holeNumber - 1)
+                        }
+                    } else if value.translation.width < -30 {
+                        // Swiped left - go to next hole
+                        if session.holeNumber < session.totalHoles {
+                            session.navigateToHole(session.holeNumber + 1)
+                        }
+                    }
+                }
+        )
         .onAppear { crownHole = session.holeNumber }
         .onChange(of: crownHole) { _, newValue in
             if newValue != session.holeNumber {

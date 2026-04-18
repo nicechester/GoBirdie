@@ -219,8 +219,9 @@ final class WatchRoundSession: NSObject, ObservableObject {
     }
 
     private func defaultClubForDistance(_ yards: Int?) -> String {
-        guard let y = yards, !clubBag.isEmpty else {
-            return clubBag.first ?? "unknown"
+        let validClubs = clubBag.filter { $0 != "putter" }
+        guard let y = yards, !validClubs.isEmpty else {
+            return validClubs.first ?? "unknown"
         }
         let table: [(String, Int)] = [
             ("driver", 230), ("3w", 210), ("5w", 195),
@@ -231,11 +232,11 @@ final class WatchRoundSession: NSObject, ObservableObject {
             ("lw", 60),
         ]
         for (club, minDist) in table {
-            if clubBag.contains(club) && y >= minDist {
+            if validClubs.contains(club) && y >= minDist {
                 return club
             }
         }
-        return clubBag.last ?? "unknown"
+        return validClubs.last ?? "unknown"
     }
 
     private func sendClubToPhone() {
