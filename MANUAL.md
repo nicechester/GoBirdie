@@ -241,13 +241,23 @@ When you start a round on the iPhone, the Watch shows the course name. Tap **Sta
 
 ### Step 19: Distances & Shot Tracking
 
-The Watch displays live distances to the **Front**, **Pin**, and **Back** of the green, updated continuously from Watch GPS. Use the buttons to:
-- **Shot** — mark a shot at your current GPS location
-- **+1 Stroke** — add a stroke without marking a location
+The Watch displays live distances to the **Front**, **Pin**, and **Back** of the green in a compact layout, updated continuously from Watch GPS. Below the distances, your current **Strokes** and **Putts** are shown. Use the buttons to:
+- **Shot** — mark a shot at your current GPS location (opens club selection)
+- **+1 Putt** — add a putt to the current hole
 
-Rotate the **Digital Crown** to navigate between holes.
+Rotate the **Digital Crown** to navigate between holes. Stroke and putt counts sync automatically with the iPhone.
 
 </td><td valign="top"><img src="screenshots/watch-rounding.png" width="160"></td></tr>
+</table>
+
+<table>
+<tr><td valign="top"><img src="screenshots/watch-club-selection.png" width="160"></td><td valign="top" width="60%">
+
+### Step 19b: Club Selection on Watch
+
+After tapping **Shot**, a club picker overlay appears. Rotate the **Digital Crown** or swipe left/right to scroll through your clubs, then tap to confirm. The selected club is recorded with the shot and synced to the iPhone.
+
+</td></tr>
 </table>
 
 <table>
