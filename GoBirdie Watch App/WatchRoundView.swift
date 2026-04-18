@@ -102,30 +102,30 @@ private struct DistanceModeView: View {
 
     var body: some View {
         VStack(spacing: 3) {
-            HStack(spacing: 4) {
+            HStack(spacing: 2) {
                 VStack(spacing: 0) {
                     Text("F")
                         .font(.system(size: 11)).foregroundStyle(.secondary)
                     Text("\(session.frontYards ?? 0)")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
                 .frame(maxWidth: .infinity)
 
                 VStack(spacing: 0) {
                     Text("PIN")
-                        .font(.system(size: 14)).foregroundStyle(.secondary)
+                        .font(.system(size: 13)).foregroundStyle(.secondary)
                     Text("\(session.pinYards ?? 0)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(.green)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .center)
 
                 VStack(spacing: 0) {
                     Text("B")
                         .font(.system(size: 11)).foregroundStyle(.secondary)
                     Text("\(session.backYards ?? 0)")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
                 .frame(maxWidth: .infinity)

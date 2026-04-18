@@ -228,7 +228,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
             ("4i", 170), ("5i", 160), ("6i", 150),
             ("7i", 140), ("8i", 130), ("9i", 120),
             ("pw", 110), ("gw", 95), ("sw", 80),
-            ("lw", 60), ("putter", 0),
+            ("lw", 60),
         ]
         for (club, minDist) in table {
             if clubBag.contains(club) && y >= minDist {

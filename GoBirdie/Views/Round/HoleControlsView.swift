@@ -118,7 +118,7 @@ struct HoleControlsView: View {
             (.iron4, 170), (.iron5, 160), (.iron6, 150),
             (.iron7, 140), (.iron8, 130), (.iron9, 120),
             (.pitchingWedge, 110), (.gapWedge, 95), (.sandWedge, 80),
-            (.lobWedge, 60), (.putter, 0),
+            (.lobWedge, 60),
         ]
         for (club, minDist) in table {
             if enabledClubs.contains(club) && y >= minDist {
