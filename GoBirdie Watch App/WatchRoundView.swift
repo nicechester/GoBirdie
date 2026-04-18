@@ -102,7 +102,8 @@ private struct DistanceModeView: View {
 
     var body: some View {
         VStack(spacing: 3) {
-            HStack(spacing: 2) {
+            HStack(spacing: 0) {
+                // FRONT COLUMN
                 VStack(spacing: 0) {
                     Text("F")
                         .font(.system(size: 11)).foregroundStyle(.secondary)
@@ -110,17 +111,21 @@ private struct DistanceModeView: View {
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
+                // PIN COLUMN
                 VStack(spacing: 0) {
                     Text("PIN")
                         .font(.system(size: 13)).foregroundStyle(.secondary)
                     Text("\(session.pinYards ?? 0)")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
                         .foregroundStyle(.green)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
+                .layoutPriority(1)
+                .frame(minWidth: 80, alignment: .center)
 
+                // BACK COLUMN
                 VStack(spacing: 0) {
                     Text("B")
                         .font(.system(size: 11)).foregroundStyle(.secondary)
@@ -128,9 +133,9 @@ private struct DistanceModeView: View {
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
-
+            
             HStack(spacing: 12) {
                 VStack(spacing: 1) {
                     Text("\(session.strokes)")
@@ -158,7 +163,7 @@ private struct DistanceModeView: View {
                         Image(systemName: "location.fill")
                             .font(.body)
                         Text("Shot")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -172,7 +177,7 @@ private struct DistanceModeView: View {
                         Text("+1")
                             .font(.body).fontWeight(.bold)
                         Text("Putt")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                     }
                     .frame(maxWidth: .infinity)
                 }
