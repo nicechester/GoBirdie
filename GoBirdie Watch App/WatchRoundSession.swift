@@ -356,6 +356,14 @@ final class WatchRoundSession: NSObject, ObservableObject {
                 endWorkout()
                 isRoundEnded = true
                 return
+            case "strokeUpdate":
+                if let hole = context["holeNumber"] as? Int,
+                   let s = context["strokes"] as? Int,
+                   let p = context["putts"] as? Int {
+                    strokes = s
+                    putts = p
+                }
+                return
             default:
                 break
             }

@@ -65,9 +65,17 @@ final class ConnectivityService: NSObject, ObservableObject {
         send(ctx)
     }
 
+    func sendStrokeUpdate(holeNumber: Int, strokes: Int, putts: Int) {
+        send([
+            "action": "strokeUpdate",
+            "holeNumber": holeNumber,
+            "strokes": strokes,
+            "putts": putts,
+        ])
+    }
 
     private func send(_ ctx: [String: Any]) {
-        guard WCSession.isSupported(), session.activationState == .activated else { return }
+        guard WCSession.isSupported() else { return }
         // Always persist to applicationContext so Watch gets it on launch
         do {
             try session.updateApplicationContext(ctx)

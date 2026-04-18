@@ -13,12 +13,24 @@ struct HoleControlsView: View {
     let viewModel: RoundViewModel
     @State private var showMarkShotSheet = false
     @State private var selectedClub: ClubType = .unknown
+    private let distanceEngine = DistanceEngine()
 
     var body: some View {
         VStack(spacing: 10) {
             // Row 1: Mark Shot + +Stroke
             HStack(spacing: 12) {
-                Button { showMarkShotSheet = true } label: {
+                Button {
+                    let currentHoleNumber = session.currentHoleNumber
+                    var distanceToGreen: Int? = nil
+                    if let hole = course.holes.first(where: { $0.number == currentHoleNumber }),
+                       let greenCenter = hole.greenCenter,
+                       let playerLoc = locationService.currentLocation {
+                        let yards = distanceEngine.distanceYards(from: playerLoc, to: greenCenter)
+                        distanceToGreen = Int(yards.rounded())
+                    }
+                    selectedClub = defaultClubForDistance(distanceToGreen)
+                    showMarkShotSheet = true
+                } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "location.fill")
                         Text("Mark Shot")
@@ -93,6 +105,27 @@ struct HoleControlsView: View {
                 appState.resetIdleTimer()
             }
         }
+    }
+
+    private func defaultClubForDistance(_ yards: Int?) -> ClubType {
+        let enabledClubs = ClubBag.shared.enabledClubs
+        guard let y = yards, !enabledClubs.isEmpty else {
+            return enabledClubs.first ?? .unknown
+        }
+        let table: [(ClubType, Int)] = [
+            (.driver, 230), (.wood3, 210), (.wood5, 195),
+            (.hybrid3, 190), (.hybrid4, 180), (.hybrid5, 170),
+            (.iron4, 170), (.iron5, 160), (.iron6, 150),
+            (.iron7, 140), (.iron8, 130), (.iron9, 120),
+            (.pitchingWedge, 110), (.gapWedge, 95), (.sandWedge, 80),
+            (.lobWedge, 60), (.putter, 0),
+        ]
+        for (club, minDist) in table {
+            if enabledClubs.contains(club) && y >= minDist {
+                return club
+            }
+        }
+        return enabledClubs.last ?? .unknown
     }
 }
 

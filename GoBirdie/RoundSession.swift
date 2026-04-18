@@ -98,6 +98,7 @@ final class RoundSession: ObservableObject {
         guard currentHole != nil, !isComplete else { return }
         round.holes[currentHoleIndex].strokes += 1
         recomputeTotals()
+        sendStrokeUpdate()
     }
 
     /// Remove one stroke from the current hole (minimum 0).
@@ -105,6 +106,15 @@ final class RoundSession: ObservableObject {
         guard let hole = currentHole, !isComplete, hole.strokes > 0 else { return }
         round.holes[currentHoleIndex].strokes -= 1
         recomputeTotals()
+        sendStrokeUpdate()
+    }
+
+    private func sendStrokeUpdate() {
+        ConnectivityService.shared.sendStrokeUpdate(
+            holeNumber: currentHoleNumber,
+            strokes: round.holes[currentHoleIndex].strokes,
+            putts: round.holes[currentHoleIndex].putts
+        )
     }
 
     /// Mark a shot at the player's current GPS location.
@@ -128,6 +138,7 @@ final class RoundSession: ObservableObject {
         round.holes[currentHoleIndex].shots.append(shot)
         round.holes[currentHoleIndex].strokes += 1
         recomputeTotals()
+        sendStrokeUpdate()
     }
 
     /// Set the number of putts for the current hole.
@@ -144,6 +155,12 @@ final class RoundSession: ObservableObject {
         }
         updateGIR()
         recomputeTotals()
+
+        ConnectivityService.shared.sendStrokeUpdate(
+            holeNumber: currentHoleNumber,
+            strokes: round.holes[currentHoleIndex].strokes,
+            putts: round.holes[currentHoleIndex].putts
+        )
     }
 
     /// Move to the next hole, or complete the round if on the last hole.
