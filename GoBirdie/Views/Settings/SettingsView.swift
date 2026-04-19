@@ -8,6 +8,11 @@ import GoBirdieCore
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+
+    private var isPatron: Bool {
+        UserDefaults.standard.bool(forKey: "isPatron")
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -29,11 +34,26 @@ struct SettingsView: View {
 
                 SyncServerSection()
                 TeeSection()
-                TipJarSection()
+                if !isPatron {
+                    TipJarSection()
+                }
                 AboutSection()
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if isPatron {
+                    ToolbarItem(placement: .principal) {
+                        HStack {
+                            Text("Settings")
+                            Image("patron-badge")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 24)
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -170,7 +190,8 @@ private struct TipJarSection: View {
             let result = try await product.purchase()
             switch result {
             case .success:
-                thankYouMessage = "Thank you! ⛳️ You're awesome."
+                UserDefaults.standard.set(true, forKey: "isPatron")
+                thankYouMessage = "Thank you! ⛳️ You're now a Patron."
             case .userCancelled:
                 break
             case .pending:
