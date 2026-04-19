@@ -236,11 +236,12 @@ final class RoundSession: ObservableObject {
     }
 
     /// Update GIR (Greens In Regulation) for the current hole.
-    /// GIR = strokes <= par + 2
+    /// GIR = (strokes - putts) <= (par - 2)
+    /// Means: reached green in regulation strokes (2 putts remaining on par or better)
     private func updateGIR() {
         guard currentHoleIndex < round.holes.count else { return }
         let hole = round.holes[currentHoleIndex]
-        let gir = hole.strokes <= hole.par + 2
+        let gir = (hole.strokes - hole.putts) <= (hole.par - 2)
         round.holes[currentHoleIndex].gir = gir
     }
 }
