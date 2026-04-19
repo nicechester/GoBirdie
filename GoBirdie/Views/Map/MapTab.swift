@@ -129,25 +129,11 @@ private struct ExploreCoursePicker: View {
                         DownloadingView(courseName: courseName)
 
                     case .selectStartingHole(let course):
-                        VStack(spacing: 20) {
-                            Text("Start exploring")
-                                .font(.headline)
-                                .multilineTextAlignment(.center)
-                            Spacer()
-                            Button {
+                        // Auto-transition to map view (skip intermediate screen)
+                        EmptyView()
+                            .onAppear {
                                 exploreState = .exploring(course: course)
-                            } label: {
-                                Text("View Map")
-                                    .fontWeight(.semibold)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(Color.green)
-                                    .foregroundStyle(.white)
-                                    .cornerRadius(10)
                             }
-                            Spacer()
-                        }
-                        .padding(.vertical, 16)
 
                     case .error(let message):
                         ErrorView(
@@ -266,31 +252,24 @@ private struct ExploreMapView: View {
     }
 }
 
-/// Bottom action buttons for explore mode
+/// Bottom action button for explore mode
 private struct ExploreMapBannerCTA: View {
     let onBack: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            Button(action: onBack) {
+        Button(action: onBack) {
+            HStack(spacing: 8) {
                 Image(systemName: "chevron.left")
                     .font(.headline)
-                    .foregroundStyle(.white)
-                    .frame(height: 44)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.black.opacity(0.6))
-                    .cornerRadius(10)
+                Text("Pick Course")
+                    .fontWeight(.semibold)
             }
-
-            Text("Exploring")
-                .font(.caption)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color.black.opacity(0.6))
-                .cornerRadius(10)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(Color.black.opacity(0.6))
+            .cornerRadius(10)
         }
-        .frame(height: 44)
     }
 }
 
