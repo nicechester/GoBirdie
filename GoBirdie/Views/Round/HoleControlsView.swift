@@ -195,7 +195,7 @@ private struct PuttStepper: View {
 
 // MARK: - Mark Shot Sheet
 
-private struct MarkShotSheet: View {
+struct MarkShotSheet: View {
     @Environment(\.dismiss) var dismiss
     @Binding var selectedClub: ClubType
     @ObservedObject private var bag = ClubBag.shared

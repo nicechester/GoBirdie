@@ -68,14 +68,13 @@ public enum ClubType: String, Codable, Sendable, CaseIterable {
         }
     }
 
-    /// The default set of clubs in a standard bag (no hybrids).
+    /// The default set of clubs in a standard bag (no hybrids, no putter).
     public static let defaultBag: [ClubType] = [
         .driver, .wood3, .wood5,
         .iron4, .iron5, .iron6, .iron7, .iron8, .iron9,
-        .pitchingWedge, .gapWedge, .sandWedge, .lobWedge,
-        .putter
+        .pitchingWedge, .gapWedge, .sandWedge, .lobWedge
     ]
 
-    /// All selectable clubs (excludes .unknown).
-    public static let allSelectable: [ClubType] = allCases.filter { $0 != .unknown }
+    /// All selectable clubs (excludes .unknown and .putter).
+    public static let allSelectable: [ClubType] = allCases.filter { $0 != .unknown && $0 != .putter }
 }

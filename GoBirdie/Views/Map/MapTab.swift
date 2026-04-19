@@ -83,7 +83,7 @@ private struct MapActiveView: View {
         }
     }
 
-    private static func makeTestCourse() -> Course {
+    fileprivate static func makeTestCourse() -> Course {
         let pebbleBeach = GpsPoint(lat: 36.5627, lon: -121.9496)
         let holes = (1...18).map { n in
             Hole(
@@ -192,19 +192,24 @@ private struct EmptyMapStateView: View {
         totalStrokes: 0,
         totalPutts: 0
     )
+
     let testSession = RoundSession(round: testRound)
 
     let appState = AppState()
     appState.activeRound = testSession
 
-    return MapTab()
-        .environmentObject(appState)
-        .preferredColorScheme(.light)
+    return (
+        MapTab()
+            .environmentObject(appState)
+            .preferredColorScheme(.light)
+    )
 }
 
 #Preview("No Round") {
     let appState = AppState()
-    return MapTab()
-        .environmentObject(appState)
-        .preferredColorScheme(.light)
+    return (
+        MapTab()
+            .environmentObject(appState)
+            .preferredColorScheme(.light)
+    )
 }

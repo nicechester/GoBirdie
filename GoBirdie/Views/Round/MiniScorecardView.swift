@@ -165,7 +165,10 @@ private struct StrokeCircle: View {
         startedAt: Date(), endedAt: nil, holesPlayed: 2,
         holes: holes, totalStrokes: 8, totalPutts: 3
     )
+
     let session = RoundSession(round: round)
-    return MiniScorecardView(session: session, onHoleSelect: { _ in })
-        .preferredColorScheme(.dark)
+    return (
+        MiniScorecardView(session: session, onHoleSelect: { _ in })
+            .preferredColorScheme(.dark)
+    )
 }

@@ -160,8 +160,6 @@ private struct ScorecardDetailView: View {
         return best
     }
     private var girCount: Int { playedHoles.filter(\.gir).count }
-    private var fairwayHitCount: Int { playedHoles.compactMap(\.fairwayHit).filter { $0 }.count }
-    private var fairwayEligible: Int { playedHoles.filter { $0.par >= 4 }.count }
 
     var body: some View {
         NavigationStack {
@@ -201,8 +199,6 @@ private struct ScorecardDetailView: View {
                         holesPlayed: playedHoles.count,
                         girCount: girCount,
                         girTotal: playedHoles.count,
-                        fairwayHit: fairwayHitCount,
-                        fairwayEligible: fairwayEligible,
                         longestDrive: longestDrive
                     )
                     .padding(.top, 8)
@@ -252,6 +248,9 @@ private struct ShotMapSheet: View {
     @State private var selectedShotId: UUID?
     @State private var showDeleteConfirm = false
     @State private var dirty = false
+    @State private var showClubPicker = false
+    @State private var clubPickerShotId: UUID? = nil
+    @State private var clubPickerInitialClub: ClubType = .unknown
 
     init(allHoles: [HoleScore], courseHoles: [Hole], initialHole: HoleScore) {
         self.allHoles = allHoles
@@ -299,9 +298,14 @@ private struct ShotMapSheet: View {
                         },
                         onAddShot: { location in
                             addShot(at: location)
+                        },
+                        onChangeClub: { shotId, currentClub in
+                            clubPickerShotId = shotId
+                            clubPickerInitialClub = currentClub
+                            showClubPicker = true
                         }
                     )
-                    .id(hole.id)
+                    .id("\(hole.id)-\(hole.shots.map { "\($0.id)-\($0.club.rawValue)" }.joined())")
                     .ignoresSafeArea()
                 } else {
                     ShotMapView(holes: [hole], courseHoles: courseHoles)
@@ -390,10 +394,25 @@ private struct ShotMapSheet: View {
                 Button("Delete", role: .destructive) { deleteSelectedShot() }
                 Button("Cancel", role: .cancel) { }
             }
+            .sheet(isPresented: $showClubPicker) {
+                MarkShotSheet(selectedClub: $clubPickerInitialClub) { club in
+                    if let sid = clubPickerShotId {
+                        changeClub(shotId: sid, club: club)
+                    }
+                    clubPickerShotId = nil
+                }
+            }
         }
         .onAppear {
             currentIndex = holesWithShots.firstIndex { $0.id == initialHole.id } ?? 0
         }
+    }
+
+    private func changeClub(shotId: UUID, club: ClubType) {
+        guard let hi = holeIndex(),
+              let si = editableHoles[hi].shots.firstIndex(where: { $0.id == shotId }) else { return }
+        editableHoles[hi].shots[si].club = club
+        dirty = true
     }
 
     private func holeIndex() -> Int? {
@@ -410,10 +429,13 @@ private struct ShotMapSheet: View {
     private func addShot(at location: GpsPoint) {
         guard let hi = holeIndex() else { return }
         let seq = (editableHoles[hi].shots.map(\.sequence).max() ?? 0) + 1
-        let shot = Shot(sequence: seq, location: location, timestamp: Date())
+        let shot = Shot(sequence: seq, location: location, timestamp: Date(), club: .unknown)
         editableHoles[hi].shots.append(shot)
         editableHoles[hi].strokes += 1
         selectedShotId = shot.id
+        clubPickerShotId = shot.id
+        clubPickerInitialClub = .unknown
+        showClubPicker = true
         dirty = true
     }
 
@@ -499,17 +521,12 @@ private struct StatsSection: View {
     let holesPlayed: Int
     let girCount: Int
     let girTotal: Int
-    let fairwayHit: Int
-    let fairwayEligible: Int
     let longestDrive: (yards: Int, hole: Int)?
 
     var body: some View {
         VStack(spacing: 6) {
             statRow("Holes Played", value: "\(holesPlayed)")
             statRow("GIR", value: "\(girCount)/\(girTotal)")
-            if fairwayEligible > 0 {
-                statRow("Fairway Hit", value: "\(fairwayHit)/\(fairwayEligible)")
-            }
             if let ld = longestDrive {
                 statRow("Longest Drive", value: "\(ld.yards) yds (H\(ld.hole))")
             }

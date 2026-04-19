@@ -13,6 +13,7 @@ struct EditableShotMapView: UIViewRepresentable {
     @Binding var selectedShotId: UUID?
     let onMoveShotTo: (UUID, GpsPoint) -> Void
     let onAddShot: (GpsPoint) -> Void
+    let onChangeClub: (UUID, ClubType) -> Void
 
     func makeUIView(context: Context) -> MLNMapView {
         let mapView = MLNMapView(frame: .zero)
@@ -60,7 +61,8 @@ struct EditableShotMapView: UIViewRepresentable {
             courseHoles: courseHoles,
             selectedShotId: $selectedShotId,
             onMoveShotTo: onMoveShotTo,
-            onAddShot: onAddShot
+            onAddShot: onAddShot,
+            onChangeClub: onChangeClub
         )
     }
 
@@ -72,6 +74,7 @@ struct EditableShotMapView: UIViewRepresentable {
         let selectedShotIdBinding: Binding<UUID?>
         let onMoveShotTo: (UUID, GpsPoint) -> Void
         let onAddShot: (GpsPoint) -> Void
+        let onChangeClub: (UUID, ClubType) -> Void
         private var shotAnnotations: [UUID: MLNPointAnnotation] = [:]
         private var draggingShotId: UUID?
 
@@ -89,13 +92,15 @@ struct EditableShotMapView: UIViewRepresentable {
 
         init(hole: HoleScore, courseHoles: [Hole], selectedShotId: Binding<UUID?>,
              onMoveShotTo: @escaping (UUID, GpsPoint) -> Void,
-             onAddShot: @escaping (GpsPoint) -> Void) {
+             onAddShot: @escaping (GpsPoint) -> Void,
+             onChangeClub: @escaping (UUID, ClubType) -> Void) {
             self.hole = hole
             self.courseHoles = courseHoles
             self.selectedShotIdBinding = selectedShotId
             self.selectedShotId = selectedShotId.wrappedValue
             self.onMoveShotTo = onMoveShotTo
             self.onAddShot = onAddShot
+            self.onChangeClub = onChangeClub
         }
 
         func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
@@ -227,11 +232,20 @@ struct EditableShotMapView: UIViewRepresentable {
             let point = gesture.location(in: mapView)
 
             if let shotId = shotIdAtPoint(point, in: mapView) {
-                DispatchQueue.main.async {
-                    self.selectedShotIdBinding.wrappedValue = shotId
-                    self.selectedShotId = shotId
+                if selectedShotId == shotId {
+                    // Already selected — open club picker
+                    let currentClub = hole.shots.first { $0.id == shotId }?.club ?? .unknown
+                    DispatchQueue.main.async {
+                        self.onChangeClub(shotId, currentClub)
+                    }
+                } else {
+                    // Not selected — select it
+                    DispatchQueue.main.async {
+                        self.selectedShotIdBinding.wrappedValue = shotId
+                        self.selectedShotId = shotId
+                    }
+                    updateSelectionVisuals(mapView: mapView)
                 }
-                updateSelectionVisuals(mapView: mapView)
                 return
             }
 
