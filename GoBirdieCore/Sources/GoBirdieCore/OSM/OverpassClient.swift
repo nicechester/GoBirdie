@@ -198,23 +198,36 @@ out geom tags;
         )]
     }
 
-    /// Split hole ways into groups by finding the largest gap in sorted way IDs.
+    /// Split hole ways into groups by finding the N-1 largest gaps in sorted way IDs,
+    /// where N is the max number of duplicates for any hole ref.
     /// OSM mappers typically trace one course's holes in sequence, producing contiguous ID blocks.
     private func splitCoursesByWayIdGap(_ holeLines: [OverpassElement]) -> [Set<Int64>] {
         let ids = holeLines.map(\.id).sorted()
         guard ids.count > 1 else { return [Set(ids)] }
 
-        // Find the largest gap
-        var maxGap: Int64 = 0
-        var splitIdx = 0
-        for i in 1..<ids.count {
-            let gap = ids[i] - ids[i - 1]
-            if gap > maxGap { maxGap = gap; splitIdx = i }
-        }
+        // Determine number of courses from max duplicate hole ref count
+        let refCounts = Dictionary(grouping: holeLines.compactMap { $0.tags?["ref"].flatMap(Int.init) }, by: { $0 })
+        let numCourses = max(2, refCounts.values.map(\.count).max() ?? 2)
+        let numSplits = numCourses - 1
 
-        let group1 = Set(ids[..<splitIdx])
-        let group2 = Set(ids[splitIdx...])
-        return [group1, group2]
+        // Find the N-1 largest gaps
+        var gaps: [(index: Int, gap: Int64)] = []
+        for i in 1..<ids.count {
+            gaps.append((i, ids[i] - ids[i - 1]))
+        }
+        let splitIndices = gaps.sorted { $0.gap > $1.gap }
+            .prefix(numSplits)
+            .map(\.index)
+            .sorted()
+
+        var groups: [Set<Int64>] = []
+        var start = 0
+        for splitIdx in splitIndices {
+            groups.append(Set(ids[start..<splitIdx]))
+            start = splitIdx
+        }
+        groups.append(Set(ids[start...]))
+        return groups
     }
 
     // MARK: - Private
