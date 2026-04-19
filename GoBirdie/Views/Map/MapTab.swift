@@ -81,6 +81,9 @@ private struct MapActiveView: View {
                 }
             }
         }
+        .onAppear {
+            mapViewModel.syncToSession()
+        }
     }
 
     fileprivate static func makeTestCourse() -> Course {

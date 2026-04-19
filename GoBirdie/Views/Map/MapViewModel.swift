@@ -137,6 +137,14 @@ final class MapViewModel: ObservableObject {
         tapPlayerLocation = nil
     }
 
+    /// Resets the map's displayed hole to match the round's current hole.
+    /// Call this whenever the user navigates back to the map tab.
+    func syncToSession() {
+        guard currentHoleIndex != session.currentHoleIndex else { return }
+        currentHoleIndex = session.currentHoleIndex
+        clearTap()
+    }
+
     private func clearTapIfPlayerMoved(_ newLoc: GpsPoint?) {
         guard let origin = tapPlayerLocation, let loc = newLoc, selectedTapPoint != nil else { return }
         if distanceEngine.distanceYards(from: origin, to: loc) > tapClearThresholdYards {
@@ -166,14 +174,12 @@ final class MapViewModel: ObservableObject {
     func navigatePrevious() {
         guard currentHoleIndex > 0 else { return }
         currentHoleIndex -= 1
-        session.currentHoleIndex = currentHoleIndex
         clearTap()
     }
 
     func navigateNext() {
         guard currentHoleIndex < course.holes.count - 1 else { return }
         currentHoleIndex += 1
-        session.currentHoleIndex = currentHoleIndex
         clearTap()
     }
 
