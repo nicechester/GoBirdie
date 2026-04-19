@@ -414,13 +414,8 @@ class StartRoundViewModel: ObservableObject {
             while self.currentLocation == nil && Date().timeIntervalSince(startTime) < 20 {
                 if let location = locationService.currentLocation {
                     self.currentLocation = location
-                    // If no saved courses shown, load with location sorting
-                    if self.displayedCourses.isEmpty {
-                        await MainActor.run { self.showCoursesForLocation(location) }
-                    } else {
-                        // Saved courses already showing, just search online
-                        await MainActor.run { self.searchOnlineForLocation(location) }
-                    }
+                    // Always call showCoursesForLocation to properly sort by distance
+                    await MainActor.run { self.showCoursesForLocation(location) }
                     return
                 }
                 try await Task.sleep(nanoseconds: 500_000_000)
