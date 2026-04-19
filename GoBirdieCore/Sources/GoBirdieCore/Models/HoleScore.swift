@@ -45,6 +45,21 @@ public struct HoleScore: Codable, Sendable, Identifiable, Equatable {
         penalties = (try? c.decode(Int.self, forKey: .penalties)) ?? 0
         shots = try c.decode([Shot].self, forKey: .shots)
         greenCenter = try c.decodeIfPresent(GpsPoint.self, forKey: .greenCenter)
+        // Note: gir is computed, not decoded
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(number, forKey: .number)
+        try c.encode(par, forKey: .par)
+        try c.encode(strokes, forKey: .strokes)
+        try c.encode(putts, forKey: .putts)
+        try c.encodeIfPresent(fairwayHit, forKey: .fairwayHit)
+        try c.encode(gir, forKey: .gir)  // Encode computed GIR for sync
+        try c.encode(penalties, forKey: .penalties)
+        try c.encode(shots, forKey: .shots)
+        try c.encodeIfPresent(greenCenter, forKey: .greenCenter)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -54,6 +69,7 @@ public struct HoleScore: Codable, Sendable, Identifiable, Equatable {
         case strokes
         case putts
         case fairwayHit = "fairway_hit"
+        case gir
         case penalties
         case shots
         case greenCenter = "green_center"
