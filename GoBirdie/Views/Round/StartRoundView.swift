@@ -127,7 +127,7 @@ struct StartRoundView: View {
 
 // MARK: - State Views
 
-private struct LocationRequestingView: View {
+struct LocationRequestingView: View {
     var body: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -146,7 +146,7 @@ private struct LocationRequestingView: View {
     }
 }
 
-private struct SearchBar: View {
+struct SearchBar: View {
     @Binding var text: String
     let onCommit: () -> Void
 
@@ -171,7 +171,7 @@ private struct SearchBar: View {
     }
 }
 
-private struct CourseListView: View {
+struct CourseListView: View {
     let courses: [GolfCourseResult]
     let playerLocation: GpsPoint?
     let isSearchingOnline: Bool
@@ -223,7 +223,7 @@ private struct CourseListView: View {
     }
 }
 
-private struct CourseCell: View {
+struct CourseCell: View {
     let course: GolfCourseResult
     let isSaved: Bool
     let distanceString: String?
@@ -263,7 +263,7 @@ private struct CourseCell: View {
     }
 }
 
-private struct DownloadingView: View {
+struct DownloadingView: View {
     let courseName: String
 
     var body: some View {
@@ -284,7 +284,7 @@ private struct DownloadingView: View {
     }
 }
 
-private struct ErrorView: View {
+struct ErrorView: View {
     let message: String
     let onRetry: () -> Void
 

@@ -171,10 +171,14 @@ struct MapLibreView: UIViewRepresentable {
                 .sink { [weak self] _ in self?.updateScreenPoints() }
                 .store(in: &cancellables)
 
-            viewModel.session.$round
-                .receive(on: DispatchQueue.main)
-                .sink { [weak self] _ in self?.updateScreenPoints() }
-                .store(in: &cancellables)
+            if let session = viewModel.session {
+                session.$round
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] _ in
+                        self?.updateScreenPoints()
+                    }
+                    .store(in: &cancellables)
+            }
         }
 
         func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
