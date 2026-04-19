@@ -166,7 +166,6 @@ final class RoundSession: ObservableObject {
     }
 
     /// Set the number of putts for the current hole.
-    /// Automatically recalculates GIR after update.
     /// - Parameter count: Number of putts (must be >= 0).
     func setPutts(_ count: Int) {
         guard currentHole != nil, count >= 0 else { return }
@@ -177,7 +176,6 @@ final class RoundSession: ObservableObject {
         if round.holes[currentHoleIndex].strokes < 0 {
             round.holes[currentHoleIndex].strokes = 0
         }
-        updateGIR()
         recomputeTotals()
 
         ConnectivityService.shared.sendStrokeUpdate(
@@ -235,13 +233,4 @@ final class RoundSession: ObservableObject {
         round.totalPutts = round.holes.reduce(0) { $0 + $1.putts }
     }
 
-    /// Update GIR (Greens In Regulation) for the current hole.
-    /// GIR = (strokes - putts) <= (par - 2)
-    /// Means: reached green in regulation strokes (2 putts remaining on par or better)
-    private func updateGIR() {
-        guard currentHoleIndex < round.holes.count else { return }
-        let hole = round.holes[currentHoleIndex]
-        let gir = (hole.strokes - hole.putts) <= (hole.par - 2)
-        round.holes[currentHoleIndex].gir = gir
-    }
 }
