@@ -17,7 +17,7 @@ struct HoleControlsView: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            // Row 1: Mark Shot + +Stroke
+            // Row 1: Mark Shot + Penalty / Undo
             HStack(spacing: 12) {
                 Button {
                     let currentHoleNumber = session.currentHoleNumber
@@ -42,15 +42,31 @@ struct HoleControlsView: View {
                 }
 
                 Button {
-                    session.addStroke()
+                    session.addPenalty()
                     appState.resetIdleTimer()
                 } label: {
-                    Text("+Stroke")
-                        .font(.subheadline).fontWeight(.semibold)
-                        .padding(.horizontal, 16).padding(.vertical, 10)
-                        .background(Color(.systemGray6)).foregroundStyle(.primary)
-                        .cornerRadius(8)
+                    VStack(spacing: 2) {
+                        Image(systemName: "exclamationmark.triangle.fill").font(.caption)
+                        Text("Penalty").font(.system(size: 9, weight: .semibold))
+                    }
+                    .frame(width: 52, height: 42)
+                    .background(Color.orange).foregroundStyle(.white)
+                    .cornerRadius(8)
                 }
+
+                Button {
+                    session.undoLastAction()
+                    appState.resetIdleTimer()
+                } label: {
+                    VStack(spacing: 2) {
+                        Image(systemName: "arrow.uturn.backward").font(.caption)
+                        Text("Undo").font(.system(size: 9, weight: .semibold))
+                    }
+                    .frame(width: 52, height: 42)
+                    .background(Color(.systemGray6)).foregroundStyle(.primary)
+                    .cornerRadius(8)
+                }
+                .disabled((session.currentHole?.strokes ?? 0) == 0)
             }
 
             // Row 2: Putts stepper

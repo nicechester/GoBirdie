@@ -101,6 +101,30 @@ final class RoundSession: ObservableObject {
         sendStrokeUpdate()
     }
 
+    /// Add a penalty stroke to the current hole.
+    func addPenalty() {
+        guard currentHole != nil, !isComplete else { return }
+        round.holes[currentHoleIndex].strokes += 1
+        round.holes[currentHoleIndex].penalties += 1
+        recomputeTotals()
+        sendStrokeUpdate()
+    }
+
+    /// Undo the last action on the current hole.
+    /// If there are shots, removes the last shot and decrements strokes.
+    /// Otherwise decrements strokes (minimum 0).
+    func undoLastAction() {
+        guard let hole = currentHole, !isComplete, hole.strokes > 0 else { return }
+        if !round.holes[currentHoleIndex].shots.isEmpty {
+            round.holes[currentHoleIndex].shots.removeLast()
+        } else if round.holes[currentHoleIndex].penalties > 0 {
+            round.holes[currentHoleIndex].penalties -= 1
+        }
+        round.holes[currentHoleIndex].strokes -= 1
+        recomputeTotals()
+        sendStrokeUpdate()
+    }
+
     /// Remove one stroke from the current hole (minimum 0).
     func removeStroke() {
         guard let hole = currentHole, !isComplete, hole.strokes > 0 else { return }

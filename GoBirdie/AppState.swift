@@ -9,6 +9,7 @@ import Foundation
 import Combine
 import UIKit
 import OSLog
+import CoreLocation
 import GoBirdieCore
 
 private let appStateLogger = Logger(subsystem: "com.gobirdie", category: "AppState")
@@ -43,6 +44,7 @@ final class AppState: ObservableObject {
     private let inProgressStore = InProgressStore()
     private let roundStore = RoundStore()
     private let syncServer: SyncServer
+    private let weatherProvider = WeatherProvider.shared
     private var autoSaveTimer: Timer?
     private var idleTimer: Timer?
     @Published var showIdlePrompt = false
@@ -271,17 +273,56 @@ final class AppState: ObservableObject {
         guard let session = activeRound else { return }
         session.endRound()
 
-        do {
-            try roundStore.save(session.round)
-            print("[AppState] Round saved: \(session.round.id)")
-        } catch {
-            print("[AppState] Failed to save round: \(error)")
-        }
+        print("[AppState] Ending round: \(session.round.id)")
+        print("[AppState] Current location: \(locationService.currentLocation?.lat ?? 0), \(locationService.currentLocation?.lon ?? 0)")
+        print("[AppState] Location service running: \(locationService.isRunning)")
 
-        if !fromWatch {
-            ConnectivityService.shared.sendRoundEnded()
+        // Attempt to fetch and store weather data
+        if let currentLocation = locationService.currentLocation {
+            let coordinate = CLLocationCoordinate2D(
+                latitude: currentLocation.lat,
+                longitude: currentLocation.lon
+            )
+
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+
+                if let weatherData = await self.weatherProvider.fetchCurrentWeather(location: coordinate) {
+                    session.round.temperatureMinF = weatherData.minF
+                    session.round.temperatureMaxF = weatherData.maxF
+                    session.round.weatherCondition = weatherData.condition
+                    print("[AppState] Weather captured: min=\(weatherData.minF)°F, max=\(weatherData.maxF)°F, \(weatherData.condition)")
+                } else {
+                    print("[AppState] Weather fetch failed or unavailable")
+                }
+
+                do {
+                    try self.roundStore.save(session.round)
+                    print("[AppState] Round saved: \(session.round.id)")
+                    print("[AppState] Weather in saved round - min: \(session.round.temperatureMinF ?? -1), max: \(session.round.temperatureMaxF ?? -1), condition: \(session.round.weatherCondition ?? "nil")")
+                } catch {
+                    print("[AppState] Failed to save round: \(error)")
+                }
+
+                if !fromWatch {
+                    ConnectivityService.shared.sendRoundEnded()
+                }
+                self.cleanupRound()
+            }
+        } else {
+            print("[AppState] No location available, skipping weather capture")
+            do {
+                try roundStore.save(session.round)
+                print("[AppState] Round saved: \(session.round.id)")
+            } catch {
+                print("[AppState] Failed to save round: \(error)")
+            }
+
+            if !fromWatch {
+                ConnectivityService.shared.sendRoundEnded()
+            }
+            cleanupRound()
         }
-        cleanupRound()
     }
 
     /// Cancel the active round without saving.

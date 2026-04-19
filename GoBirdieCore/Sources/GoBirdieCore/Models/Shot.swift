@@ -2,7 +2,7 @@ import Foundation
 
 /// A single shot dropped by the player during a hole.
 /// `sequence` is 1-based (first shot of the hole is 1).
-public struct Shot: Codable, Sendable, Identifiable {
+public struct Shot: Codable, Sendable, Identifiable, Equatable {
     public var id: UUID
     public var sequence: Int
     public var location: GpsPoint

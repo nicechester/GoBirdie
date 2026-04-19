@@ -364,6 +364,7 @@ class StartRoundViewModel: ObservableObject {
     var appState: AppState?
 
     private var locationService: LocationService = LocationService()
+    private let courseDownloadService = CourseDownloadService()
     private let overpassClient = OverpassClient()
     private let golfCourseAPI = GolfCourseAPIClient(apiKey: Config.golfCourseAPIKey)
     var currentLocation: GpsPoint?
@@ -511,33 +512,6 @@ class StartRoundViewModel: ObservableObject {
         }
     }
 
-    private func mergeCourse(name: String, id: String, location: GpsPoint,
-                             apiHoles: [GolfCourseHole], osmCourse: Course?,
-                             golfCourseApiId: Int? = nil) -> Course {
-        let osmHoles = osmCourse?.holes ?? []
-        let osmHoleMap = Dictionary(uniqueKeysWithValues: osmHoles.map { ($0.number, $0) })
-        // OSM is ground truth for hole count (9-hole courses have 18 API holes)
-        let effectiveApiHoles = !apiHoles.isEmpty && !osmHoles.isEmpty
-            ? Array(apiHoles.prefix(osmHoles.count))
-            : apiHoles
-        let baseHoles: [Hole] = effectiveApiHoles.isEmpty
-            ? osmHoles
-            : effectiveApiHoles.map { api in
-                let osm = osmHoleMap[api.number]
-                return Hole(
-                    id: osm?.id ?? UUID(), number: api.number,
-                    par: api.par, handicap: api.handicap,
-                    yardage: "\(api.yardage)",
-                    tee: osm?.tee, greenCenter: osm?.greenCenter,
-                    greenFront: osm?.greenFront, greenBack: osm?.greenBack,
-                    geometry: osm?.geometry
-                )
-            }
-        return Course(id: id, name: name, location: location,
-                      holes: baseHoles, downloadedAt: Date(), osmVersion: 1,
-                      golfCourseApiId: golfCourseApiId)
-    }
-
     func startRound(course: Course, startingHole: Int) {
         isStartingRound = true
         if let appState {
@@ -561,6 +535,8 @@ class StartRoundViewModel: ObservableObject {
     func downloadCourse(_ course: GolfCourseResult) {
         let store = CourseStore()
         let cacheId = cacheIdMap[course.id] ?? (course.id > 0 ? "gcapi-\(course.id)" : "osm-\(abs(course.id))")
+
+        // Check cache first
         if let cached = try? store.load(id: cacheId) {
             print("[CourseStore] Loaded \(course.name) from cache")
             state = .selectStartingHole(cached)
@@ -573,114 +549,28 @@ class StartRoundViewModel: ObservableObject {
 
         Task {
             do {
-                // 1. Get OSM geometry
-                let osmResults = try await overpassClient.searchCourses(location: course.location, radius: 2_000)
-                let osmMatch = osmResults.first(where: {
-                    levenshtein($0.name, course.name) < 10
-                }) ?? osmResults.first
-
-                // 2. Get par/yardage from GolfCourseAPI — search by name if no direct ID
-                var apiHoles: [GolfCourseHole] = []
                 let teeColor = appState?.teeColor ?? "Blue"
-                var gcapiId = course.id > 0 ? course.id : nil
+                let courseId = course.id > 0 ? "api-\(course.id)" : "osm-\(abs(course.id))"
 
-                if gcapiId == nil {
-                    // Search by course name to get the GolfCourseAPI ID
-                    let apiResults = try? await golfCourseAPI.searchCourses(query: course.name, playerLocation: course.location)
-                    gcapiId = apiResults?.first(where: { levenshtein($0.name, course.name) < 15 })?.id
-                    print("[GolfCourseAPI] Resolved id=\(gcapiId.map(String.init) ?? "nil") for '\(course.name)'")
-                }
-
-                if let id = gcapiId {
-                    apiHoles = (try? await golfCourseAPI.fetchHoles(courseId: id, teeColor: teeColor)) ?? []
-                    print("[GolfCourseAPI] Got \(apiHoles.count) holes for tee: \(teeColor)")
-                }
-
-                // 3. Download OSM geometry
-                var osmCourse: Course?
-                var osmCourses: [Course] = []
-                if let osm = osmMatch {
-                    print("[Overpass] Downloading geometry for \(osm.name) osmId=\(osm.osmId)")
-                    osmCourses = (try? await overpassClient.downloadCourse(
-                        osmRelationId: osm.osmId, name: course.name,
-                        playerLocation: currentLocation
-                    )) ?? []
-                }
-
-                // Multi-course complex: match to GolfCourseAPI by yardage, save all, let user pick
-                if osmCourses.count > 1 {
-                    // Fetch all GolfCourseAPI courses for this club
-                    let apiResults = (try? await golfCourseAPI.searchCourses(
-                        query: course.name, playerLocation: course.location
-                    ))?.filter { $0.location.distanceMeters(to: course.location) < 5_000 } ?? []
-
-                    // Fetch hole data for each API course
-                    var apiCourseHoles: [(name: String, id: Int, holes: [GolfCourseHole])] = []
-                    for api in apiResults {
-                        if let holes = try? await golfCourseAPI.fetchHoles(courseId: api.id, teeColor: teeColor), !holes.isEmpty {
-                            apiCourseHoles.append((name: api.name, id: api.id, holes: holes))
-                        }
-                    }
-                    print("[MultiCourse] \(osmCourses.count) OSM clusters, \(apiResults.count) API results, \(apiCourseHoles.count) with holes")
-
-                    // Match each OSM cluster to best API course by yardage
-                    var usedApiIdx = Set<Int>()
-                    var subCourses: [GolfCourseResult] = []
-                    for osc in osmCourses {
-                        let osmTotal = osc.holes.compactMap { h -> Double? in
-                            guard let t = h.tee, let g = h.greenCenter else { return nil }
-                            return t.distanceMeters(to: g) * 1.09361
-                        }.reduce(0, +)
-                        let bestMatch = matchByYardage(osmCourse: osc, apiCourses: apiCourseHoles, excluding: usedApiIdx)
-                        let matchedHoles = bestMatch.map { apiCourseHoles[$0].holes } ?? []
-                        let matchedName = bestMatch.map { apiCourseHoles[$0].name } ?? osc.name
-                        let matchedApiId = bestMatch.map { apiCourseHoles[$0].id }
-                        if let idx = bestMatch { usedApiIdx.insert(idx) }
-                        print("[MultiCourse] OSM '\(osc.name)' (\(Int(osmTotal)) yds) -> matched '\(matchedName)' (idx=\(bestMatch.map(String.init) ?? "nil"), used=\(usedApiIdx))")
-
-                        let merged = mergeCourse(name: matchedName, id: osc.id,
-                                                 location: osc.location,
-                                                 apiHoles: matchedHoles, osmCourse: osc,
-                                                 golfCourseApiId: matchedApiId)
-                        try? store.save(merged)
-                    }
-                    // Reload from store so user sees properly named courses
-                    let saved = (try? store.loadAll()) ?? []
-                    subCourses = saved
-                        .filter { $0.id.hasPrefix("osm-\(osmMatch!.osmId)-") }
-                        .map { c -> GolfCourseResult in
-                            let intId = stableId(from: c.id)
-                            self.cacheIdMap[intId] = c.id
-                            return GolfCourseResult(id: intId, name: c.name, location: c.location, city: "")
-                        }
-                    print("[CourseStore] Saved \(osmCourses.count) sub-courses")
-                    await MainActor.run {
-                        self.lastFailedCourse = nil
-                        self.displayedCourses = subCourses
-                        self.state = .selectCourse(subCourses)
-                    }
-                    return
-                }
-
-                // Single course
-                osmCourse = osmCourses.first
-                let mergedCourse = mergeCourse(
-                    name: course.name, id: cacheId,
+                let result = try await courseDownloadService.downloadCourse(
+                    id: courseId,
+                    name: course.name,
                     location: course.location,
-                    apiHoles: apiHoles, osmCourse: osmCourse,
-                    golfCourseApiId: gcapiId
+                    teeColor: teeColor
                 )
 
-                try? store.save(mergedCourse)
-                print("[CourseStore] Saved \(course.name)")
+                print("[CourseStore] Saving course (isSingleCourse: \(result.isSingleCourse))")
+                try? store.save(result.course)
 
                 await MainActor.run {
                     self.lastFailedCourse = nil
-                    self.state = .selectStartingHole(mergedCourse)
+                    self.state = .selectStartingHole(result.course)
                 }
             } catch {
                 print("[Download] Error: \(error)")
-                await MainActor.run { self.state = .error("Failed: \(error.localizedDescription)") }
+                await MainActor.run {
+                    self.state = .error("Failed: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -693,34 +583,6 @@ class StartRoundViewModel: ObservableObject {
             .replacingOccurrences(of: "gcapi-", with: "")
         if let num = Int(stripped) { return -num }
         return -abs(courseId.hashValue)
-    }
-
-    /// Match an OSM course to the best GolfCourseAPI course by comparing
-    /// tee-to-green distances against actual yardages.
-    private func matchByYardage(osmCourse: Course, apiCourses: [(name: String, id: Int, holes: [GolfCourseHole])], excluding: Set<Int>) -> Int? {
-        guard !apiCourses.isEmpty else { return nil }
-        let osmYards: [Int: Double] = Dictionary(uniqueKeysWithValues:
-            osmCourse.holes.compactMap { hole -> (Int, Double)? in
-                guard let tee = hole.tee, let green = hole.greenCenter else { return nil }
-                return (hole.number, tee.distanceMeters(to: green) * 1.09361)
-            }
-        )
-        guard !osmYards.isEmpty else { return nil }
-
-        var bestIdx: Int?
-        var bestError = Double.infinity
-        for (idx, api) in apiCourses.enumerated() where !excluding.contains(idx) {
-            var totalError = 0.0
-            for (i, h) in api.holes.enumerated() {
-                let holeNum = i + 1
-                if let osmYd = osmYards[holeNum] {
-                    let diff = osmYd - Double(h.yardage)
-                    totalError += diff * diff
-                }
-            }
-            if totalError < bestError { bestError = totalError; bestIdx = idx }
-        }
-        return bestIdx
     }
 
     private func levenshtein(_ a: String, _ b: String) -> Int {

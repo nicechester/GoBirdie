@@ -500,7 +500,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GoBirdie/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GoBirdie;
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "GoBirdie uses the local network to sync golf rounds with your desktop.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "GoBirdie uses the local network to sync rounds with the desktop app.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "GoBirdie uses your location in the background to track your round and update distances on your Apple Watch.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GoBirdie uses your location to show distances to the green and find nearby courses.\n";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -539,7 +539,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GoBirdie/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GoBirdie;
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "GoBirdie uses the local network to sync golf rounds with your desktop.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "GoBirdie uses the local network to sync rounds with the desktop app.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "GoBirdie uses your location in the background to track your round and update distances on your Apple Watch.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GoBirdie uses your location to show distances to the green and find nearby courses.\n";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
