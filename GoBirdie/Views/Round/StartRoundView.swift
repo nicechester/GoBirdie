@@ -388,6 +388,25 @@ class StartRoundViewModel: ObservableObject {
     }
 
     func requestLocation() {
+        // 1. Load and show saved courses immediately (without waiting for location)
+        let store = CourseStore()
+        let saved = (try? store.loadAll()) ?? []
+
+        if !saved.isEmpty {
+            let savedResults = saved
+                .prefix(20)
+                .map { c -> GolfCourseResult in
+                    let intId = stableId(from: c.id)
+                    cacheIdMap[intId] = c.id
+                    return GolfCourseResult(id: intId, name: c.name, location: c.location, city: "")
+                }
+
+            savedCourseIds = Set(savedResults.map { $0.id })
+            displayedCourses = savedResults
+            state = .selectCourse(displayedCourses)
+        }
+
+        // 2. Request location and search online in background
         locationService.start()
 
         Task {
@@ -395,12 +414,19 @@ class StartRoundViewModel: ObservableObject {
             while self.currentLocation == nil && Date().timeIntervalSince(startTime) < 20 {
                 if let location = locationService.currentLocation {
                     self.currentLocation = location
-                    await MainActor.run { self.showCoursesForLocation(location) }
+                    // If no saved courses shown, load with location sorting
+                    if self.displayedCourses.isEmpty {
+                        await MainActor.run { self.showCoursesForLocation(location) }
+                    } else {
+                        // Saved courses already showing, just search online
+                        await MainActor.run { self.searchOnlineForLocation(location) }
+                    }
                     return
                 }
                 try await Task.sleep(nanoseconds: 500_000_000)
             }
-            if self.currentLocation == nil {
+            // Only show error if we have no saved courses to fall back on
+            if self.currentLocation == nil && self.displayedCourses.isEmpty {
                 await MainActor.run {
                     self.state = .error("Could not get location. Check Settings.")
                 }
@@ -426,6 +452,10 @@ class StartRoundViewModel: ObservableObject {
         state = .selectCourse(displayedCourses)
 
         // 2. Search online in background
+        searchOnlineForLocation(location)
+    }
+
+    private func searchOnlineForLocation(_ location: GpsPoint) {
         isSearchingOnline = true
         Task {
             defer { Task { @MainActor in self.isSearchingOnline = false } }

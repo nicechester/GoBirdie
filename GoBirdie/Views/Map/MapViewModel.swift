@@ -39,7 +39,7 @@ final class MapViewModel: ObservableObject {
     private let tapClearThresholdYards: Double = 15
 
     init(
-        session: RoundSession,
+        session: RoundSession?,
         course: Course,
         locationService: LocationService,
         mockLocation: GpsPoint? = nil
@@ -48,7 +48,7 @@ final class MapViewModel: ObservableObject {
         self.course = course
         self.locationService = locationService
         self.mockLocation = mockLocation
-        self.currentHoleIndex = session.currentHoleIndex
+        self.currentHoleIndex = session?.currentHoleIndex ?? 0
 
         if let session {
             session.$currentHoleIndex
