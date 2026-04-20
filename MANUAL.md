@@ -295,7 +295,7 @@ After ending the round, the Watch confirms the save with your final score. The r
 
 ## 8. Exploring Courses
 
-Browse course layouts without tracking a round. This is useful for familiarizing yourself with a course layout before playing.
+Browse course layouts without tracking a round. This is useful to use this app as course map + range finder only.
 
 <table>
 <tr><td valign="top"><img src="screenshots/map-view-explore.png" width="220"></td><td valign="top" width="60%">
