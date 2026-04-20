@@ -31,7 +31,7 @@ struct GoBirdieApp: App {
                     appState.getLocationService().requestPermission()
                     appState.checkForInProgressRound()
                 }
-                .onChange(of: scenePhase) { _, phase in
+                .onChange(of: scenePhase) { phase in
                     if phase == .background {
                         appState.saveInProgress()
                         if appState.syncServerEnabled { appState.stopSyncServer() }

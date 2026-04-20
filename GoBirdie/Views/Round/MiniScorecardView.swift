@@ -53,7 +53,7 @@ struct MiniScorecardView: View {
                 .onAppear {
                     proxy.scrollTo(session.currentHoleNumber, anchor: .top)
                 }
-                .onChange(of: session.currentHoleIndex) { _, _ in
+                .onChange(of: session.currentHoleIndex) { _ in
                     withAnimation {
                         proxy.scrollTo(session.currentHoleNumber, anchor: .top)
                     }

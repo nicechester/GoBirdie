@@ -100,12 +100,12 @@ private struct ActiveRoundView: View {
                 }
         )
         .onAppear { crownHole = session.holeNumber }
-        .onChange(of: crownHole) { _, newValue in
+        .onChange(of: crownHole) { newValue in
             if newValue != session.holeNumber {
                 session.navigateToHole(newValue)
             }
         }
-        .onChange(of: session.holeNumber) { _, newValue in
+        .onChange(of: session.holeNumber) { newValue in
             crownHole = newValue
         }
     }
@@ -346,14 +346,47 @@ private struct ClubPickerOverlay: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text("Club")
-                .font(.caption2).foregroundStyle(.secondary)
+        VStack(spacing: 12) {
+            // Carousel of clubs
+            HStack(spacing: 12) {
+                // Previous club
+                if crownIndex > 0 {
+                    let prevClub = session.clubBag[crownIndex - 1]
+                    Text(prevClub)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.gray)
+                        .opacity(0.5)
+                        .frame(width: 30, alignment: .center)
+                } else {
+                    Color.clear.frame(width: 30)
+                }
 
-            Text(clubDisplayName)
-                .font(.system(size: 32, weight: .bold, design: .rounded))
-                .foregroundStyle(.green)
+                Spacer()
 
+                // Current club (large)
+                Text(clubDisplayName)
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundStyle(.green)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+
+                Spacer()
+
+                // Next club
+                if crownIndex < session.clubBag.count - 1 {
+                    let nextClub = session.clubBag[crownIndex + 1]
+                    Text(nextClub)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.gray)
+                        .opacity(0.5)
+                        .frame(width: 30, alignment: .center)
+                } else {
+                    Color.clear.frame(width: 30)
+                }
+            }
+            .frame(height: 50)
+
+            // Confirm button
             Button {
                 session.confirmClub()
             } label: {
@@ -386,7 +419,7 @@ private struct ClubPickerOverlay: View {
         .onAppear {
             crownIndex = session.clubBag.firstIndex(of: session.selectedClub) ?? 0
         }
-        .onChange(of: crownIndex) { _, newValue in
+        .onChange(of: crownIndex) { newValue in
             guard session.clubBag.indices.contains(newValue) else { return }
             session.selectedClub = session.clubBag[newValue]
         }

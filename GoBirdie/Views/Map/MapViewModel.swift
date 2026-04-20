@@ -28,7 +28,7 @@ final class MapViewModel: ObservableObject {
     @Published var tapScreenPoint: CGPoint?
     @Published var shotScreenPoints: [(point: CGPoint, shot: Shot)] = []
 
-    let session: RoundSession
+    let session: RoundSession?
     let course: Course
     let locationService: LocationService
     let mockLocation: GpsPoint?
@@ -39,7 +39,7 @@ final class MapViewModel: ObservableObject {
     private let tapClearThresholdYards: Double = 15
 
     init(
-        session: RoundSession,
+        session: RoundSession?,
         course: Course,
         locationService: LocationService,
         mockLocation: GpsPoint? = nil
@@ -48,15 +48,34 @@ final class MapViewModel: ObservableObject {
         self.course = course
         self.locationService = locationService
         self.mockLocation = mockLocation
-        self.currentHoleIndex = session.currentHoleIndex
+        self.currentHoleIndex = session?.currentHoleIndex ?? 0
 
-        session.$currentHoleIndex
+        if let session {
+            session.$currentHoleIndex
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] index in
+                    self?.currentHoleIndex = index
+                    self?.updatePlayerToGreen()
+                }
+                .store(in: &cancellables)
+        }
+
+        locationService.$currentLocation
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] index in
-                self?.currentHoleIndex = index
+            .sink { [weak self] loc in
+                self?.playerLocation = loc
                 self?.updatePlayerToGreen()
+                self?.clearTapIfPlayerMoved(loc)
             }
             .store(in: &cancellables)
+    }
+
+    init(course: Course, locationService: LocationService, mockLocation: GpsPoint? = nil) {
+        self.session = nil
+        self.course = course
+        self.locationService = locationService
+        self.mockLocation = mockLocation
+        self.currentHoleIndex = 0
 
         locationService.$currentLocation
             .receive(on: DispatchQueue.main)
@@ -76,7 +95,8 @@ final class MapViewModel: ObservableObject {
     }
 
     var currentHoleShots: [Shot] {
-        session.round.holes.first(where: { $0.number == currentHoleIndex + 1 })?.shots ?? []
+        guard let session else { return [] }
+        return session.round.holes.first(where: { $0.number == currentHoleIndex + 1 })?.shots ?? []
     }
 
     /// Tee for the current hole.
@@ -137,6 +157,15 @@ final class MapViewModel: ObservableObject {
         tapPlayerLocation = nil
     }
 
+    /// Resets the map's displayed hole to match the round's current hole.
+    /// Call this whenever the user navigates back to the map tab.
+    func syncToSession() {
+        guard let session else { return }
+        guard currentHoleIndex != session.currentHoleIndex else { return }
+        currentHoleIndex = session.currentHoleIndex
+        clearTap()
+    }
+
     private func clearTapIfPlayerMoved(_ newLoc: GpsPoint?) {
         guard let origin = tapPlayerLocation, let loc = newLoc, selectedTapPoint != nil else { return }
         if distanceEngine.distanceYards(from: origin, to: loc) > tapClearThresholdYards {
@@ -166,14 +195,12 @@ final class MapViewModel: ObservableObject {
     func navigatePrevious() {
         guard currentHoleIndex > 0 else { return }
         currentHoleIndex -= 1
-        session.currentHoleIndex = currentHoleIndex
         clearTap()
     }
 
     func navigateNext() {
         guard currentHoleIndex < course.holes.count - 1 else { return }
         currentHoleIndex += 1
-        session.currentHoleIndex = currentHoleIndex
         clearTap()
     }
 

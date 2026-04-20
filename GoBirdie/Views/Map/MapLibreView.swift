@@ -171,10 +171,14 @@ struct MapLibreView: UIViewRepresentable {
                 .sink { [weak self] _ in self?.updateScreenPoints() }
                 .store(in: &cancellables)
 
-            viewModel.session.$round
-                .receive(on: DispatchQueue.main)
-                .sink { [weak self] _ in self?.updateScreenPoints() }
-                .store(in: &cancellables)
+            if let session = viewModel.session {
+                session.$round
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] _ in
+                        self?.updateScreenPoints()
+                    }
+                    .store(in: &cancellables)
+            }
         }
 
         func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
@@ -226,9 +230,10 @@ struct MapLibreView: UIViewRepresentable {
             guard let tee = viewModel.resolvedTee, let green = viewModel.resolvedGreenCenter else {
                 let target = viewModel.cameraBounds
                 guard target.lat != 0 || target.lon != 0 else { return }
+                // Fallback: zoom to course location with reasonable altitude
                 let camera = MLNMapCamera(
                     lookingAtCenter: CLLocationCoordinate2D(latitude: target.lat, longitude: target.lon),
-                    altitude: 400, pitch: 0, heading: 0
+                    altitude: 2000, pitch: 0, heading: 0
                 )
                 mapView.setCamera(camera, animated: animated)
                 return

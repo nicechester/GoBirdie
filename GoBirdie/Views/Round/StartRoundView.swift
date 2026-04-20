@@ -96,7 +96,7 @@ struct StartRoundView: View {
             viewModel.setup(locationService: appState.getLocationService())
             viewModel.requestLocation()
         }
-        .onChange(of: viewModel.startedRound) { oldVal, newVal in
+        .onChange(of: viewModel.startedRound) { newVal in
             if newVal {
                 dismiss()
             }
@@ -127,7 +127,7 @@ struct StartRoundView: View {
 
 // MARK: - State Views
 
-private struct LocationRequestingView: View {
+struct LocationRequestingView: View {
     var body: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -146,7 +146,7 @@ private struct LocationRequestingView: View {
     }
 }
 
-private struct SearchBar: View {
+struct SearchBar: View {
     @Binding var text: String
     let onCommit: () -> Void
 
@@ -171,7 +171,7 @@ private struct SearchBar: View {
     }
 }
 
-private struct CourseListView: View {
+struct CourseListView: View {
     let courses: [GolfCourseResult]
     let playerLocation: GpsPoint?
     let isSearchingOnline: Bool
@@ -180,50 +180,58 @@ private struct CourseListView: View {
     let onRetry: () -> Void
 
     var body: some View {
-        if courses.isEmpty && !isSearchingOnline {
-            VStack(spacing: 16) {
-                Image(systemName: "mappin.slash")
-                    .font(.system(size: 32))
-                    .foregroundStyle(.secondary)
-                Text("No courses found")
-                    .font(.headline)
-                Button(action: onRetry) {
-                    Text("Retry")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.green)
-                        .foregroundStyle(.white)
-                        .cornerRadius(8)
+        VStack(spacing: 8) {
+            // Search indicator at top
+            if isSearchingOnline {
+                HStack(spacing: 8) {
+                    ProgressView().tint(.green)
+                    Text("Searching for more courses...")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
             }
-            .padding(.vertical, 32)
-        } else {
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(courses) { course in
-                        CourseCell(
-                            course: course,
-                            isSaved: isSaved(course),
-                            distanceString: playerLocation.map { course.location.distanceMilesString(to: $0) },
-                            onTap: { onSelect(course) }
-                        )
-                    }
-                    if isSearchingOnline {
-                        HStack(spacing: 8) {
-                            ProgressView().tint(.green)
-                            Text("Searching for more courses...")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 8)
+
+            // Course list
+            if courses.isEmpty && !isSearchingOnline {
+                VStack(spacing: 16) {
+                    Image(systemName: "mappin.slash")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.secondary)
+                    Text("No courses found")
+                        .font(.headline)
+                    Button(action: onRetry) {
+                        Text("Retry")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Color.green)
+                            .foregroundStyle(.white)
+                            .cornerRadius(8)
                     }
                 }
-                .padding(.vertical, 12)
+                .padding(.vertical, 32)
+            } else {
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(courses) { course in
+                            CourseCell(
+                                course: course,
+                                isSaved: isSaved(course),
+                                distanceString: playerLocation.map { course.location.distanceMilesString(to: $0) },
+                                onTap: { onSelect(course) }
+                            )
+                        }
+                    }
+                    .padding(.vertical, 12)
+                }
             }
         }
     }
 }
 
-private struct CourseCell: View {
+struct CourseCell: View {
     let course: GolfCourseResult
     let isSaved: Bool
     let distanceString: String?
@@ -263,7 +271,7 @@ private struct CourseCell: View {
     }
 }
 
-private struct DownloadingView: View {
+struct DownloadingView: View {
     let courseName: String
 
     var body: some View {
@@ -284,7 +292,7 @@ private struct DownloadingView: View {
     }
 }
 
-private struct ErrorView: View {
+struct ErrorView: View {
     let message: String
     let onRetry: () -> Void
 
@@ -388,6 +396,25 @@ class StartRoundViewModel: ObservableObject {
     }
 
     func requestLocation() {
+        // 1. Load and show saved courses immediately (without waiting for location)
+        let store = CourseStore()
+        let saved = (try? store.loadAll()) ?? []
+
+        if !saved.isEmpty {
+            let savedResults = saved
+                .prefix(20)
+                .map { c -> GolfCourseResult in
+                    let intId = stableId(from: c.id)
+                    cacheIdMap[intId] = c.id
+                    return GolfCourseResult(id: intId, name: c.name, location: c.location, city: "")
+                }
+
+            savedCourseIds = Set(savedResults.map { $0.id })
+            displayedCourses = savedResults
+            state = .selectCourse(displayedCourses)
+        }
+
+        // 2. Request location and search online in background
         locationService.start()
 
         Task {
@@ -395,12 +422,14 @@ class StartRoundViewModel: ObservableObject {
             while self.currentLocation == nil && Date().timeIntervalSince(startTime) < 20 {
                 if let location = locationService.currentLocation {
                     self.currentLocation = location
+                    // Always call showCoursesForLocation to properly sort by distance
                     await MainActor.run { self.showCoursesForLocation(location) }
                     return
                 }
                 try await Task.sleep(nanoseconds: 500_000_000)
             }
-            if self.currentLocation == nil {
+            // Only show error if we have no saved courses to fall back on
+            if self.currentLocation == nil && self.displayedCourses.isEmpty {
                 await MainActor.run {
                     self.state = .error("Could not get location. Check Settings.")
                 }
@@ -426,6 +455,10 @@ class StartRoundViewModel: ObservableObject {
         state = .selectCourse(displayedCourses)
 
         // 2. Search online in background
+        searchOnlineForLocation(location)
+    }
+
+    private func searchOnlineForLocation(_ location: GpsPoint) {
         isSearchingOnline = true
         Task {
             defer { Task { @MainActor in self.isSearchingOnline = false } }
