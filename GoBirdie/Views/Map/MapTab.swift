@@ -62,7 +62,7 @@ private struct ExploreEntryView: View {
                     .font(.headline)
                     .foregroundStyle(.primary)
 
-                Text("View course layouts without playing a round")
+                Text("View course layouts without tracking a round")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -130,9 +130,11 @@ private struct ExploreCoursePicker: View {
 
                     case .selectStartingHole(let course):
                         // Auto-transition to map view (skip intermediate screen)
-                        EmptyView()
-                            .onAppear {
-                                exploreState = .exploring(course: course)
+                        Color.clear
+                            .task {
+                                DispatchQueue.main.async {
+                                    exploreState = .exploring(course: course)
+                                }
                             }
 
                     case .error(let message):
@@ -259,9 +261,9 @@ private struct ExploreMapBannerCTA: View {
     var body: some View {
         Button(action: onBack) {
             HStack(spacing: 8) {
-                Image(systemName: "chevron.left")
+                Image(systemName: "xmark.circle.fill")
                     .font(.headline)
-                Text("Pick Course")
+                Text("Pick Another Course")
                     .fontWeight(.semibold)
             }
             .foregroundStyle(.white)

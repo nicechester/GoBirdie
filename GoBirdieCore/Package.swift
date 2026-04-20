@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "GoBirdieCore",
     platforms: [
-        .iOS(.v17),
+        .iOS(.v16),
         .watchOS(.v10),
         .macOS(.v14)
     ],

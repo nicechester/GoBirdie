@@ -96,7 +96,7 @@ struct StartRoundView: View {
             viewModel.setup(locationService: appState.getLocationService())
             viewModel.requestLocation()
         }
-        .onChange(of: viewModel.startedRound) { oldVal, newVal in
+        .onChange(of: viewModel.startedRound) { newVal in
             if newVal {
                 dismiss()
             }
@@ -180,44 +180,52 @@ struct CourseListView: View {
     let onRetry: () -> Void
 
     var body: some View {
-        if courses.isEmpty && !isSearchingOnline {
-            VStack(spacing: 16) {
-                Image(systemName: "mappin.slash")
-                    .font(.system(size: 32))
-                    .foregroundStyle(.secondary)
-                Text("No courses found")
-                    .font(.headline)
-                Button(action: onRetry) {
-                    Text("Retry")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.green)
-                        .foregroundStyle(.white)
-                        .cornerRadius(8)
+        VStack(spacing: 8) {
+            // Search indicator at top
+            if isSearchingOnline {
+                HStack(spacing: 8) {
+                    ProgressView().tint(.green)
+                    Text("Searching for more courses...")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
             }
-            .padding(.vertical, 32)
-        } else {
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(courses) { course in
-                        CourseCell(
-                            course: course,
-                            isSaved: isSaved(course),
-                            distanceString: playerLocation.map { course.location.distanceMilesString(to: $0) },
-                            onTap: { onSelect(course) }
-                        )
-                    }
-                    if isSearchingOnline {
-                        HStack(spacing: 8) {
-                            ProgressView().tint(.green)
-                            Text("Searching for more courses...")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 8)
+
+            // Course list
+            if courses.isEmpty && !isSearchingOnline {
+                VStack(spacing: 16) {
+                    Image(systemName: "mappin.slash")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.secondary)
+                    Text("No courses found")
+                        .font(.headline)
+                    Button(action: onRetry) {
+                        Text("Retry")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Color.green)
+                            .foregroundStyle(.white)
+                            .cornerRadius(8)
                     }
                 }
-                .padding(.vertical, 12)
+                .padding(.vertical, 32)
+            } else {
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(courses) { course in
+                            CourseCell(
+                                course: course,
+                                isSaved: isSaved(course),
+                                distanceString: playerLocation.map { course.location.distanceMilesString(to: $0) },
+                                onTap: { onSelect(course) }
+                            )
+                        }
+                    }
+                    .padding(.vertical, 12)
+                }
             }
         }
     }

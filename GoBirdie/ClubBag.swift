@@ -21,7 +21,8 @@ final class ClubBag: ObservableObject {
     private init() {
         if let data = UserDefaults.standard.data(forKey: key),
            let rawValues = try? JSONDecoder().decode([String].self, from: data) {
-            enabledClubs = rawValues.compactMap { ClubType(rawValue: $0) }
+            // Load from storage, filtering out putter
+            enabledClubs = rawValues.compactMap { ClubType(rawValue: $0) }.filter { $0 != .putter }
         } else {
             enabledClubs = ClubType.defaultBag
         }
@@ -32,6 +33,8 @@ final class ClubBag: ObservableObject {
     }
 
     func toggle(_ club: ClubType) {
+        guard club != .putter else { return }  // Prevent putter from being toggled
+
         if let idx = enabledClubs.firstIndex(of: club) {
             enabledClubs.remove(at: idx)
         } else {

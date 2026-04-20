@@ -215,7 +215,7 @@ private struct ScorecardDetailView: View {
             .sheet(item: $shotMapHole) { hole in
                 ShotMapSheet(allHoles: currentRound.holes, courseHoles: courseHoles, initialHole: hole)
             }
-            .onChange(of: shotMapHole) { _, _ in
+            .onChange(of: shotMapHole) { _ in
                 // Reload round when shot map sheet is dismissed
                 if shotMapHole == nil {
                     reloadRound()
