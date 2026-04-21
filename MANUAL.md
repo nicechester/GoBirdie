@@ -331,7 +331,7 @@ Once a course is loaded, view the hole layout on the map. Navigate between holes
 
 ## 9. Syncing to Desktop
 
-GoBirdie syncs rounds to the [GoBirdie Desktop](../../desktop/GoBirdie-Desktop) companion app over MultipeerConnectivity (Bluetooth + WiFi peer-to-peer). No network configuration is needed — it works even if your iPhone and desktop are on different WiFi networks.
+GoBirdie syncs rounds to the [GoBirdie Desktop](https://github.com/nicechester/GoBirdie-Desktop) companion app over MultipeerConnectivity (Bluetooth + WiFi peer-to-peer). No network configuration is needed — it works even if your iPhone and desktop are on different WiFi networks.
 
 ### Step 25: Enable Sync
 
