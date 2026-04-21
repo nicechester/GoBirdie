@@ -214,7 +214,7 @@ private struct AboutSection: View {
             Link("GitHub", destination: URL(string: "https://github.com/nicechester/GoBirdie")!)
             LabeledContent("Map Data", value: "© OpenStreetMap contributors")
             LabeledContent("Maps", value: "© MapLibre")
-            LabeledContent("License", value: "MIT")
+            LabeledContent("License", value: "© 2026 Chester Kim. All rights reserved.")
         }
     }
 
