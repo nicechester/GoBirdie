@@ -21,7 +21,7 @@
       "localizations" : [
         {
           "description" : "Support GoBirdie development — every bit helps!",
-          "displayName" : "Buy me a sleeve of balls ⛳️",
+          "displayName" : "Sleeve of Balls",
           "locale" : "en_US"
         }
       ],
@@ -36,7 +36,7 @@
       "localizations" : [
         {
           "description" : "Support GoBirdie development — every bit helps!",
-          "displayName" : "Buy me a mid-round snack 🌭",
+          "displayName" : "Mid-Round Snack",
           "locale" : "en_US"
         }
       ],
@@ -51,7 +51,7 @@
       "localizations" : [
         {
           "description" : "Support GoBirdie development — every bit helps!",
-          "displayName" : "Buy me a post-round drink 🍺",
+          "displayName" : "Post-Round Drink",
           "locale" : "en_US"
         }
       ],

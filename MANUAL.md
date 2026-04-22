@@ -88,7 +88,7 @@ After each shot, tap **Mark Shot** to drop a GPS pin at your current location. A
 
 Your shots appear on the map as colored dots connected by lines. Each line shows the distance in yards between shots. The current hole's info (par, yardage, handicap) is displayed at the top, and the mini scorecard tracks your running score at the bottom.
 
-</td><td valign="top"><img src="screenshots/rounding-view.png" width="220"></td></tr>
+</td><td valign="top"><img src="screenshots/map-view.png" width="220"></td></tr>
 </table>
 
 ---
