@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "7465B60D-2F94-4A95-A224-FC2D60BCA5ED",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:GoBirdie.xcodeproj",
+      "identifier" : "45985F2B2F86F41A00EB0B97",
+      "name" : "GoBirdie"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:GoBirdie.xcodeproj",
+        "identifier" : "4528B5E62F981E1900CB4185",
+        "name" : "GoBirdieUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
