@@ -16,6 +16,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4528B5ED2F981E1900CB4185 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45985F242F86F41A00EB0B97 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45985F2B2F86F41A00EB0B97;
+			remoteInfo = GoBirdie;
+		};
 		45985F3B2F86F41C00EB0B97 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 45985F242F86F41A00EB0B97 /* Project object */;
@@ -40,6 +47,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4528B5E72F981E1900CB4185 /* GoBirdieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GoBirdieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4528B5FA2F9825F600CB4185 /* GoBirdie.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = GoBirdie.xctestplan; sourceTree = "<group>"; };
 		454B1F9E2F92F80200DF34A3 /* H01-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H01-S3.gpx"; path = "GPX/H01-S3.gpx"; sourceTree = "<group>"; };
 		454B1F9F2F92F80200DF34A3 /* H08-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H08-S3.gpx"; path = "GPX/H08-S3.gpx"; sourceTree = "<group>"; };
 		454B1FA02F92F80200DF34A3 /* H09-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H09-S1.gpx"; path = "GPX/H09-S1.gpx"; sourceTree = "<group>"; };
@@ -76,6 +85,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		4528B5E82F981E1900CB4185 /* GoBirdieUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GoBirdieUITests;
+			sourceTree = "<group>";
+		};
 		456AA3402F88B12300AC1A95 /* GoBirdie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -92,6 +106,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4528B5E42F981E1900CB4185 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		45985F292F86F41A00EB0B97 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -116,6 +137,7 @@
 		45985F232F86F41A00EB0B97 = {
 			isa = PBXGroup;
 			children = (
+				4528B5FA2F9825F600CB4185 /* GoBirdie.xctestplan */,
 				454B1FAA2F92F80300DF34A3 /* H01-S1.gpx */,
 				454B1FA62F92F80300DF34A3 /* H01-S2.gpx */,
 				454B1F9E2F92F80200DF34A3 /* H01-S3.gpx */,
@@ -139,6 +161,7 @@
 				456AA47E2F88BAB800AC1A95 /* tip.storekit */,
 				456AA3402F88B12300AC1A95 /* GoBirdie */,
 				45985F3D2F86F41C00EB0B97 /* GoBirdie Watch App */,
+				4528B5E82F981E1900CB4185 /* GoBirdieUITests */,
 				45985F502F86F45B00EB0B97 /* Frameworks */,
 				45985F2D2F86F41A00EB0B97 /* Products */,
 			);
@@ -149,6 +172,7 @@
 			children = (
 				45985F2C2F86F41A00EB0B97 /* GoBirdie.app */,
 				45985F392F86F41C00EB0B97 /* GoBirdie Watch App.app */,
+				4528B5E72F981E1900CB4185 /* GoBirdieUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -163,6 +187,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4528B5E62F981E1900CB4185 /* GoBirdieUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4528B5F12F981E1900CB4185 /* Build configuration list for PBXNativeTarget "GoBirdieUITests" */;
+			buildPhases = (
+				4528B5E32F981E1900CB4185 /* Sources */,
+				4528B5E42F981E1900CB4185 /* Frameworks */,
+				4528B5E52F981E1900CB4185 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4528B5EE2F981E1900CB4185 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4528B5E82F981E1900CB4185 /* GoBirdieUITests */,
+			);
+			name = GoBirdieUITests;
+			packageProductDependencies = (
+			);
+			productName = GoBirdieUITests;
+			productReference = 4528B5E72F981E1900CB4185 /* GoBirdieUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		45985F2B2F86F41A00EB0B97 /* GoBirdie */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 45985F4A2F86F41C00EB0B97 /* Build configuration list for PBXNativeTarget "GoBirdie" */;
@@ -223,6 +270,10 @@
 				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					4528B5E62F981E1900CB4185 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 45985F2B2F86F41A00EB0B97;
+					};
 					45985F2B2F86F41A00EB0B97 = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -251,11 +302,19 @@
 			targets = (
 				45985F2B2F86F41A00EB0B97 /* GoBirdie */,
 				45985F382F86F41C00EB0B97 /* GoBirdie Watch App */,
+				4528B5E62F981E1900CB4185 /* GoBirdieUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4528B5E52F981E1900CB4185 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		45985F2A2F86F41A00EB0B97 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -274,6 +333,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4528B5E32F981E1900CB4185 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		45985F282F86F41A00EB0B97 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -291,6 +357,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4528B5EE2F981E1900CB4185 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45985F2B2F86F41A00EB0B97 /* GoBirdie */;
+			targetProxy = 4528B5ED2F981E1900CB4185 /* PBXContainerItemProxy */;
+		};
 		45985F3C2F86F41C00EB0B97 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 45985F382F86F41C00EB0B97 /* GoBirdie Watch App */;
@@ -299,6 +370,51 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		4528B5EF2F981E1900CB4185 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K92B539W6W;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.nicechester.GoBirdieUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GoBirdie;
+			};
+			name = Debug;
+		};
+		4528B5F02F981E1900CB4185 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K92B539W6W;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.nicechester.GoBirdieUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GoBirdie;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		45985F442F86F41C00EB0B97 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -422,7 +538,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = K92B539W6W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -449,7 +565,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+				WATCHOS_DEPLOYMENT_TARGET = 11.6;
 			};
 			name = Debug;
 		};
@@ -460,7 +576,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = K92B539W6W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -488,7 +604,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				VALIDATE_PRODUCT = YES;
-				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+				WATCHOS_DEPLOYMENT_TARGET = 11.6;
 			};
 			name = Release;
 		};
@@ -499,7 +615,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = K92B539W6W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -540,7 +656,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = K92B539W6W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -578,6 +694,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4528B5F12F981E1900CB4185 /* Build configuration list for PBXNativeTarget "GoBirdieUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4528B5EF2F981E1900CB4185 /* Debug */,
+				4528B5F02F981E1900CB4185 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		45985F272F86F41A00EB0B97 /* Build configuration list for PBXProject "GoBirdie" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

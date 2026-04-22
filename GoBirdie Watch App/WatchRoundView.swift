@@ -277,6 +277,7 @@ private struct EndRoundPage: View {
                 Label("End Round", systemImage: "flag.checkered")
                     .font(.caption).fontWeight(.semibold)
             }
+            .accessibilityIdentifier("end_round_menu_item")
 
             Button {
                 session.cancelRound()

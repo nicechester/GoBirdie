@@ -40,6 +40,7 @@ struct HoleControlsView: View {
                     .background(Color.green).foregroundStyle(.white)
                     .cornerRadius(8)
                 }
+                .accessibilityIdentifier("markShotButton")
 
                 Button {
                     session.addPenalty()
@@ -108,6 +109,7 @@ struct HoleControlsView: View {
                     .foregroundStyle(isLast ? .white : .primary)
                     .cornerRadius(8)
                 }
+                .accessibilityIdentifier("nextHoleButton")
             }
         }
         .padding(.horizontal, 16)
@@ -170,11 +172,13 @@ private struct PuttStepper: View {
                         .font(.title2)
                         .foregroundStyle(putts > 0 ? .green : Color(.systemGray4))
                 }
+                .accessibilityIdentifier("puttMinus")
                 .disabled(putts == 0)
 
                 Text("\(putts)")
                     .font(.title2).fontWeight(.bold).monospacedDigit()
                     .frame(minWidth: 32, alignment: .center)
+                    .accessibilityIdentifier("puttCount")
 
                 Button {
                     session.setPutts(putts + 1)
@@ -184,6 +188,7 @@ private struct PuttStepper: View {
                         .font(.title2)
                         .foregroundStyle(.green)
                 }
+                .accessibilityIdentifier("puttPlus")
             }
         }
         .padding(.horizontal, 16)

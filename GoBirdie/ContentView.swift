@@ -28,6 +28,7 @@ struct ContentView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape") }
                 .tag(3)
         }
+        .accessibilityIdentifier("mainTabView")
     }
 }
 

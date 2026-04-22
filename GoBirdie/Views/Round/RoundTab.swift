@@ -42,6 +42,7 @@ private struct ActiveRoundView: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("Hole \(session.currentHoleNumber)")
                     .font(.title3).fontWeight(.bold)
+                    .accessibilityIdentifier("holeLabel")
 
                 if let hole = session.currentHole,
                    let courseHole = viewModel.course.holes.first(where: { $0.number == session.currentHoleNumber }) {
@@ -61,6 +62,7 @@ private struct ActiveRoundView: View {
                     } label: {
                         Label("End Round", systemImage: "flag.checkered")
                     }
+                    .accessibilityIdentifier("endRoundMenu")
                     Button(role: .destructive) {
                         appState.cancelActiveRound()
                     } label: {
@@ -72,6 +74,7 @@ private struct ActiveRoundView: View {
                         .foregroundStyle(.primary)
                         .contentShape(Rectangle())
                 }
+                .accessibilityIdentifier("roundMenu")
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -98,6 +101,7 @@ private struct ActiveRoundView: View {
                 session.endRound()
                 appState.endActiveRound()
             }
+            .accessibilityIdentifier("confirmEndRound")
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Save and finish this round?")
@@ -138,6 +142,7 @@ private struct EmptyRoundStateView: View {
                     .foregroundStyle(.white)
                     .cornerRadius(14)
             }
+            .accessibilityIdentifier("startRoundButton")
             .padding(.horizontal, 32)
             .padding(.bottom, 32)
         }
