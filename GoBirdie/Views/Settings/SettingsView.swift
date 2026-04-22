@@ -150,7 +150,7 @@ private struct TipJarSection: View {
                         Task { await buy(product) }
                     } label: {
                         HStack {
-                            Text(product.displayName)
+                            Text(localName(for: product))
                                 .foregroundStyle(.primary)
                             Spacer()
                             Text(product.displayPrice)
@@ -201,6 +201,15 @@ private struct TipJarSection: View {
             }
         } catch {
             print("[TipJar] Purchase failed: \(error)")
+        }
+    }
+
+    private func localName(for product: Product) -> String {
+        switch product.id {
+        case "io.github.nicechester.GoBirdie.tip.sleeve": return "⛳️ Sleeve of Balls"
+        case "io.github.nicechester.GoBirdie.tip.snack":  return "🌭 Mid-Round Snack"
+        case "io.github.nicechester.GoBirdie.tip.drink":  return "🍺 Post-Round Drink"
+        default: return product.displayName
         }
     }
 }
