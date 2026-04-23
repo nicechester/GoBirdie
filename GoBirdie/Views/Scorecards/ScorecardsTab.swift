@@ -6,6 +6,7 @@ import SwiftUI
 import GoBirdieCore
 
 struct ScorecardsTab: View {
+    @EnvironmentObject var appState: AppState
     @State private var rounds: [Round] = []
     @State private var selectedRound: Round?
 
@@ -23,6 +24,12 @@ struct ScorecardsTab: View {
                             Button(role: .destructive) { deleteRound(round) } label: {
                                 Label("Delete", systemImage: "trash")
                             }
+                        }
+                        .swipeActions(edge: .leading) {
+                            Button { resumeRound(round) } label: {
+                                Label("Resume", systemImage: "play.fill")
+                            }
+                            .tint(.green)
                         }
                     }
                     .listStyle(.plain)
@@ -46,6 +53,26 @@ struct ScorecardsTab: View {
         let store = RoundStore()
         try? store.delete(id: round.id)
         rounds.removeAll { $0.id == round.id }
+    }
+
+    private func resumeRound(_ round: Round) {
+        guard appState.activeRound == nil else { return }
+        let store = RoundStore()
+        // Find the last hole that was played
+        let lastPlayedIndex = round.holes.lastIndex(where: { $0.strokes > 0 }) ?? 0
+        // Clear endedAt so it becomes in-progress again
+        var resumedRound = round
+        resumedRound.endedAt = nil
+        let snapshot = InProgressSnapshot(
+            round: resumedRound,
+            courseId: round.courseId,
+            currentHoleIndex: lastPlayedIndex
+        )
+        // Remove from completed rounds
+        try? store.delete(id: round.id)
+        rounds.removeAll { $0.id == round.id }
+        // Resume
+        appState.resumeRound(snapshot: snapshot)
     }
 }
 
@@ -225,7 +252,7 @@ private struct ScorecardDetailView: View {
     }
 
     private func showHoleMap(_ hole: HoleScore) {
-        guard !hole.shots.isEmpty else { return }
+        guard hole.strokes > 0 else { return }
         shotMapHole = hole
     }
 
@@ -260,7 +287,7 @@ private struct ShotMapSheet: View {
     }
 
     private var holesWithShots: [HoleScore] {
-        editableHoles.filter { !$0.shots.isEmpty }
+        editableHoles.filter { $0.strokes > 0 || !$0.shots.isEmpty }
     }
     private var hole: HoleScore { holesWithShots[currentIndex] }
 
@@ -352,7 +379,23 @@ private struct ShotMapSheet: View {
                         Text("\(hole.strokes)").font(.title3).fontWeight(.bold).foregroundStyle(scoreColor)
                         Text(scoreName).font(.caption).fontWeight(.semibold).foregroundStyle(scoreColor)
                         Spacer()
-                        Text("\(hole.putts) Putts").font(.caption).foregroundStyle(.secondary)
+                        if editMode {
+                            HStack(spacing: 8) {
+                                Button { adjustPutts(-1) } label: {
+                                    Image(systemName: "minus.circle.fill")
+                                        .font(.title3).foregroundStyle(.secondary)
+                                }
+                                .disabled(hole.putts <= 0)
+                                Text("\(hole.putts) Putts").font(.caption).foregroundStyle(.secondary)
+                                    .frame(minWidth: 50)
+                                Button { adjustPutts(1) } label: {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.title3).foregroundStyle(.green)
+                                }
+                            }
+                        } else {
+                            Text("\(hole.putts) Putts").font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                     .padding(.horizontal, 16).padding(.vertical, 8)
                     .background(.ultraThinMaterial)
@@ -405,6 +448,7 @@ private struct ShotMapSheet: View {
         }
         .onAppear {
             currentIndex = holesWithShots.firstIndex { $0.id == initialHole.id } ?? 0
+            if initialHole.shots.isEmpty { editMode = true }
         }
     }
 
@@ -431,7 +475,7 @@ private struct ShotMapSheet: View {
         let seq = (editableHoles[hi].shots.map(\.sequence).max() ?? 0) + 1
         let shot = Shot(sequence: seq, location: location, timestamp: Date(), club: .unknown)
         editableHoles[hi].shots.append(shot)
-        editableHoles[hi].strokes += 1
+        recalcStrokes(hi)
         selectedShotId = shot.id
         clubPickerShotId = shot.id
         clubPickerInitialClub = .unknown
@@ -442,13 +486,23 @@ private struct ShotMapSheet: View {
     private func deleteSelectedShot() {
         guard let shotId = selectedShotId, let hi = holeIndex() else { return }
         editableHoles[hi].shots.removeAll { $0.id == shotId }
-        editableHoles[hi].strokes = max(0, editableHoles[hi].strokes - 1)
-        // Re-sequence
         for i in editableHoles[hi].shots.indices {
             editableHoles[hi].shots[i].sequence = i + 1
         }
+        recalcStrokes(hi)
         selectedShotId = nil
         dirty = true
+    }
+
+    private func adjustPutts(_ delta: Int) {
+        guard let hi = holeIndex() else { return }
+        editableHoles[hi].putts = max(0, editableHoles[hi].putts + delta)
+        recalcStrokes(hi)
+        dirty = true
+    }
+
+    private func recalcStrokes(_ hi: Int) {
+        editableHoles[hi].strokes = editableHoles[hi].shots.count + editableHoles[hi].putts
     }
 
     private func saveEdits() {
@@ -574,7 +628,7 @@ private struct NineSection: View {
             .padding(.bottom, 6)
 
             ForEach(holes, id: \.id) { hole in
-                HoleRow(hole: hole, hasShotMap: !hole.shots.isEmpty)
+                HoleRow(hole: hole, hasShotMap: hole.strokes > 0)
                     .onTapGesture { onHoleTap(hole) }
                 if hole.number != holes.last?.number {
                     Divider().padding(.leading, 16)
