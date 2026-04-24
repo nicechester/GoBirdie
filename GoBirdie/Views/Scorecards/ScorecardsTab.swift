@@ -139,7 +139,7 @@ private struct ScorecardDetailView: View {
     private var playedHoles: [HoleScore] { currentRound.holes.filter { $0.strokes > 0 } }
     private var parTotal: Int { playedHoles.reduce(0) { $0 + $1.par } }
     private var frontNine: [HoleScore] {
-        let f = Array(round.holes.prefix(9))
+        let f = Array(currentRound.holes.prefix(9))
         return f.contains(where: { $0.strokes > 0 }) ? f : []
     }
     private var backNine: [HoleScore] {
@@ -240,12 +240,10 @@ private struct ScorecardDetailView: View {
                 }
             }
             .sheet(item: $shotMapHole) { hole in
-                ShotMapSheet(allHoles: currentRound.holes, courseHoles: courseHoles, initialHole: hole)
-            }
-            .onChange(of: shotMapHole) { _ in
-                // Reload round when shot map sheet is dismissed
-                if shotMapHole == nil {
-                    reloadRound()
+                ShotMapSheet(allHoles: currentRound.holes, courseHoles: courseHoles, initialHole: hole) { updatedHoles in
+                    currentRound.holes = updatedHoles
+                    currentRound.totalStrokes = updatedHoles.reduce(0) { $0 + $1.strokes }
+                    currentRound.totalPutts = updatedHoles.reduce(0) { $0 + $1.putts }
                 }
             }
         }
@@ -268,6 +266,7 @@ private struct ShotMapSheet: View {
     let allHoles: [HoleScore]
     let courseHoles: [Hole]
     let initialHole: HoleScore
+    let onSave: ([HoleScore]) -> Void
     @Environment(\.dismiss) var dismiss
     @State private var currentIndex: Int = 0
     @State private var editMode = false
@@ -279,10 +278,11 @@ private struct ShotMapSheet: View {
     @State private var clubPickerShotId: UUID? = nil
     @State private var clubPickerInitialClub: ClubType = .unknown
 
-    init(allHoles: [HoleScore], courseHoles: [Hole], initialHole: HoleScore) {
+    init(allHoles: [HoleScore], courseHoles: [Hole], initialHole: HoleScore, onSave: @escaping ([HoleScore]) -> Void) {
         self.allHoles = allHoles
         self.courseHoles = courseHoles
         self.initialHole = initialHole
+        self.onSave = onSave
         self._editableHoles = State(initialValue: allHoles)
     }
 
@@ -514,6 +514,7 @@ private struct ShotMapSheet: View {
         round.totalStrokes = editableHoles.reduce(0) { $0 + $1.strokes }
         round.totalPutts = editableHoles.reduce(0) { $0 + $1.putts }
         try? store.save(round)
+        onSave(editableHoles)
     }
 
     private func findRoundId() -> String? {
