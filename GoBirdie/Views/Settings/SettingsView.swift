@@ -220,7 +220,7 @@ private struct AboutSection: View {
     var body: some View {
         Section("About") {
             LabeledContent("Version", value: appVersion)
-            Link("GitHub", destination: URL(string: "https://github.com/nicechester/GoBirdie")!)
+            Link("Manual", destination: URL(string: "https://github.com/nicechester/GoBirdie/blob/main/MANUAL.md")!)
             LabeledContent("Map Data", value: "© OpenStreetMap contributors")
             LabeledContent("Maps", value: "© MapLibre")
             LabeledContent("License", value: "© 2026 Chester Kim. All rights reserved.")
