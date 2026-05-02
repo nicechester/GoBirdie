@@ -6,19 +6,11 @@ import CoreLocation
 final class RoundSmokeTests: XCTestCase {
 
     var app: XCUIApplication!
-    var roundData: RoundData!
+    var roundData: TestRoundData!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        app = XCUIApplication()
-        app.launchArguments += ["-UITest"]
-        app.launch()
-
-        let bundle = Bundle(for: type(of: self))
-        guard let url = bundle.url(forResource: "test_round", withExtension: "json") else {
-            throw XCTSkip("test_round.json not in test bundle")
-        }
-        roundData = try JSONDecoder().decode(RoundData.self, from: Data(contentsOf: url))
+        throw XCTSkip("RoundSmokeTests disabled — use RoundSimulationTests")
     }
 
 //    func testThreeHoleSmokeRound() throws {
@@ -115,8 +107,8 @@ final class RoundSmokeTests: XCTestCase {
     private func selectClub(_ garminName: String) {
         let nameMap: [String: String] = [
             "Driver": "Driver", "3-Wood": "3 Wood", "5-Wood": "5 Wood",
-            "3-Hybrid": "3 Hybrid", "4-Hybrid": "4 Hybrid",
-            "5-Hybrid": "5 Hybrid", "Hybrid": "5 Hybrid",
+            "3-Hybrid": "3 Wood", "4-Hybrid": "4 Iron",
+            "5-Hybrid": "5 Iron", "Hybrid": "5 Iron",
             "4-Iron": "4 Iron", "5-Iron": "5 Iron", "6-Iron": "6 Iron",
             "7-Iron": "7 Iron", "8-Iron": "8 Iron", "9-Iron": "9 Iron",
             "PW": "Pitching Wedge", "GW": "Gap Wedge",
@@ -125,15 +117,20 @@ final class RoundSmokeTests: XCTestCase {
         let display = nameMap[garminName] ?? garminName
 
         guard app.navigationBars["Select Club"].waitForExistence(timeout: 5) else {
-            if app.buttons["Skip"].exists { app.buttons["Skip"].tap() }
+            if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
             return
         }
 
-        let cell = app.cells.containing(NSPredicate(format: "label CONTAINS[c] %@", display)).firstMatch
-        if cell.waitForExistence(timeout: 3) {
-            cell.tap()
-        } else if app.buttons["Skip"].exists {
-            app.buttons["Skip"].tap()
+        let wheel = app.pickerWheels.firstMatch
+        if wheel.waitForExistence(timeout: 3) {
+            wheel.adjust(toPickerWheelValue: display)
+        }
+
+        let confirm = app.buttons["Confirm"]
+        if confirm.waitForExistence(timeout: 3) {
+            confirm.tap()
+        } else {
+            if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
         }
     }
 

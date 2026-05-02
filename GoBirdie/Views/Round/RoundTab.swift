@@ -35,6 +35,7 @@ private struct ActiveRoundView: View {
     @ObservedObject var appState: AppState
     @Binding var showMenu: Bool
     @State private var showEndConfirm = false
+    @State private var showMoveShotsSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -53,10 +54,14 @@ private struct ActiveRoundView: View {
                 Spacer()
 
                 Menu {
-                    Button { } label: {
-                        Label("Change Tee", systemImage: "figure.golf")
+                    if (session.currentHole?.shots.count ?? 0) > 0 {
+                        Button {
+                            showMoveShotsSheet = true
+                        } label: {
+                            Label("Move Shots to Hole...", systemImage: "arrow.triangle.swap")
+                        }
+                        Divider()
                     }
-                    Divider()
                     Button(role: .destructive) {
                         showEndConfirm = true
                     } label: {
@@ -91,10 +96,8 @@ private struct ActiveRoundView: View {
             )
             .padding(.top, 4)
 
-            MiniScorecardView(session: session, onHoleSelect: { holeNumber in
-                session.navigateTo(holeNumber: holeNumber, course: viewModel.course)
-            })
-            .padding(.top, 4)
+            MiniScorecardView(session: session)
+                .padding(.top, 4)
         }
         .alert("End Round?", isPresented: $showEndConfirm) {
             Button("End", role: .destructive) {
@@ -116,6 +119,28 @@ private struct ActiveRoundView: View {
             }
         } message: {
             Text("No activity for 30 minutes.")
+        }
+        .sheet(isPresented: $showMoveShotsSheet) {
+            MoveShotsSheet(session: session, course: viewModel.course)
+        }
+        .overlay {
+            if appState.isSavingRound {
+                ZStack {
+                    Color.black.opacity(0.4).ignoresSafeArea()
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .scaleEffect(1.5)
+                            .tint(.white)
+                        Text("Saving round...")
+                            .font(.subheadline)
+                            .foregroundStyle(.white)
+                    }
+                    .padding(32)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(16)
+                }
+            }
         }
     }
 }
@@ -145,6 +170,51 @@ private struct EmptyRoundStateView: View {
             .accessibilityIdentifier("startRoundButton")
             .padding(.horizontal, 32)
             .padding(.bottom, 32)
+        }
+    }
+}
+
+// MARK: - Move Shots Sheet
+
+private struct MoveShotsSheet: View {
+    @Environment(\.dismiss) var dismiss
+    @ObservedObject var session: RoundSession
+    let course: Course
+
+    var body: some View {
+        NavigationStack {
+            let currentNum = session.currentHoleNumber
+            let shotCount = session.currentHole?.shots.count ?? 0
+            List {
+                Section {
+                    ForEach(session.round.holes, id: \.id) { hole in
+                        if hole.number != currentNum {
+                            Button {
+                                session.moveShotsToHole(hole.number)
+                                dismiss()
+                            } label: {
+                                HStack {
+                                    Text("Hole \(hole.number)")
+                                    Text("Par \(hole.par)").foregroundStyle(.secondary)
+                                    Spacer()
+                                    if hole.strokes > 0 {
+                                        Text("\(hole.strokes) strokes").foregroundStyle(.secondary).font(.caption)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Move \(shotCount) shot\(shotCount == 1 ? "" : "s") from Hole \(currentNum) to:")
+                }
+            }
+            .navigationTitle("Move Shots")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
         }
     }
 }

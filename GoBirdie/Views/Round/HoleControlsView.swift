@@ -28,7 +28,7 @@ struct HoleControlsView: View {
                         let yards = distanceEngine.distanceYards(from: playerLoc, to: greenCenter)
                         distanceToGreen = Int(yards.rounded())
                     }
-                    selectedClub = defaultClubForDistance(distanceToGreen)
+                    selectedClub = defaultClubForDistance(distanceToGreen, shotNumber: (session.currentHole?.shots.count ?? 0) + 1)
                     showMarkShotSheet = true
                 } label: {
                     HStack(spacing: 6) {
@@ -125,11 +125,13 @@ struct HoleControlsView: View {
         }
     }
 
-    private func defaultClubForDistance(_ yards: Int?) -> ClubType {
+    private func defaultClubForDistance(_ yards: Int?, shotNumber: Int = 1) -> ClubType {
         let enabledClubs = ClubBag.shared.enabledClubs
         guard let y = yards, !enabledClubs.isEmpty else {
             return enabledClubs.first ?? .unknown
         }
+        // Don't recommend driver from 2nd shot onwards
+        let excludeDriver = shotNumber > 1
         let table: [(ClubType, Int)] = [
             (.driver, 230), (.wood3, 210), (.wood5, 195),
             (.hybrid3, 190), (.hybrid4, 180), (.hybrid5, 170),
@@ -139,6 +141,7 @@ struct HoleControlsView: View {
             (.lobWedge, 60),
         ]
         for (club, minDist) in table {
+            if club == .driver && excludeDriver { continue }
             if enabledClubs.contains(club) && y >= minDist {
                 return club
             }
@@ -208,27 +211,35 @@ struct MarkShotSheet: View {
 
     var body: some View {
         NavigationStack {
-            List(bag.enabledClubs, id: \.self) { club in
+            VStack(spacing: 0) {
+                Picker("Club", selection: $selectedClub) {
+                    ForEach(bag.enabledClubs, id: \.self) { club in
+                        Text(club.displayName).tag(club)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxHeight: 220)
+
                 Button {
-                    selectedClub = club
-                    onConfirm(club)
+                    onConfirm(selectedClub)
                     dismiss()
                 } label: {
-                    HStack {
-                        Text(club.displayName).foregroundStyle(.primary)
-                        Spacer()
-                        if selectedClub == club {
-                            Image(systemName: "checkmark").foregroundStyle(.green)
-                        }
-                    }
-                    .contentShape(Rectangle())
+                    Text("Confirm")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.green)
+                        .foregroundStyle(.white)
+                        .cornerRadius(12)
                 }
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
             }
             .navigationTitle("Select Club")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Skip") { onConfirm(.unknown); dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
             }
         }

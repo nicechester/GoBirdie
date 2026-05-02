@@ -48,6 +48,7 @@ final class AppState: ObservableObject {
     private var autoSaveTimer: Timer?
     private var idleTimer: Timer?
     @Published var showIdlePrompt = false
+    @Published var isSavingRound = false
 
     init() {
         syncServer = SyncServer(roundStore: roundStore)
@@ -271,56 +272,38 @@ final class AppState: ObservableObject {
     func endActiveRound(fromWatch: Bool = false) {
         guard let session = activeRound else { return }
         session.endRound()
+        isSavingRound = true
 
-        print("[AppState] Ending round: \(session.round.id)")
-        print("[AppState] Current location: \(locationService.currentLocation?.lat ?? 0), \(locationService.currentLocation?.lon ?? 0)")
-        print("[AppState] Location service running: \(locationService.isRunning)")
+        // Save round immediately — no waiting for weather
+        do {
+            try roundStore.save(session.round)
+            print("[AppState] Round saved: \(session.round.id)")
+        } catch {
+            print("[AppState] Failed to save round: \(error)")
+        }
 
-        // Attempt to fetch and store weather data
+        if !fromWatch {
+            ConnectivityService.shared.sendRoundEnded()
+        }
+        cleanupRound()
+
+        // Fetch weather async and update saved round in background
         if let currentLocation = locationService.currentLocation {
+            let roundId = session.round.id
             let coordinate = CLLocationCoordinate2D(
                 latitude: currentLocation.lat,
                 longitude: currentLocation.lon
             )
-
-            Task { @MainActor [weak self] in
-                guard let self = self else { return }
-
-                if let weatherData = await self.weatherProvider.fetchCurrentWeather(location: coordinate) {
-                    session.round.temperatureMinF = weatherData.minF
-                    session.round.temperatureMaxF = weatherData.maxF
-                    session.round.weatherCondition = weatherData.condition
-                    print("[AppState] Weather captured: min=\(weatherData.minF)°F, max=\(weatherData.maxF)°F, \(weatherData.condition)")
-                } else {
-                    print("[AppState] Weather fetch failed or unavailable")
-                }
-
-                do {
-                    try self.roundStore.save(session.round)
-                    print("[AppState] Round saved: \(session.round.id)")
-                    print("[AppState] Weather in saved round - min: \(session.round.temperatureMinF ?? -1), max: \(session.round.temperatureMaxF ?? -1), condition: \(session.round.weatherCondition ?? "nil")")
-                } catch {
-                    print("[AppState] Failed to save round: \(error)")
-                }
-
-                if !fromWatch {
-                    ConnectivityService.shared.sendRoundEnded()
-                }
-                self.cleanupRound()
+            Task { [weak self] in
+                guard let self else { return }
+                guard let weatherData = await self.weatherProvider.fetchCurrentWeather(location: coordinate) else { return }
+                guard var saved = try? self.roundStore.load(id: roundId) else { return }
+                saved.temperatureMinF = weatherData.minF
+                saved.temperatureMaxF = weatherData.maxF
+                saved.weatherCondition = weatherData.condition
+                try? self.roundStore.save(saved)
+                print("[AppState] Weather updated async: \(weatherData.minF)°F/\(weatherData.maxF)°F \(weatherData.condition)")
             }
-        } else {
-            print("[AppState] No location available, skipping weather capture")
-            do {
-                try roundStore.save(session.round)
-                print("[AppState] Round saved: \(session.round.id)")
-            } catch {
-                print("[AppState] Failed to save round: \(error)")
-            }
-
-            if !fromWatch {
-                ConnectivityService.shared.sendRoundEnded()
-            }
-            cleanupRound()
         }
     }
 
@@ -349,6 +332,7 @@ final class AppState: ObservableObject {
         idleTimer?.invalidate()
         idleTimer = nil
         showIdlePrompt = false
+        isSavingRound = false
         inProgressStore.clear()
         activeRoundViewModel?.stopRound()
         activeRound = nil

@@ -41,8 +41,13 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      shouldAutocreateTestPlan = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <TestPlans>
+         <TestPlanReference
+            reference = "container:../GoBirdie Watch App.xctestplan"
+            default = "YES">
+         </TestPlanReference>
+      </TestPlans>
       <Testables>
          <TestableReference
             skipped = "NO"
@@ -52,6 +57,17 @@
                BlueprintIdentifier = "4528B5E62F981E1900CB4185"
                BuildableName = "GoBirdieUITests.xctest"
                BlueprintName = "GoBirdieUITests"
+               ReferencedContainer = "container:GoBirdie.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "450024E82FA5B8A3009929E0"
+               BuildableName = "GoBirdie Watch AppUITests.xctest"
+               BlueprintName = "GoBirdie Watch AppUITests"
                ReferencedContainer = "container:GoBirdie.xcodeproj">
             </BuildableReference>
          </TestableReference>

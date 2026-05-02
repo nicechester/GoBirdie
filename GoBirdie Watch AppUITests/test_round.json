@@ -1,0 +1,554 @@
+{
+  "course_name": "Hansen Dam Golf Course",
+  "date": "2026-02-14",
+  "total_score": 99,
+  "total_putts": 36,
+  "holes": [
+    {
+      "hole_number": 1,
+      "par": 4,
+      "score": 5,
+      "putts": 1,
+      "shots": [
+        {
+            "lat": 34.25838101426926,
+            "lon": -118.39155059500602,
+            "club": "driver",
+            "club_display": "Driver"
+        },
+        {
+          "lat": 34.25907723605633,
+          "lon": -118.39315795339644,
+          "club": "5i",
+          "club_display": "5-Iron"
+        },
+        {
+          "lat": 34.258647663518786,
+          "lon": -118.39354385621846,
+          "club": "5h",
+          "club_display": "Hybrid"
+        },
+        {
+          "lat": 34.258953519165516,
+          "lon": -118.39462839066982,
+          "club": "sw",
+          "club_display": "SW"
+        }
+      ]
+    },
+    {
+      "hole_number": 2,
+      "par": 5,
+      "score": 7,
+      "putts": 3,
+      "shots": [
+        {
+          "lat": 34.25909793935716,
+          "lon": -118.39527438394725,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.25953949801624,
+          "lon": -118.39596681296825,
+          "club": "unknown",
+          "club_display": "?"
+        },
+        {
+          "lat": 34.26008398644626,
+          "lon": -118.39639261364937,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.26119551062584,
+          "lon": -118.39733943343163,
+          "club": "5i",
+          "club_display": "5-Iron"
+        },
+        {
+          "lat": 34.261771850287914,
+          "lon": -118.39742660522461,
+          "club": "9i",
+          "club_display": "9-Iron"
+        },
+        {
+          "lat": 34.26213227212429,
+          "lon": -118.39800730347633,
+          "club": "sw",
+          "club_display": "SW"
+        }
+      ]
+    },
+    {
+      "hole_number": 3,
+      "par": 4,
+      "score": 5,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.262074772268534,
+          "lon": -118.39875362813473,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.26366180181503,
+          "lon": -118.39986816979945,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.26435356028378,
+          "lon": -118.4009312465787,
+          "club": "sw",
+          "club_display": "SW"
+        }
+      ]
+    },
+    {
+      "hole_number": 4,
+      "par": 3,
+      "score": 3,
+      "putts": 0,
+      "shots": [
+        {
+          "lat": 34.26493928767741,
+          "lon": -118.40131488628685,
+          "club": "3w",
+          "club_display": "3-Wood"
+        },
+        {
+          "lat": 34.26607009023428,
+          "lon": -118.40096301399171,
+          "club": "unknown",
+          "club_display": "?"
+        }
+      ]
+    },
+    {
+      "hole_number": 5,
+      "par": 4,
+      "score": 5,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.26602625288069,
+          "lon": -118.40026186779141,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.26429245620966,
+          "lon": -118.39958544820547,
+          "club": "3w",
+          "club_display": "3-Wood"
+        },
+        {
+          "lat": 34.263613102957606,
+          "lon": -118.39833696372807,
+          "club": "sw",
+          "club_display": "SW"
+        }
+      ]
+    },
+    {
+      "hole_number": 6,
+      "par": 5,
+      "score": 7,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.26292268559337,
+          "lon": -118.39802272617817,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.262476516887546,
+          "lon": -118.39651591144502,
+          "club": "6i",
+          "club_display": "6-Iron"
+        },
+        {
+          "lat": 34.26199397072196,
+          "lon": -118.396040154621,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.26169549115002,
+          "lon": -118.3950628247112,
+          "club": "3w",
+          "club_display": "3-Wood"
+        },
+        {
+          "lat": 34.261499773710966,
+          "lon": -118.39351309463382,
+          "club": "gw",
+          "club_display": "GW"
+        },
+        {
+          "lat": 34.26134588196874,
+          "lon": -118.39338543824852,
+          "club": "unknown",
+          "club_display": "?"
+        }
+      ]
+    },
+    {
+      "hole_number": 7,
+      "par": 3,
+      "score": 4,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.26157328300178,
+          "lon": -118.39311998337507,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.260773146525025,
+          "lon": -118.39182699099183,
+          "club": "lw",
+          "club_display": "LW"
+        }
+      ]
+    },
+    {
+      "hole_number": 8,
+      "par": 4,
+      "score": 6,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.260128661990166,
+          "lon": -118.39199152775109,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.26049335859716,
+          "lon": -118.39363345876336,
+          "club": "3w",
+          "club_display": "3-Wood"
+        },
+        {
+          "lat": 34.260355392470956,
+          "lon": -118.39474129490554,
+          "club": "8i",
+          "club_display": "8-Iron"
+        },
+        {
+          "lat": 34.26049880683422,
+          "lon": -118.3950408641249,
+          "club": "gw",
+          "club_display": "GW"
+        }
+      ]
+    },
+    {
+      "hole_number": 9,
+      "par": 4,
+      "score": 8,
+      "putts": 3,
+      "shots": [
+        {
+          "lat": 34.2602442484349,
+          "lon": -118.39546884410083,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.2599627841264,
+          "lon": -118.39429370127618,
+          "club": "3w",
+          "club_display": "3-Wood"
+        },
+        {
+          "lat": 34.25975994206965,
+          "lon": -118.39282426983118,
+          "club": "5h",
+          "club_display": "Hybrid"
+        },
+        {
+          "lat": 34.25928829237819,
+          "lon": -118.39161157608032,
+          "club": "gw",
+          "club_display": "GW"
+        },
+        {
+          "lat": 34.25918226130307,
+          "lon": -118.39164895936847,
+          "club": "gw",
+          "club_display": "GW"
+        }
+      ]
+    },
+    {
+      "hole_number": 10,
+      "par": 4,
+      "score": 6,
+      "putts": 1,
+      "shots": [
+        {
+          "lat": 34.25832160748541,
+          "lon": -118.39133790694177,
+          "club": "unknown",
+          "club_display": "?"
+        },
+        {
+          "lat": 34.259058963507414,
+          "lon": -118.39266375638545,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.25870415754616,
+          "lon": -118.38996226899326,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.25908771343529,
+          "lon": -118.38904855772853,
+          "club": "5i",
+          "club_display": "5-Iron"
+        },
+        {
+          "lat": 34.25971585325897,
+          "lon": -118.3884747326374,
+          "club": "7i",
+          "club_display": "7-Iron"
+        },
+        {
+          "lat": 34.25994710996747,
+          "lon": -118.38802831247449,
+          "club": "pw",
+          "club_display": "PW"
+        },
+        {
+          "lat": 34.26036494784057,
+          "lon": -118.38766093365848,
+          "club": "unknown",
+          "club_display": "?"
+        }
+      ]
+    },
+    {
+      "hole_number": 11,
+      "par": 4,
+      "score": 5,
+      "putts": 3,
+      "shots": [
+        {
+          "lat": 34.26007845439017,
+          "lon": -118.38695232756436,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.25896952860057,
+          "lon": -118.38763796724379,
+          "club": "5h",
+          "club_display": "Hybrid"
+        }
+      ]
+    },
+    {
+      "hole_number": 12,
+      "par": 5,
+      "score": 8,
+      "putts": 3,
+      "shots": [
+        {
+          "lat": 34.25758425146341,
+          "lon": -118.38551751337945,
+          "club": "unknown",
+          "club_display": "?"
+        },
+        {
+          "lat": 34.25817618146539,
+          "lon": -118.38349948637187,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.25774484872818,
+          "lon": -118.3821527659893,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.25807375460863,
+          "lon": -118.38089531287551,
+          "club": "pw",
+          "club_display": "PW"
+        },
+        {
+          "lat": 34.25798901356757,
+          "lon": -118.38043447583914,
+          "club": "sw",
+          "club_display": "SW"
+        }
+      ]
+    },
+    {
+      "hole_number": 13,
+      "par": 4,
+      "score": 8,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.257950792089105,
+          "lon": -118.37923485785723,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.257915671914816,
+          "lon": -118.37756727822125,
+          "club": "3w",
+          "club_display": "3-Wood"
+        },
+        {
+          "lat": 34.25762373022735,
+          "lon": -118.37608695030212,
+          "club": "8i",
+          "club_display": "8-Iron"
+        },
+        {
+          "lat": 34.25780310295522,
+          "lon": -118.37566995061934,
+          "club": "gw",
+          "club_display": "GW"
+        },
+        {
+          "lat": 34.25793210044503,
+          "lon": -118.37558093480766,
+          "club": "unknown",
+          "club_display": "?"
+        },
+        {
+          "lat": 34.25808842293918,
+          "lon": -118.37540441192687,
+          "club": "sw",
+          "club_display": "SW"
+        }
+      ]
+    },
+    {
+      "hole_number": 14,
+      "par": 5,
+      "score": 6,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.257853059098125,
+          "lon": -118.37437159381807,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.25763395614922,
+          "lon": -118.37563935667276,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.25690690986812,
+          "lon": -118.37670737877488,
+          "club": "unknown",
+          "club_display": "?"
+        },
+        {
+          "lat": 34.25687740556896,
+          "lon": -118.37835886515677,
+          "club": "pw",
+          "club_display": "PW"
+        }
+      ]
+    },
+    {
+      "hole_number": 15,
+      "par": 3,
+      "score": 3,
+      "putts": 1,
+      "shots": [
+        {
+          "lat": 34.25676475279033,
+          "lon": -118.3792585786432,
+          "club": "5w",
+          "club_display": "5-Wood"
+        },
+        {
+          "lat": 34.255730509757996,
+          "lon": -118.37847545742989,
+          "club": "sw",
+          "club_display": "SW"
+        }
+      ]
+    },
+    {
+      "hole_number": 16,
+      "par": 4,
+      "score": 4,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.25559237599373,
+          "lon": -118.37930308654904,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.25705191679299,
+          "lon": -118.38034034706652,
+          "club": "7i",
+          "club_display": "7-Iron"
+        }
+      ]
+    },
+    {
+      "hole_number": 17,
+      "par": 3,
+      "score": 3,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.257301362231374,
+          "lon": -118.3820406999439,
+          "club": "3w",
+          "club_display": "3-Wood"
+        }
+      ]
+    },
+    {
+      "hole_number": 18,
+      "par": 4,
+      "score": 6,
+      "putts": 2,
+      "shots": [
+        {
+          "lat": 34.25499767996371,
+          "lon": -118.382796831429,
+          "club": "driver",
+          "club_display": "Driver"
+        },
+        {
+          "lat": 34.25607140175998,
+          "lon": -118.38376175612211,
+          "club": "5i",
+          "club_display": "5-Iron"
+        },
+        {
+          "lat": 34.25663726404309,
+          "lon": -118.38478577323258,
+          "club": "unknown",
+          "club_display": "?"
+        }
+      ]
+    }
+  ]
+}

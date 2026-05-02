@@ -141,6 +141,44 @@ final class RoundSession: ObservableObject {
         )
     }
 
+    /// Move all shots from the current hole to another hole.
+    /// Adjusts strokes on both holes accordingly.
+    func moveShotsToHole(_ targetHoleNumber: Int) {
+        guard !isComplete,
+              let sourceIdx = round.holes.firstIndex(where: { $0.number == currentHoleNumber }),
+              let targetIdx = round.holes.firstIndex(where: { $0.number == targetHoleNumber }),
+              sourceIdx != targetIdx else { return }
+
+        let shotsToMove = round.holes[sourceIdx].shots
+        let shotCount = shotsToMove.count
+        guard shotCount > 0 else { return }
+
+        // Re-sequence shots appended to target
+        let existingCount = round.holes[targetIdx].shots.count
+        let resequenced = shotsToMove.enumerated().map { i, s in
+            Shot(sequence: existingCount + i + 1, location: s.location,
+                 timestamp: s.timestamp, club: s.club,
+                 distanceToPinYards: s.distanceToPinYards,
+                 altitudeMeters: s.altitudeMeters,
+                 heartRateBpm: s.heartRateBpm,
+                 temperatureCelsius: s.temperatureCelsius)
+        }
+        round.holes[targetIdx].shots.append(contentsOf: resequenced)
+        round.holes[targetIdx].strokes += shotCount
+        // Move putts too
+        let puttsToMove = round.holes[sourceIdx].putts
+        round.holes[targetIdx].putts += puttsToMove
+        round.holes[targetIdx].strokes += puttsToMove
+
+        // Remove shots and putts from source hole
+        round.holes[sourceIdx].shots.removeAll()
+        round.holes[sourceIdx].putts = 0
+        round.holes[sourceIdx].strokes = max(0, round.holes[sourceIdx].strokes - shotCount - puttsToMove)
+
+        recomputeTotals()
+        sendStrokeUpdate()
+    }
+
     /// Mark a shot at the player's current GPS location.
     /// - Parameters:
     ///   - location: The GPS coordinates of the shot.

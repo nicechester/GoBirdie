@@ -251,6 +251,9 @@ private struct ExploreMapView: View {
                     .padding(.bottom, 16)
             }
         }
+        .onDisappear {
+            mapViewModel.clearTapMeasurement()
+        }
     }
 }
 
@@ -333,6 +336,9 @@ private struct MapActiveView: View {
         }
         .onAppear {
             mapViewModel.syncToSession()
+        }
+        .onDisappear {
+            mapViewModel.clearTapMeasurement()
         }
     }
 
