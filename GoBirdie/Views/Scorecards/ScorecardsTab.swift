@@ -277,6 +277,9 @@ private struct ShotMapSheet: View {
     @State private var showClubPicker = false
     @State private var clubPickerShotId: UUID? = nil
     @State private var clubPickerInitialClub: ClubType = .unknown
+    @State private var showReorderSheet = false
+    @State private var pendingShot: (id: UUID, location: GpsPoint)? = nil
+    @State private var showSaveConfirm = false
 
     init(allHoles: [HoleScore], courseHoles: [Hole], initialHole: HoleScore, onSave: @escaping ([HoleScore]) -> Void) {
         self.allHoles = allHoles
@@ -324,7 +327,7 @@ private struct ShotMapSheet: View {
                             moveShotTo(shotId: shotId, location: newLocation)
                         },
                         onAddShot: { location in
-                            addShot(at: location)
+                            stagePendingShot(at: location)
                         },
                         onChangeClub: { shotId, currentClub in
                             clubPickerShotId = shotId
@@ -332,11 +335,11 @@ private struct ShotMapSheet: View {
                             showClubPicker = true
                         }
                     )
-                    .id("\(hole.id)-\(hole.shots.map { "\($0.id)-\($0.club.rawValue)" }.joined())")
+                    .id("\(hole.id)-\(hole.shots.map(\.id.uuidString).sorted().joined())")
                     .ignoresSafeArea()
                 } else {
                     ShotMapView(holes: [hole], courseHoles: courseHoles)
-                        .id(hole.id)
+                        .id("\(hole.id)-\(hole.shots.count)-\(hole.putts)")
                         .ignoresSafeArea()
                 }
 
@@ -363,15 +366,35 @@ private struct ShotMapSheet: View {
                     }
 
                     if editMode {
-                        HStack {
-                            Text("Tap map to add shot")
-                                .font(.caption).foregroundStyle(.secondary)
-                            Spacer()
-                            Text("Tap pin to select")
-                                .font(.caption).foregroundStyle(.secondary)
+                        if let pending = pendingShot {
+                            HStack(spacing: 12) {
+                                Button(role: .cancel) {
+                                    cancelPendingShot(pending.id)
+                                } label: {
+                                    Label("Cancel", systemImage: "xmark")
+                                        .font(.caption).fontWeight(.semibold)
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 12).padding(.vertical, 6)
+                                        .background(Color.gray)
+                                        .cornerRadius(6)
+                                }
+                                Spacer()
+                                Text("Select club to confirm")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 4)
+                            .background(.ultraThinMaterial)
+                        } else {
+                            HStack {
+                                Text("Tap map to add shot")
+                                    .font(.caption).foregroundStyle(.secondary)
+                                Spacer()
+                                Text("Tap pin to select")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 4)
+                            .background(.ultraThinMaterial)
                         }
-                        .padding(.horizontal, 16).padding(.vertical, 4)
-                        .background(.ultraThinMaterial)
                     }
 
                     HStack(spacing: 16) {
@@ -404,15 +427,19 @@ private struct ShotMapSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        if editMode {
-                            selectedShotId = nil
-                            if dirty { saveEdits() }
+                    if editMode {
+                        Button {
+                            if dirty {
+                                showSaveConfirm = true
+                            } else {
+                                selectedShotId = nil
+                                editMode = false
+                            }
+                        } label: {
+                            Text("Done").fontWeight(.bold)
                         }
-                        editMode.toggle()
-                    } label: {
-                        Text(editMode ? "Done" : "Edit")
-                            .fontWeight(editMode ? .bold : .regular)
+                    } else {
+                        Button { editMode = true } label: { Text("Edit") }
                     }
                 }
                 ToolbarItem(placement: .principal) {
@@ -427,9 +454,15 @@ private struct ShotMapSheet: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Close") {
-                        if dirty { saveEdits() }
-                        dismiss()
+                    if editMode {
+                        Button {
+                            showReorderSheet = true
+                        } label: {
+                            Image(systemName: "list.number")
+                        }
+                        .disabled(hole.shots.count < 2)
+                    } else {
+                        Button("Close") { dismiss() }
                     }
                 }
             }
@@ -437,12 +470,27 @@ private struct ShotMapSheet: View {
                 Button("Delete", role: .destructive) { deleteSelectedShot() }
                 Button("Cancel", role: .cancel) { }
             }
-            .sheet(isPresented: $showClubPicker) {
+            .alert("Do you want to save the changes?", isPresented: $showSaveConfirm) {
+                Button("Yes") { saveEdits(); selectedShotId = nil; editMode = false }
+                Button("No", role: .destructive) { selectedShotId = nil; dirty = false; editMode = false }
+            }
+            .sheet(isPresented: $showClubPicker, onDismiss: {
+                // If club picker was cancelled (pendingShot still set), remove the staged shot
+                if let pending = pendingShot {
+                    cancelPendingShot(pending.id)
+                }
+            }) {
                 MarkShotSheet(selectedClub: $clubPickerInitialClub) { club in
                     if let sid = clubPickerShotId {
                         changeClub(shotId: sid, club: club)
                     }
+                    pendingShot = nil
                     clubPickerShotId = nil
+                }
+            }
+            .sheet(isPresented: $showReorderSheet) {
+                ReorderShotsSheet(shots: hole.shots.sorted { $0.sequence < $1.sequence }) { reordered in
+                    applyReorder(reordered)
                 }
             }
         }
@@ -470,27 +518,55 @@ private struct ShotMapSheet: View {
         dirty = true
     }
 
-    private func addShot(at location: GpsPoint) {
+    private func stagePendingShot(at location: GpsPoint) {
         guard let hi = holeIndex() else { return }
-        let seq = (editableHoles[hi].shots.map(\.sequence).max() ?? 0) + 1
-        let shot = Shot(sequence: seq, location: location, timestamp: Date(), club: .unknown)
-        editableHoles[hi].shots.append(shot)
+        // Insert at correct sequence position ordered by distance to green
+        let green = courseHoles.first { $0.number == hole.number }?.greenCenter
+        var shots = editableHoles[hi].shots.sorted { $0.sequence < $1.sequence }
+        let insertIndex: Int
+        if let green {
+            let newDist = location.distanceMeters(to: green)
+            insertIndex = shots.firstIndex { $0.location.distanceMeters(to: green) < newDist } ?? shots.count
+        } else {
+            insertIndex = shots.count
+        }
+        let shot = Shot(sequence: insertIndex + 1, location: location, timestamp: Date(), club: .unknown)
+        shots.insert(shot, at: insertIndex)
+        for i in shots.indices { shots[i].sequence = i + 1 }
+        editableHoles[hi].shots = shots
         recalcStrokes(hi)
         selectedShotId = shot.id
+        pendingShot = (shot.id, location)
         clubPickerShotId = shot.id
         clubPickerInitialClub = .unknown
         showClubPicker = true
         dirty = true
     }
 
+    private func cancelPendingShot(_ id: UUID) {
+        guard let hi = holeIndex() else { pendingShot = nil; return }
+        editableHoles[hi].shots.removeAll { $0.id == id }
+        for i in editableHoles[hi].shots.indices { editableHoles[hi].shots[i].sequence = i + 1 }
+        recalcStrokes(hi)
+        selectedShotId = nil
+        pendingShot = nil
+        dirty = true
+    }
+
     private func deleteSelectedShot() {
         guard let shotId = selectedShotId, let hi = holeIndex() else { return }
         editableHoles[hi].shots.removeAll { $0.id == shotId }
-        for i in editableHoles[hi].shots.indices {
-            editableHoles[hi].shots[i].sequence = i + 1
-        }
+        for i in editableHoles[hi].shots.indices { editableHoles[hi].shots[i].sequence = i + 1 }
         recalcStrokes(hi)
         selectedShotId = nil
+        dirty = true
+    }
+
+    private func applyReorder(_ reordered: [Shot]) {
+        guard let hi = holeIndex() else { return }
+        var shots = reordered
+        for i in shots.indices { shots[i].sequence = i + 1 }
+        editableHoles[hi].shots = shots
         dirty = true
     }
 
@@ -715,6 +791,52 @@ private struct EmptyScorecardsView: View {
             Text("Completed rounds will appear here")
                 .font(.subheadline).foregroundStyle(.secondary)
             Spacer()
+        }
+    }
+}
+
+// MARK: - Reorder Shots Sheet
+
+private struct ReorderShotsSheet: View {
+    @State private var shots: [Shot]
+    let onConfirm: ([Shot]) -> Void
+    @Environment(\.dismiss) var dismiss
+
+    init(shots: [Shot], onConfirm: @escaping ([Shot]) -> Void) {
+        self._shots = State(initialValue: shots)
+        self.onConfirm = onConfirm
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(shots) { shot in
+                    HStack(spacing: 12) {
+                        Image(systemName: "line.3.horizontal")
+                            .foregroundStyle(.secondary)
+                        Text("Shot \(shots.firstIndex(where: { $0.id == shot.id }).map { $0 + 1 } ?? 0)")
+                            .font(.subheadline)
+                        Spacer()
+                        Text(shot.club.shortName)
+                            .font(.caption).fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .onMove { from, to in
+                    shots.move(fromOffsets: from, toOffset: to)
+                }
+            }
+            .environment(\.editMode, .constant(.active))
+            .navigationTitle("Reorder Shots")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { onConfirm(shots); dismiss() }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
         }
     }
 }

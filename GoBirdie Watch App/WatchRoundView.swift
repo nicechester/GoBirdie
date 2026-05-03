@@ -358,11 +358,12 @@ private struct ClubPickerOverlay: View {
                 Picker(selection: $selectedIndex, label: Text("Club")) {
                     ForEach(0..<session.clubBag.count, id: \.self) { idx in
                         Text(clubName(session.clubBag[idx]))
-                            .font(.system(size: 28, weight: .semibold))
+                            .font(.system(size: 48, weight: .semibold))
                             .tag(idx)
                     }
                 }
                 .pickerStyle(.wheel)
+                .defaultWheelPickerItemHeight(60)
                 .onChange(of: selectedIndex) {
                     guard session.clubBag.indices.contains(selectedIndex) else { return }
                     session.selectedClub = session.clubBag[selectedIndex]
