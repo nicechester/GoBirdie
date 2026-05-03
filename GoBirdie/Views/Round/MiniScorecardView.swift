@@ -9,7 +9,6 @@ import GoBirdieCore
 /// Matches sketch: rows scroll vertically, circles numbered 1…n, last circle red if over par.
 struct MiniScorecardView: View {
     @ObservedObject var session: RoundSession
-    let onHoleSelect: (Int) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -43,8 +42,7 @@ struct MiniScorecardView: View {
                         ForEach(session.round.holes, id: \.id) { hole in
                             ScorecardRow(
                                 hole: hole,
-                                isCurrent: hole.number == session.currentHoleNumber,
-                                onTap: { onHoleSelect(hole.number) }
+                                isCurrent: hole.number == session.currentHoleNumber
                             )
                             .id(hole.number)
                         }
@@ -67,7 +65,6 @@ struct MiniScorecardView: View {
 private struct ScorecardRow: View {
     let hole: HoleScore
     let isCurrent: Bool
-    let onTap: () -> Void
 
     private var overPar: Int { hole.strokes - hole.par }
 
@@ -85,8 +82,7 @@ private struct ScorecardRow: View {
     }
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 10) {
+        HStack(spacing: 10) {
                 // H# label
                 Text("H\(hole.number)")
                     .font(.caption)
@@ -127,8 +123,6 @@ private struct ScorecardRow: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 7)
             .background(isCurrent ? Color.green.opacity(0.08) : Color.clear)
-        }
-        .buttonStyle(.plain)
 
         Divider()
             .padding(.leading, 16)
@@ -168,7 +162,7 @@ private struct StrokeCircle: View {
 
     let session = RoundSession(round: round)
     return (
-        MiniScorecardView(session: session, onHoleSelect: { _ in })
+        MiniScorecardView(session: session)
             .preferredColorScheme(.dark)
     )
 }

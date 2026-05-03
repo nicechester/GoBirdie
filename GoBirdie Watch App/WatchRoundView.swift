@@ -9,7 +9,9 @@ struct WatchRoundView: View {
 
     var body: some View {
         ZStack {
-            if session.isRoundEnded {
+            if session.isSaving {
+                SavingView()
+            } else if session.isRoundEnded {
                 RoundEndedView()
             } else if session.hasHoleData {
                 TabView {
@@ -24,6 +26,21 @@ struct WatchRoundView: View {
             if session.showClubPicker {
                 ClubPickerOverlay()
             }
+        }
+    }
+}
+
+// MARK: - Saving View
+
+private struct SavingView: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .progressViewStyle(.circular)
+                .scaleEffect(1.5)
+            Text("Saving...")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 }
@@ -86,16 +103,14 @@ private struct ActiveRoundView: View {
         .gesture(
             DragGesture()
                 .onEnded { value in
-                    if value.translation.width > 30 {
-                        // Swiped right - go to previous hole
-                        if session.holeNumber > 1 {
-                            session.navigateToHole(session.holeNumber - 1)
-                        }
-                    } else if value.translation.width < -30 {
-                        // Swiped left - go to next hole
-                        if session.holeNumber < session.totalHoles {
-                            session.navigateToHole(session.holeNumber + 1)
-                        }
+                    let h = value.translation.width
+                    let v = value.translation.height
+                    // Only handle if clearly horizontal (not a vertical swipe to TabView page)
+                    guard abs(h) > abs(v) else { return }
+                    if h > 30, session.holeNumber > 1 {
+                        session.navigateToHole(session.holeNumber - 1)
+                    } else if h < -30, session.holeNumber < session.totalHoles {
+                        session.navigateToHole(session.holeNumber + 1)
                     }
                 }
         )
@@ -185,6 +200,7 @@ private struct DistanceModeView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.green)
+                .accessibilityIdentifier("watch_mark_shot")
 
                 Button {
                     session.addPutt()
@@ -198,6 +214,7 @@ private struct DistanceModeView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
+                .accessibilityIdentifier("watch_add_putt")
             }
         }
         .padding(.horizontal, 2)
@@ -322,6 +339,7 @@ private struct RoundEndedView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.green)
+            .accessibilityIdentifier("watch_round_ended_done")
         }
     }
 }
@@ -330,11 +348,56 @@ private struct RoundEndedView: View {
 
 private struct ClubPickerOverlay: View {
     @EnvironmentObject var session: WatchRoundSession
-    @State private var crownIndex: Int = 0
+    @State private var selectedIndex: Int = 0
 
-    private var clubDisplayName: String {
-        guard !session.clubBag.isEmpty else { return "?" }
-        let raw = session.selectedClub
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Color.black.ignoresSafeArea()
+
+            VStack(spacing: 4) {
+                Picker(selection: $selectedIndex, label: Text("Club")) {
+                    ForEach(0..<session.clubBag.count, id: \.self) { idx in
+                        Text(clubName(session.clubBag[idx]))
+                            .font(.system(size: 48, weight: .semibold))
+                            .tag(idx)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .defaultWheelPickerItemHeight(60)
+                .onChange(of: selectedIndex) {
+                    guard session.clubBag.indices.contains(selectedIndex) else { return }
+                    session.selectedClub = session.clubBag[selectedIndex]
+                    session.resetClubPickerTimer()
+                }
+                .simultaneousGesture(TapGesture().onEnded {
+                    session.confirmClub()
+                })
+
+                Text("\(session.clubPickerCountdown)s")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.gray)
+            }
+
+            // Cancel button
+            Button {
+                session.cancelClubPicker()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.red)
+                    .background(Color.black.opacity(0.6))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(6)
+            .accessibilityIdentifier("watch_club_cancel")
+        }
+        .onAppear {
+            selectedIndex = session.clubBag.firstIndex(of: session.selectedClub) ?? 0
+        }
+    }
+
+    private func clubName(_ raw: String) -> String {
         let names: [String: String] = [
             "driver": "Driver", "3w": "3W", "5w": "5W",
             "3h": "3H", "4h": "4H", "5h": "5H",
@@ -344,86 +407,6 @@ private struct ClubPickerOverlay: View {
             "lw": "LW", "putter": "Putter",
         ]
         return names[raw] ?? raw
-    }
-
-    var body: some View {
-        VStack(spacing: 12) {
-            // Carousel of clubs
-            HStack(spacing: 12) {
-                // Previous club
-                if crownIndex > 0 {
-                    let prevClub = session.clubBag[crownIndex - 1]
-                    Text(prevClub)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.gray)
-                        .opacity(0.5)
-                        .frame(width: 30, alignment: .center)
-                } else {
-                    Color.clear.frame(width: 30)
-                }
-
-                Spacer()
-
-                // Current club (large)
-                Text(clubDisplayName)
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundStyle(.green)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-
-                Spacer()
-
-                // Next club
-                if crownIndex < session.clubBag.count - 1 {
-                    let nextClub = session.clubBag[crownIndex + 1]
-                    Text(nextClub)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.gray)
-                        .opacity(0.5)
-                        .frame(width: 30, alignment: .center)
-                } else {
-                    Color.clear.frame(width: 30)
-                }
-            }
-            .frame(height: 50)
-
-            // Confirm button
-            Button {
-                session.confirmClub()
-            } label: {
-                Image(systemName: "checkmark")
-                    .font(.title3).fontWeight(.bold)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.black.opacity(0.92))
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture()
-                .onChanged { value in
-                    let threshold: CGFloat = 20
-                    if value.translation.width > threshold, crownIndex > 0 {
-                        crownIndex -= 1
-                    } else if value.translation.width < -threshold, crownIndex < session.clubBag.count - 1 {
-                        crownIndex += 1
-                    }
-                }
-        )
-        .focusable()
-        .digitalCrownRotation(
-            detent: $crownIndex,
-            from: 0, through: max(session.clubBag.count - 1, 0), by: 1,
-            sensitivity: .low
-        ) { _ in } onIdle: { }
-        .onAppear {
-            crownIndex = session.clubBag.firstIndex(of: session.selectedClub) ?? 0
-        }
-        .onChange(of: crownIndex) { newValue in
-            guard session.clubBag.indices.contains(newValue) else { return }
-            session.selectedClub = session.clubBag[newValue]
-        }
     }
 }
 

@@ -4,6 +4,7 @@
 
 import Foundation
 import CoreLocation
+import CoreMotion
 import WatchConnectivity
 import HealthKit
 import Combine
@@ -24,10 +25,19 @@ final class WatchRoundSession: NSObject, ObservableObject {
     @Published var totalHoles: Int = 18
 
     @Published var isRoundEnded: Bool = false
+    @Published var isSaving: Bool = false
     @Published var showClubPicker: Bool = false
     @Published var selectedClub: String = "unknown"
+    @Published var clubPickerCountdown: Int = 15
     var clubBag: [String] = []
     private var clubPickerTimer: Timer?
+    private var countdownTimer: Timer?
+
+    // Motion detection
+    private let motionManager = CMMotionManager()
+    private var swingDebounceDate: Date = .distantPast
+    private static let swingThreshold: Double = 8.0   // g-force magnitude
+    private static let swingDebounceSeconds: Double = 2.0
 
     private var heartRateSamples: [[String: Any]] = []
 
@@ -116,7 +126,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
     func finishRound() {
         accumulatedStrokes += strokes
         endWorkout()
-        isRoundEnded = true
+        isSaving = true
         sendEndRoundToPhone()
     }
 
@@ -152,6 +162,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
         guard !isActive else { return }
         isActive = true
         locationManager.startUpdatingLocation()
+        startSwingDetection()
 
         // HKWorkoutSession is optional — keeps GPS alive in background
         guard HKHealthStore.isHealthDataAvailable() else { return }
@@ -187,6 +198,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
         workoutBuilder?.endCollection(withEnd: Date()) { _, _ in }
         workoutBuilder?.finishWorkout { _, _ in }
         locationManager.stopUpdatingLocation()
+        stopSwingDetection()
         isActive = false
     }
 
@@ -195,27 +207,53 @@ final class WatchRoundSession: NSObject, ObservableObject {
     private func showClubPickerAfterShot() {
         guard !clubBag.isEmpty else { return }
         selectedClub = defaultClubForDistance(pinYards)
+        clubPickerCountdown = 15
         showClubPicker = true
         clubPickerTimer?.invalidate()
-        clubPickerTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+        clubPickerTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: false) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.confirmClub()
+            }
+        }
+        countdownTimer?.invalidate()
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.showClubPicker else { return }
+                self.clubPickerCountdown = max(0, self.clubPickerCountdown - 1)
             }
         }
     }
 
     func confirmClub() {
         guard showClubPicker else { return }
-        clubPickerTimer?.invalidate()
-        clubPickerTimer = nil
+        clubPickerTimer?.invalidate(); clubPickerTimer = nil
+        countdownTimer?.invalidate(); countdownTimer = nil
         showClubPicker = false
         sendClubToPhone()
     }
 
-    func dismissClubPicker() {
-        clubPickerTimer?.invalidate()
-        clubPickerTimer = nil
+    /// Cancel shot marking — undo the stroke and dismiss the picker.
+    func cancelClubPicker() {
+        guard showClubPicker else { return }
+        clubPickerTimer?.invalidate(); clubPickerTimer = nil
+        countdownTimer?.invalidate(); countdownTimer = nil
         showClubPicker = false
+        if strokes > 0 { strokes -= 1 }
+        sendStrokesToPhone()
+    }
+
+    func dismissClubPicker() {
+        clubPickerTimer?.invalidate(); clubPickerTimer = nil
+        countdownTimer?.invalidate(); countdownTimer = nil
+        showClubPicker = false
+    }
+
+    func resetClubPickerTimer() {
+        clubPickerTimer?.invalidate()
+        clubPickerTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.confirmClub() }
+        }
+        clubPickerCountdown = 15
     }
 
     private func defaultClubForDistance(_ yards: Int?) -> String {
@@ -250,6 +288,32 @@ final class WatchRoundSession: NSObject, ObservableObject {
                 print("[Watch] clubSelection sendMessage failed: \(error)")
             }
         }
+    }
+
+    // MARK: - Swing Detection
+
+    private func startSwingDetection() {
+        guard motionManager.isAccelerometerAvailable else { return }
+        motionManager.accelerometerUpdateInterval = 0.02 // 50 Hz
+        motionManager.startAccelerometerUpdates(to: .main) { [weak self] data, _ in
+            guard let self, let data else { return }
+            let a = data.acceleration
+            let magnitude = sqrt(a.x * a.x + a.y * a.y + a.z * a.z)
+            guard magnitude > Self.swingThreshold else { return }
+            let now = Date()
+            guard now.timeIntervalSince(self.swingDebounceDate) > Self.swingDebounceSeconds else { return }
+            self.swingDebounceDate = now
+            if self.showClubPicker {
+                // Practice swing during club picker — reset the auto-submit timer
+                self.resetClubPickerTimer()
+            } else {
+                self.markShot()
+            }
+        }
+    }
+
+    private func stopSwingDetection() {
+        motionManager.stopAccelerometerUpdates()
     }
 
     // MARK: - Distance Computation
@@ -355,6 +419,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
                 return
             case "roundEnded":
                 endWorkout()
+                isSaving = false
                 isRoundEnded = true
                 return
             case "strokeUpdate":

@@ -174,6 +174,12 @@ final class MapViewModel: ObservableObject {
     }
 
     /// Handle a tap on the map.
+    func clearTapMeasurement() {
+        selectedTapPoint = nil
+        tapDistanceYards = nil
+        tapToGreenYards = nil
+    }
+
     func handleTap(at tapPoint: GpsPoint) {
         selectedTapPoint = tapPoint
         tapPlayerLocation = mockLocation ?? locationService.currentLocation

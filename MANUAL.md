@@ -76,7 +76,7 @@ Once you've selected the course and starting hole, the round begins. You'll see 
 
 ### Step 4: Select Your Club
 
-After each shot, tap **Mark Shot** to drop a GPS pin at your current location. A club selection sheet appears — pick the club you used. You can customize the club list in Settings → Clubs.
+After each shot, tap **Mark Shot** to drop a GPS pin at your current location. A club selection wheel appears — scroll to your club and tap **Confirm**. Tap **Cancel** to discard the shot without recording it. You can customize the club list in Settings → Clubs.
 
 </td></tr>
 </table>
@@ -126,9 +126,13 @@ This is useful for planning layups or checking carry distances over hazards.
 <table>
 <tr><td valign="top"><img src="screenshots/round-menu.png" width="220"></td><td valign="top" width="60%">
 
-### Step 8: Enter Putts
+### Step 8: Enter Putts & Penalties
 
-Enter number of putts with + / − buttons and click next to move to next hole. Finish button shows up at the last hole. You can click on it to finish and save the game. Optionally, the menu button on the top-right corner shows End Round / Cancel Round which can be used any time during the round.
+Enter number of putts with + / − buttons and tap **Next** to move to the next hole. The **Finish** button appears at the last hole to end and save the round. Two quick-action buttons are available during play:
+- **Penalty** — adds a penalty stroke to the current hole
+- **Undo** — removes the last stroke
+
+The menu button (top-right) shows **End Round** / **Cancel Round** which can be used any time.
 
 </td></tr>
 </table>
@@ -162,7 +166,7 @@ Tap the **Scorecards** tab to see all completed rounds. Each card shows the cour
 
 ### Step 11: Scorecard Detail
 
-Tap a round to see the full scorecard with per-hole breakdown: score, putts, fairway hit, and number of tracked shots.
+Tap a round to see the full scorecard with per-hole breakdown: score, putts, and penalties per hole. Stats are shown below the table: holes played, GIR, and longest drive. The course name is followed by the date and weather conditions (temperature and sky condition recorded at round end).
 
 </td><td valign="top"><img src="screenshots/score-card-detail.png" width="220"></td></tr>
 </table>
@@ -182,9 +186,46 @@ Scroll down in the scorecard detail to see the shot map. Each hole's shots are p
 
 ### Step 13: Edit Shot Map
 
-Tap **Edit** in the shot map view to adjust shot locations, club selections, or putt count. Drag pins to move shots, tap to select and delete shots, tap on the map to add new shots, and use the **+/−** buttons to adjust putts. Changes are saved when you tap **Done**.
+Tap **Edit** to adjust shots for a hole. In edit mode:
+- **Drag** a pin to move a shot to a new location
+- **Tap** a pin to select it — a **Delete Shot** button appears at the bottom
+- **Tap the map** to add a missing shot — it's inserted in sequence order toward the green, and a club picker opens to confirm. Tap **Cancel** in the hint bar to discard the placement
+- **Double-tap** a selected pin to change its club
+- **+/−** buttons adjust the putt count
+- Tap the **list** icon (top-right) to reorder shots by dragging rows
+- Tap **Done** when finished — if there are unsaved changes, you'll be asked whether to save
 
 </td><td valign="top"><img src="screenshots/score-card-shot-map-edit.png" width="220"></td></tr>
+</table>
+
+<table>
+<tr><td valign="top"><img src="screenshots/scorecard-shot-map-eidt-reorder.png" width="220"></td><td valign="top" width="60%">
+
+### Step 13a: Reorder Shots
+
+Tap the **list** icon in the top-right corner while in edit mode to open the reorder sheet. Drag rows up or down to change the shot sequence, then tap **Done** to apply. Tap **Cancel** to discard the reorder.
+
+</td></tr>
+</table>
+
+<table>
+<tr><td valign="top" width="60%">
+
+### Step 13b: Save Changes
+
+When you tap **Done** after making edits, a prompt asks "Do you want to save the changes?" — tap **Yes** to save or **No** to discard.
+
+</td><td valign="top"><img src="screenshots/scorecard-shot-map-edit-confirm.png" width="220"></td></tr>
+</table>
+
+<table>
+<tr><td valign="top" width="60%">
+
+### Step 13c: Move Shots to Another Hole
+
+If you accidentally recorded shots on the wrong hole, tap the **menu** button during a round and select **Move Shots to Hole…**. All shots and putts from the current hole are moved to the selected target hole, and stroke counts are adjusted on both holes.
+
+</td></tr>
 </table>
 
 <table>
@@ -262,11 +303,13 @@ When you start a round on the iPhone, the Watch shows the course name. Tap **Sta
 
 ### Step 20: Distances & Shot Tracking
 
-The Watch displays live distances to the **Front**, **Pin**, and **Back** of the green in a compact layout, updated continuously from Watch GPS. Below the distances, your current **Strokes** and **Putts** are shown. Use the buttons to:
+The Watch displays live distances to the **Front**, **Pin**, and **Back** of the green, updated continuously from Watch GPS. Below the distances, your current **Strokes** and **Putts** are shown. Use the buttons to:
 - **Shot** — mark a shot at your current GPS location (opens club selection)
 - **+1 Putt** — add a putt to the current hole
 
 Rotate the **Digital Crown** to navigate between holes. Stroke and putt counts sync automatically with the iPhone.
+
+> **Swing detection** — The Watch automatically detects a golf swing via the accelerometer (g-force > 8g) and triggers **Shot** for you. A 2-second debounce prevents double-triggers from follow-through.
 
 </td></tr>
 </table>
@@ -276,7 +319,11 @@ Rotate the **Digital Crown** to navigate between holes. Stroke and putt counts s
 
 ### Step 20b: Club Selection on Watch
 
-After tapping **Shot**, a club picker overlay appears. Rotate the **Digital Crown** or swipe left/right to scroll through your clubs, then tap to confirm. The selected club is recorded with the shot and synced to the iPhone.
+After tapping **Shot** (or after swing detection triggers automatically), a full-screen club list appears. Tap any row to confirm immediately — the currently highlighted club is shown in green. Rotate the **Digital Crown** to scroll. A **15-second countdown** is shown next to the highlighted club; if it expires, the highlighted club is auto-submitted.
+
+Tap the red **✕** in the top-right corner to cancel the shot (the stroke is undone and no location is recorded).
+
+> **Practice swing** — If a swing is detected while the club picker is open, it resets the 15s timer instead of marking a new shot.
 
 </td><td valign="top"><img src="screenshots/watch-club-selection.png" width="160"></td></tr>
 </table>

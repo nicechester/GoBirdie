@@ -53,6 +53,15 @@ struct EditableShotMapView: UIViewRepresentable {
 
     func updateUIView(_ uiView: MLNMapView, context: Context) {
         context.coordinator.selectedShotId = selectedShotId
+        // Refresh overlays when shot locations change (e.g. after drag-move)
+        // but only after the style has loaded (annotations array is non-nil)
+        if context.coordinator.renderedHole != hole {
+            context.coordinator.renderedHole = hole
+            if uiView.style != nil {
+                uiView.removeAnnotations(uiView.annotations ?? [])
+                context.coordinator.refreshOverlays(mapView: uiView)
+            }
+        }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -69,6 +78,7 @@ struct EditableShotMapView: UIViewRepresentable {
     class Coordinator: NSObject, MLNMapViewDelegate, UIGestureRecognizerDelegate {
         var mapView: MLNMapView?
         let hole: HoleScore
+        var renderedHole: HoleScore
         let courseHoles: [Hole]
         var selectedShotId: UUID?
         let selectedShotIdBinding: Binding<UUID?>
@@ -77,6 +87,7 @@ struct EditableShotMapView: UIViewRepresentable {
         let onChangeClub: (UUID, ClubType) -> Void
         private var shotAnnotations: [UUID: MLNPointAnnotation] = [:]
         private var draggingShotId: UUID?
+        private var suppressNextTap = false
 
         private static func clubColor(for club: ClubType) -> UIColor {
             switch club {
@@ -95,6 +106,7 @@ struct EditableShotMapView: UIViewRepresentable {
              onAddShot: @escaping (GpsPoint) -> Void,
              onChangeClub: @escaping (UUID, ClubType) -> Void) {
             self.hole = hole
+            self.renderedHole = hole
             self.courseHoles = courseHoles
             self.selectedShotIdBinding = selectedShotId
             self.selectedShotId = selectedShotId.wrappedValue
@@ -104,12 +116,17 @@ struct EditableShotMapView: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
-            addOverlays(to: mapView)
+            addOverlays(to: mapView, resetCamera: true)
         }
 
-        private func addOverlays(to mapView: MLNMapView) {
-            let courseHole = courseHoles.first { $0.number == hole.number }
-            let sortedShots = hole.shots.sorted { $0.sequence < $1.sequence }
+        func refreshOverlays(mapView: MLNMapView) {
+            shotAnnotations.removeAll()
+            addOverlays(to: mapView, resetCamera: false)
+        }
+
+        private func addOverlays(to mapView: MLNMapView, resetCamera: Bool = true) {
+            let courseHole = courseHoles.first { $0.number == renderedHole.number }
+            let sortedShots = renderedHole.shots.sorted { $0.sequence < $1.sequence }
             var allCoords: [CLLocationCoordinate2D] = []
 
             var prevCoord: CLLocationCoordinate2D? = nil
@@ -166,18 +183,19 @@ struct EditableShotMapView: UIViewRepresentable {
                 shotAnnotations[shot.id] = point
             }
 
-            if hole.putts > 0, let green = courseHole?.greenCenter {
+            if renderedHole.putts > 0, let green = courseHole?.greenCenter {
                 let puttPin = MLNPointAnnotation()
                 puttPin.coordinate = CLLocationCoordinate2D(latitude: green.lat, longitude: green.lon)
-                puttPin.title = "\(hole.putts) Putts"
+                puttPin.title = "\(renderedHole.putts) Putts"
                 puttPin.subtitle = "putt-label"
                 mapView.addAnnotation(puttPin)
             }
 
             guard allCoords.count >= 2 else {
-                if let c = allCoords.first { mapView.setCenter(c, zoomLevel: 17, animated: false) }
+                if resetCamera, let c = allCoords.first { mapView.setCenter(c, zoomLevel: 17, animated: false) }
                 return
             }
+            guard resetCamera else { return }
             let heading: CLLocationDirection
             let teeGreenDist: Double
             if let ch = courseHole, let tee = ch.tee, let green = ch.greenCenter {
@@ -229,12 +247,13 @@ struct EditableShotMapView: UIViewRepresentable {
 
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard let mapView else { return }
+            if suppressNextTap { suppressNextTap = false; return }
             let point = gesture.location(in: mapView)
 
             if let shotId = shotIdAtPoint(point, in: mapView) {
                 if selectedShotId == shotId {
                     // Already selected — open club picker
-                    let currentClub = hole.shots.first { $0.id == shotId }?.club ?? .unknown
+                    let currentClub = renderedHole.shots.first { $0.id == shotId }?.club ?? .unknown
                     DispatchQueue.main.async {
                         self.onChangeClub(shotId, currentClub)
                     }
@@ -282,6 +301,7 @@ struct EditableShotMapView: UIViewRepresentable {
             case .ended, .cancelled:
                 if let dragId = draggingShotId, let ann = shotAnnotations[dragId] {
                     let newLoc = GpsPoint(lat: ann.coordinate.latitude, lon: ann.coordinate.longitude)
+                    suppressNextTap = true
                     DispatchQueue.main.async {
                         self.onMoveShotTo(dragId, newLoc)
                     }
@@ -359,7 +379,7 @@ struct EditableShotMapView: UIViewRepresentable {
             guard let subtitle = point.subtitle, subtitle.hasPrefix("shot-") else { return nil }
             let idStr = String(subtitle.dropFirst(5))
             let shotId = UUID(uuidString: idStr)
-            let shot = hole.shots.first { $0.id == shotId }
+            let shot = renderedHole.shots.first { $0.id == shotId }
             let club = shot?.club ?? .unknown
             let color = Self.clubColor(for: club)
             let isSelected = shotId == selectedShotId

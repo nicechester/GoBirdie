@@ -1,30 +1,6 @@
 import XCTest
 import CoreLocation
 
-// MARK: - Test Data Model
-
-struct ShotData: Decodable {
-    let lat: Double
-    let lon: Double
-    let club: String
-    let club_display: String
-}
-
-struct HoleData: Decodable {
-    let hole_number: Int
-    let par: Int
-    let score: Int
-    let putts: Int
-    let shots: [ShotData]
-}
-
-struct RoundData: Decodable {
-    let course_name: String
-    let total_score: Int
-    let total_putts: Int
-    let holes: [HoleData]
-}
-
 // MARK: - Round Simulation UI Test
 
 /// Simulates a full round using real Garmin data from Hansen Dam Golf Course.
@@ -45,13 +21,22 @@ struct RoundData: Decodable {
 final class RoundSimulationTests: XCTestCase {
 
     var app: XCUIApplication!
-    var roundData: RoundData!
+    var roundData: TestRoundData!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments += ["-UITest"]
         app.launch()
+
+        addUIInterruptionMonitor(withDescription: "Location permission") { alert in
+            let whileUsing = alert.buttons["Allow While Using App"]
+            if whileUsing.exists { whileUsing.tap(); return true }
+            let allow = alert.buttons["Allow"]
+            if allow.exists { allow.tap(); return true }
+            return false
+        }
+        app.tap()
 
         roundData = try loadTestRound()
     }
@@ -125,7 +110,7 @@ final class RoundSimulationTests: XCTestCase {
 
     // MARK: - Play a Single Hole
 
-    private func playHole(_ hole: HoleData, holeIndex: Int) {
+    private func playHole(_ hole: TestHoleData, holeIndex: Int) {
         let holeLabel = app.staticTexts["holeLabel"]
         XCTAssertTrue(holeLabel.waitForExistence(timeout: 5), "Hole label should be visible")
 
@@ -146,7 +131,7 @@ final class RoundSimulationTests: XCTestCase {
             markShot.tap()
 
             // Select club from the sheet
-            selectClub(shot.club_display)
+            selectClub(shot.club)
         }
 
         // Set putts
@@ -174,49 +159,46 @@ final class RoundSimulationTests: XCTestCase {
     // MARK: - Club Selection
 
     private func selectClub(_ clubDisplay: String) {
-        // The MarkShotSheet shows a list of clubs
-        // Wait for the sheet to appear
-        let clubList = app.navigationBars["Select Club"]
-        guard clubList.waitForExistence(timeout: 5) else {
-            // Sheet didn't appear or different layout — tap Skip
-            let skip = app.buttons["Skip"]
-            if skip.exists { skip.tap() }
+        let navBar = app.navigationBars["Select Club"]
+        guard navBar.waitForExistence(timeout: 5) else {
+            if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
             return
         }
 
-        // Map garmin club names to app display names
         let displayName = mapClubName(clubDisplay)
+        let wheel = app.pickerWheels.firstMatch
+        if wheel.waitForExistence(timeout: 3) {
+            wheel.adjust(toPickerWheelValue: displayName)
+        }
 
-        let clubButton = app.buttons[displayName]
-        if clubButton.waitForExistence(timeout: 3) {
-            clubButton.tap()
+        if app.buttons["Confirm"].waitForExistence(timeout: 3) {
+            app.buttons["Confirm"].tap()
         } else {
-            // Try scrolling to find it
-            let clubCell = app.cells.containing(
-                NSPredicate(format: "label CONTAINS[c] %@", displayName)
-            ).firstMatch
-            if clubCell.waitForExistence(timeout: 3) {
-                clubCell.tap()
-            } else {
-                // Club not found in bag — skip
-                let skip = app.buttons["Skip"]
-                if skip.exists { skip.tap() }
-            }
+            if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
         }
     }
 
     private func mapClubName(_ garminName: String) -> String {
         let map: [String: String] = [
+            // Short codes from club field
+            "driver": "Driver",
+            "3w": "3 Wood", "5w": "5 Wood",
+            "3h": "3 Wood", "4h": "4 Iron", "5h": "4 Iron",
+            "4i": "4 Iron", "5i": "5 Iron", "6i": "6 Iron",
+            "7i": "7 Iron", "8i": "8 Iron", "9i": "9 Iron",
+            "pw": "Pitching Wedge", "gw": "Gap Wedge",
+            "sw": "Sand Wedge", "lw": "Lob Wedge",
+            // Long display names (legacy)
             "Driver": "Driver",
             "3-Wood": "3 Wood", "5-Wood": "5 Wood",
-            "3-Hybrid": "3 Hybrid", "4-Hybrid": "4 Hybrid",
-            "5-Hybrid": "5 Hybrid", "Hybrid": "5 Hybrid",
+            "3-Hybrid": "3 Wood", "4-Hybrid": "4 Iron", "5-Hybrid": "4 Iron", "Hybrid": "4 Iron",
             "4-Iron": "4 Iron", "5-Iron": "5 Iron", "6-Iron": "6 Iron",
             "7-Iron": "7 Iron", "8-Iron": "8 Iron", "9-Iron": "9 Iron",
             "PW": "Pitching Wedge", "GW": "Gap Wedge",
             "SW": "Sand Wedge", "LW": "Lob Wedge",
         ]
-        return map[garminName] ?? garminName
+        // unknown/? — leave picker at default
+        return map[garminName] ?? "Driver"
     }
 
     // MARK: - Putts
@@ -267,13 +249,13 @@ final class RoundSimulationTests: XCTestCase {
 
     // MARK: - Test Data Loading
 
-    private func loadTestRound() throws -> RoundData {
+    private func loadTestRound() throws -> TestRoundData {
         let bundle = Bundle(for: type(of: self))
         guard let url = bundle.url(forResource: "test_round", withExtension: "json") else {
             throw NSError(domain: "RoundSimulationTests", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "test_round.json not found in test bundle"])
         }
         let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(RoundData.self, from: data)
+        return try JSONDecoder().decode(TestRoundData.self, from: data)
     }
 }

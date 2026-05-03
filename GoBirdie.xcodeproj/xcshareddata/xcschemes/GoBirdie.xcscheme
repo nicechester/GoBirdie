@@ -33,6 +33,9 @@
             reference = "container:GoBirdie.xctestplan"
             default = "YES">
          </TestPlanReference>
+         <TestPlanReference
+            reference = "container:GoBirdie Watch App.xctestplan">
+         </TestPlanReference>
       </TestPlans>
       <Testables>
          <TestableReference
