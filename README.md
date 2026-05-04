@@ -1,3 +1,5 @@
+[![Download on the App Store](https://img.shields.io/badge/iOS-App_Store-blue?logo=apple)](https://apps.apple.com/us/app/gobirdie/id6762627436)
+
 # GoBirdie
 
 A golf GPS and shot tracking app for iPhone and Apple Watch, with desktop sync via [GoBirdie Desktop](https://github.com/nicechester/GoBirdie-Desktop).
