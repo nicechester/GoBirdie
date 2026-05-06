@@ -14,11 +14,7 @@ struct WatchRoundView: View {
             } else if session.isRoundEnded {
                 RoundEndedView()
             } else if session.hasHoleData {
-                TabView {
-                    ActiveRoundView()
-                    EndRoundPage()
-                }
-                .tabViewStyle(.verticalPage)
+                RoundPagesView()
             } else {
                 StartView()
             }
@@ -72,10 +68,29 @@ private struct StartView: View {
     }
 }
 
+// MARK: - Round Pages
+
+private struct RoundPagesView: View {
+    @EnvironmentObject var session: WatchRoundSession
+    @State private var showEndPage = false
+
+    var body: some View {
+        ZStack {
+            if showEndPage {
+                EndRoundPage(showEndPage: $showEndPage)
+            } else {
+                ActiveRoundView(showEndPage: $showEndPage)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showEndPage)
+    }
+}
+
 // MARK: - Active Round
 
 private struct ActiveRoundView: View {
     @EnvironmentObject var session: WatchRoundSession
+    @Binding var showEndPage: Bool
     @State private var crownHole: Int = 1
 
     var body: some View {
@@ -105,12 +120,14 @@ private struct ActiveRoundView: View {
                 .onEnded { value in
                     let h = value.translation.width
                     let v = value.translation.height
-                    // Only handle if clearly horizontal (not a vertical swipe to TabView page)
-                    guard abs(h) > abs(v) else { return }
-                    if h > 30, session.holeNumber > 1 {
-                        session.navigateToHole(session.holeNumber - 1)
-                    } else if h < -30, session.holeNumber < session.totalHoles {
-                        session.navigateToHole(session.holeNumber + 1)
+                    if abs(v) > abs(h) {
+                        if v < -30 { showEndPage = true }
+                    } else {
+                        if h > 30, session.holeNumber > 1 {
+                            session.navigateToHole(session.holeNumber - 1)
+                        } else if h < -30, session.holeNumber < session.totalHoles {
+                            session.navigateToHole(session.holeNumber + 1)
+                        }
                     }
                 }
         )
@@ -279,6 +296,7 @@ private struct PuttModeView: View {
 
 private struct EndRoundPage: View {
     @EnvironmentObject var session: WatchRoundSession
+    @Binding var showEndPage: Bool
 
     var body: some View {
         VStack(spacing: 12) {
@@ -305,6 +323,13 @@ private struct EndRoundPage: View {
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
         }
+        .gesture(
+            DragGesture().onEnded { value in
+                if value.translation.height > 30, abs(value.translation.height) > abs(value.translation.width) {
+                    showEndPage = false
+                }
+            }
+        )
     }
 }
 
