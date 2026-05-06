@@ -87,6 +87,9 @@ final class ConnectivityService: NSObject, ObservableObject {
             session.sendMessage(ctx, replyHandler: nil) { error in
                 print("[Connectivity] sendMessage failed: \(error)")
             }
+        } else {
+            // transferUserInfo is queued and delivered reliably even when not reachable
+            session.transferUserInfo(ctx)
         }
     }
 }
@@ -118,6 +121,12 @@ extension ConnectivityService: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         Task { @MainActor in
             self.handleWatchMessage(applicationContext)
+        }
+    }
+
+    nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
+        Task { @MainActor in
+            self.handleWatchMessage(userInfo)
         }
     }
 
