@@ -27,6 +27,7 @@ final class WatchRoundSession: NSObject, ObservableObject {
     @Published var isRoundEnded: Bool = false
     @Published var isSaving: Bool = false
     @Published var showClubPicker: Bool = false
+    @Published var teeDetectionHole: Int? = nil
     @Published var selectedClub: String = "unknown"
     @Published var clubPickerCountdown: Int = 15
     var clubBag: [String] = []
@@ -136,7 +137,23 @@ final class WatchRoundSession: NSObject, ObservableObject {
         resetToWaiting()
     }
 
+    func confirmTeeDetection(holeNumber: Int) {
+        teeDetectionHole = nil
+        navigateToHole(holeNumber)
+    }
+
+    func dismissTeeDetection(holeNumber: Int) {
+        teeDetectionHole = nil
+        let msg: [String: Any] = ["action": "teeDetectDismissed", "holeNumber": holeNumber]
+        if WCSession.default.isReachable {
+            WCSession.default.sendMessage(msg, replyHandler: nil) { error in
+                print("[Watch] teeDetectDismissed sendMessage failed: \(error)")
+            }
+        }
+    }
+
     func resetToWaiting() {
+        teeDetectionHole = nil
         isRoundEnded = false
         hasHoleData = false
         holeNumber = 1
@@ -430,6 +447,11 @@ final class WatchRoundSession: NSObject, ObservableObject {
                     putts = p
                 }
                 return
+            case "teeDetected":
+                if let hole = context["holeNumber"] as? Int {
+                    teeDetectionHole = hole
+                }
+                return
             default:
                 break
             }
@@ -473,8 +495,8 @@ final class WatchRoundSession: NSObject, ObservableObject {
             clubBag = clubs
         }
 
-        strokes = 0
-        putts = 0
+        strokes = context["strokes"] as? Int ?? 0
+        putts = context["putts"] as? Int ?? 0
         hasHoleData = true
         isRoundEnded = false
         recomputeDistances()

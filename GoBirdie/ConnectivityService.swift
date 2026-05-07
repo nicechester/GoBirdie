@@ -26,16 +26,25 @@ final class ConnectivityService: NSObject, ObservableObject {
     }
 
     /// Send hole + round data to Watch as a single context.
+    var isWatchReachable: Bool { session.isReachable }
+
+    func sendTeeDetected(holeNumber: Int) {
+        guard session.isReachable else { return }
+        session.sendMessage(["action": "teeDetected", "holeNumber": holeNumber], replyHandler: nil) { error in
+            print("[Connectivity] teeDetected sendMessage failed: \(error)")
+        }
+    }
+
     func sendRoundEnded() {
-        send(["action": "roundEnded"])
+        sendTransient(["action": "roundEnded"])
     }
 
     func sendRoundCancelled() {
-        send(["action": "roundCancelled"])
+        sendTransient(["action": "roundCancelled"])
     }
 
     /// Send hole + round data to Watch as a single context.
-    func sendHoleData(hole: Hole, holeNumber: Int, courseName: String, totalStrokes: Int, totalHoles: Int = 18) {
+    func sendHoleData(hole: Hole, holeNumber: Int, courseName: String, totalStrokes: Int, totalHoles: Int = 18, strokes: Int = 0, putts: Int = 0) {
         var ctx: [String: Any] = [
             "holeNumber": holeNumber,
             "par": hole.par,
@@ -43,6 +52,8 @@ final class ConnectivityService: NSObject, ObservableObject {
             "totalStrokes": totalStrokes,
             "totalHoles": totalHoles,
             "clubBag": ClubBag.shared.enabledClubs.map(\.rawValue),
+            "strokes": strokes,
+            "putts": putts,
         ]
 
         if let tee = hole.tee {
@@ -66,12 +77,29 @@ final class ConnectivityService: NSObject, ObservableObject {
     }
 
     func sendStrokeUpdate(holeNumber: Int, strokes: Int, putts: Int) {
-        send([
+        let msg: [String: Any] = [
             "action": "strokeUpdate",
             "holeNumber": holeNumber,
             "strokes": strokes,
             "putts": putts,
-        ])
+        ]
+        guard session.isReachable else { return }
+        session.sendMessage(msg, replyHandler: nil) { error in
+            print("[Connectivity] strokeUpdate sendMessage failed: \(error)")
+        }
+    }
+
+    // Transient messages — sendMessage only, no transferUserInfo queue
+    private func sendTransient(_ msg: [String: Any]) {
+        guard WCSession.isSupported() else { return }
+        if session.isReachable {
+            session.sendMessage(msg, replyHandler: nil) { error in
+                print("[Connectivity] sendTransient failed: \(error)")
+            }
+        }
+        // Also update context so watch gets it on next activation if currently unreachable,
+        // but do NOT use transferUserInfo which would queue stale messages into future rounds
+        try? session.updateApplicationContext(msg)
     }
 
     private func send(_ ctx: [String: Any]) {
@@ -163,6 +191,14 @@ extension ConnectivityService: WCSessionDelegate {
             NotificationCenter.default.post(name: .watchEndRound, object: nil, userInfo: info.isEmpty ? nil : info)
         case "cancelRound":
             NotificationCenter.default.post(name: .watchCancelRound, object: nil)
+        case "teeDetectDismissed":
+            if let holeNumber = message["holeNumber"] as? Int {
+                NotificationCenter.default.post(
+                    name: .watchTeeDetectDismissed,
+                    object: nil,
+                    userInfo: ["holeNumber": holeNumber]
+                )
+            }
         case "clubSelection":
             if let holeNumber = message["holeNumber"] as? Int,
                let clubRaw = message["club"] as? String {
@@ -202,4 +238,5 @@ extension Notification.Name {
     static let watchEndRound = Notification.Name("watchEndRound")
     static let watchCancelRound = Notification.Name("watchCancelRound")
     static let watchClubSelection = Notification.Name("watchClubSelection")
+    static let watchTeeDetectDismissed = Notification.Name("watchTeeDetectDismissed")
 }

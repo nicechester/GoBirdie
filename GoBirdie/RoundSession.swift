@@ -243,13 +243,16 @@ final class RoundSession: ObservableObject {
         currentHoleIndex = idx
 
         // Notify Watch of hole change if course data is available
-        if let course = course, let hole = course.holes.first(where: { $0.number == holeNumber }) {
+        if let course = course, let hole = course.holes.first(where: { $0.number == holeNumber }),
+           let holeScore = round.holes.first(where: { $0.number == holeNumber }) {
             ConnectivityService.shared.sendHoleData(
                 hole: hole,
                 holeNumber: holeNumber,
                 courseName: course.name,
                 totalStrokes: round.totalStrokes,
-                totalHoles: course.holes.count
+                totalHoles: course.holes.count,
+                strokes: holeScore.strokes,
+                putts: holeScore.putts
             )
         }
     }
