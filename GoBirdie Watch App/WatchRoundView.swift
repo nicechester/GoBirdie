@@ -23,6 +23,19 @@ struct WatchRoundView: View {
                 ClubPickerOverlay()
             }
         }
+        .alert("Move to Hole \(session.teeDetectionHole ?? 0)?", isPresented: Binding(
+            get: { session.teeDetectionHole != nil },
+            set: { if !$0 { session.teeDetectionHole = nil } }
+        )) {
+            if let hole = session.teeDetectionHole {
+                Button("Move to Hole \(hole)") { session.confirmTeeDetection(holeNumber: hole) }
+                Button("Stay", role: .cancel) { session.dismissTeeDetection(holeNumber: hole) }
+            }
+        } message: {
+            if let hole = session.teeDetectionHole {
+                Text("You're near the Hole \(hole) tee box.")
+            }
+        }
     }
 }
 
@@ -337,6 +350,8 @@ private struct EndRoundPage: View {
 
 private struct RoundEndedView: View {
     @EnvironmentObject var session: WatchRoundSession
+    @State private var countdown = 10
+    @State private var timer: Timer? = nil
 
     var body: some View {
         VStack(spacing: 8) {
@@ -357,15 +372,31 @@ private struct RoundEndedView: View {
                 .font(.caption).foregroundStyle(.secondary)
 
             Button {
-                session.resetToWaiting()
+                dismiss()
             } label: {
-                Text("Done")
+                Text("Done (\(countdown)s)")
                     .font(.caption).fontWeight(.semibold)
             }
             .buttonStyle(.borderedProminent)
             .tint(.green)
             .accessibilityIdentifier("watch_round_ended_done")
         }
+        .onAppear { startCountdown() }
+        .onDisappear { timer?.invalidate(); timer = nil }
+    }
+
+    private func startCountdown() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            Task { @MainActor in
+                countdown -= 1
+                if countdown <= 0 { dismiss() }
+            }
+        }
+    }
+
+    private func dismiss() {
+        timer?.invalidate(); timer = nil
+        session.resetToWaiting()
     }
 }
 

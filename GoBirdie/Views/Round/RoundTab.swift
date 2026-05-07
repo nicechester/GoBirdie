@@ -120,6 +120,19 @@ private struct ActiveRoundView: View {
         } message: {
             Text("No activity for 30 minutes.")
         }
+        .alert("Move to Hole \(appState.teeDetectionHole ?? 0)?", isPresented: Binding(
+            get: { appState.teeDetectionHole != nil },
+            set: { if !$0 { appState.teeDetectionHole = nil } }
+        )) {
+            if let hole = appState.teeDetectionHole {
+                Button("Move to Hole \(hole)") { appState.confirmTeeDetection(holeNumber: hole) }
+                Button("Stay", role: .cancel) { appState.dismissTeeDetection(holeNumber: hole) }
+            }
+        } message: {
+            if let hole = appState.teeDetectionHole {
+                Text("You're near the Hole \(hole) tee box.")
+            }
+        }
         .sheet(isPresented: $showMoveShotsSheet) {
             MoveShotsSheet(session: session, course: viewModel.course)
         }

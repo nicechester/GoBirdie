@@ -49,6 +49,10 @@ final class AppState: ObservableObject {
     private var idleTimer: Timer?
     @Published var showIdlePrompt = false
     @Published var isSavingRound = false
+    @Published var teeDetectionHole: Int? = nil  // non-nil when phone should show prompt
+
+    private var teeHitCounts: [Int: Int] = [:]   // hole number → consecutive hit count
+    private var dismissedTees: Set<Int> = []
 
     init() {
         syncServer = SyncServer(roundStore: roundStore)
@@ -84,6 +88,15 @@ final class AppState: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.cancelActiveRound(fromWatch: true)
+            }
+        }
+        NotificationCenter.default.addObserver(
+            forName: .watchTeeDetectDismissed, object: nil, queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                if let hole = notification.userInfo?["holeNumber"] as? Int {
+                    self?.dismissedTees.insert(hole)
+                }
             }
         }
     }
@@ -147,7 +160,7 @@ final class AppState: ObservableObject {
         self.activeRound = session
         self.selectedTab = 1
 
-        let viewModel = RoundViewModel(session: session, course: course, locationService: locationService)
+        let viewModel = RoundViewModel(session: session, course: course, locationService: locationService, appState: self)
         self.activeRoundViewModel = viewModel
         viewModel.startRound()
 
@@ -245,7 +258,7 @@ final class AppState: ObservableObject {
         self.selectedTab = 1
 
         // Create the ViewModel for UI updates
-        let viewModel = RoundViewModel(session: session, course: course, locationService: locationService)
+        let viewModel = RoundViewModel(session: session, course: course, locationService: locationService, appState: self)
         self.activeRoundViewModel = viewModel
 
         // Start location tracking
@@ -282,9 +295,7 @@ final class AppState: ObservableObject {
             print("[AppState] Failed to save round: \(error)")
         }
 
-        if !fromWatch {
-            ConnectivityService.shared.sendRoundEnded()
-        }
+        ConnectivityService.shared.sendRoundEnded()
         cleanupRound()
 
         // Fetch weather async and update saved round in background
@@ -327,12 +338,50 @@ final class AppState: ObservableObject {
         }
     }
 
+    func checkTeeProximity(location: GpsPoint, course: Course, currentHoleNumber: Int) {
+        for hole in course.holes {
+            guard let tee = hole.tee,
+                  hole.number != currentHoleNumber,
+                  hole.number > currentHoleNumber,
+                  !dismissedTees.contains(hole.number) else { continue }
+            let dist = distanceEngine.distanceYards(from: location, to: tee)
+            if dist <= 3.28 {
+                teeHitCounts[hole.number, default: 0] += 1
+                if teeHitCounts[hole.number]! >= 3 {
+                    teeHitCounts.removeAll()
+                    if ConnectivityService.shared.isWatchReachable {
+                        ConnectivityService.shared.sendTeeDetected(holeNumber: hole.number)
+                    } else {
+                        teeDetectionHole = hole.number
+                    }
+                }
+                return
+            } else {
+                teeHitCounts[hole.number] = 0
+            }
+        }
+    }
+
+    func confirmTeeDetection(holeNumber: Int) {
+        teeDetectionHole = nil
+        guard let session = activeRound, let vm = activeRoundViewModel else { return }
+        session.navigateTo(holeNumber: holeNumber, course: vm.course)
+    }
+
+    func dismissTeeDetection(holeNumber: Int) {
+        teeDetectionHole = nil
+        dismissedTees.insert(holeNumber)
+    }
+
     private func cleanupRound() {
         stopAutoSave()
         idleTimer?.invalidate()
         idleTimer = nil
         showIdlePrompt = false
         isSavingRound = false
+        teeDetectionHole = nil
+        teeHitCounts.removeAll()
+        dismissedTees.removeAll()
         inProgressStore.clear()
         activeRoundViewModel?.stopRound()
         activeRound = nil

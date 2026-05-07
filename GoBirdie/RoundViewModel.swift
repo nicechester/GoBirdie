@@ -16,14 +16,16 @@ final class RoundViewModel: ObservableObject {
     let locationService: LocationService
     private let distanceEngine = DistanceEngine()
     private var cancellables = Set<AnyCancellable>()
+    private weak var appState: AppState?
     private var locationTask: Task<Void, Never>?
 
 
 
-    init(session: RoundSession, course: Course, locationService: LocationService, mockLocation: GpsPoint? = nil) {
+    init(session: RoundSession, course: Course, locationService: LocationService, mockLocation: GpsPoint? = nil, appState: AppState? = nil) {
         self.session = session
         self.course = course
         self.locationService = locationService
+        self.appState = appState
 
         session.$currentHoleIndex
             .receive(on: DispatchQueue.main)
@@ -41,6 +43,9 @@ final class RoundViewModel: ObservableObject {
         locationTask = Task {
             while !Task.isCancelled {
                 self.recomputeDistances()
+                if let loc = locationService.currentLocation {
+                    appState?.checkTeeProximity(location: loc, course: course, currentHoleNumber: session.currentHoleNumber)
+                }
                 try? await Task.sleep(nanoseconds: 500_000_000)
             }
         }
