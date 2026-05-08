@@ -21,6 +21,7 @@ final class MapViewModel: ObservableObject {
     @Published var isSatellite: Bool = false
     @Published var currentHoleIndex: Int = 0
     @Published var playerLocation: GpsPoint?
+    @Published var refreshTrigger: Int = 0
 
     // Screen-space points updated by MapLibreView coordinator
     @Published var playerScreenPoint: CGPoint?
@@ -158,12 +159,14 @@ final class MapViewModel: ObservableObject {
     }
 
     /// Resets the map's displayed hole to match the round's current hole.
-    /// Call this whenever the user navigates back to the map tab.
+    /// Call this whenever the user navigates back to the map tab or shots change.
     func syncToSession() {
         guard let session else { return }
-        guard currentHoleIndex != session.currentHoleIndex else { return }
-        currentHoleIndex = session.currentHoleIndex
-        clearTap()
+        if currentHoleIndex != session.currentHoleIndex {
+            currentHoleIndex = session.currentHoleIndex
+            clearTap()
+        }
+        refreshTrigger += 1
     }
 
     private func clearTapIfPlayerMoved(_ newLoc: GpsPoint?) {

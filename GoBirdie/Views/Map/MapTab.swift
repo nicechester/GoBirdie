@@ -280,9 +280,10 @@ private struct ExploreMapBannerCTA: View {
 
 /// View shown when an active round exists.
 private struct MapActiveView: View {
-    let session: RoundSession
+    @ObservedObject var session: RoundSession
     let appState: AppState
     @StateObject private var mapViewModel: MapViewModel
+    @State private var editHole: HoleScore?
 
     init(session: RoundSession, appState: AppState) {
         self.session = session
@@ -298,6 +299,10 @@ private struct MapActiveView: View {
                 locationService: locationService
             )
         )
+    }
+
+    private var course: Course {
+        appState.activeRoundViewModel?.course ?? Self.makeTestCourse()
     }
 
     var body: some View {
@@ -316,21 +321,33 @@ private struct MapActiveView: View {
 
                 Spacer()
 
-                // Clear button when tap is active
-                if mapViewModel.selectedTapPoint != nil {
-                    HStack {
-                        Spacer()
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        // Clear tap button
+                        if mapViewModel.selectedTapPoint != nil {
+                            Button {
+                                mapViewModel.clearTap()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.5), radius: 2)
+                            }
+                        }
+                        // Edit shots button
                         Button {
-                            mapViewModel.clearTap()
+                            let holeNum = mapViewModel.currentHoleIndex + 1
+                            editHole = session.round.holes.first { $0.number == holeNum }
                         } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.title2)
+                            Image(systemName: "pencil.circle.fill")
+                                .font(.system(size: 48))
                                 .foregroundStyle(.white)
                                 .shadow(color: .black.opacity(0.5), radius: 2)
                         }
-                        .padding(.trailing, 16)
-                        .padding(.bottom, 16)
                     }
+                    .padding(.trailing, 16)
+                    .padding(.bottom, 16)
                 }
             }
         }
@@ -339,6 +356,30 @@ private struct MapActiveView: View {
         }
         .onDisappear {
             mapViewModel.clearTapMeasurement()
+        }
+        .sheet(item: $editHole) { hole in
+            ShotMapSheet(
+                allHoles: session.round.holes,
+                courseHoles: course.holes,
+                initialHole: hole,
+                startInEditMode: true
+            ) { updatedHoles in
+                for updated in updatedHoles {
+                    guard let idx = session.round.holes.firstIndex(where: { $0.id == updated.id }) else { continue }
+                    session.round.holes[idx] = updated
+                }
+                session.round.totalStrokes = session.round.holes.reduce(0) { $0 + $1.strokes }
+                session.round.totalPutts = session.round.holes.reduce(0) { $0 + $1.putts }
+                let holeNum = hole.number
+                if let updated = updatedHoles.first(where: { $0.number == holeNum }) {
+                    ConnectivityService.shared.sendStrokeUpdate(
+                        holeNumber: holeNum,
+                        strokes: updated.strokes,
+                        putts: updated.putts
+                    )
+                }
+                mapViewModel.syncToSession()
+            }
         }
     }
 

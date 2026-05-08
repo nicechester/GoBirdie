@@ -208,6 +208,7 @@ struct MarkShotSheet: View {
     @Binding var selectedClub: ClubType
     @ObservedObject private var bag = ClubBag.shared
     let onConfirm: (ClubType) -> Void
+    var onCancel: (() -> Void)? = nil
 
     var body: some View {
         NavigationStack {
@@ -239,7 +240,10 @@ struct MarkShotSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        onCancel?()
+                        dismiss()
+                    }
                 }
             }
         }

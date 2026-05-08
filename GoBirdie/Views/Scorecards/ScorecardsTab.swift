@@ -262,11 +262,12 @@ private struct ScorecardDetailView: View {
     }
 }
 
-private struct ShotMapSheet: View {
+struct ShotMapSheet: View {
     let allHoles: [HoleScore]
     let courseHoles: [Hole]
     let initialHole: HoleScore
     let onSave: ([HoleScore]) -> Void
+    var startInEditMode: Bool = false
     @Environment(\.dismiss) var dismiss
     @State private var currentIndex: Int = 0
     @State private var editMode = false
@@ -281,11 +282,13 @@ private struct ShotMapSheet: View {
     @State private var pendingShot: (id: UUID, location: GpsPoint)? = nil
     @State private var showSaveConfirm = false
 
-    init(allHoles: [HoleScore], courseHoles: [Hole], initialHole: HoleScore, onSave: @escaping ([HoleScore]) -> Void) {
+    init(allHoles: [HoleScore], courseHoles: [Hole], initialHole: HoleScore, startInEditMode: Bool = false,
+         onSave: @escaping ([HoleScore]) -> Void) {
         self.allHoles = allHoles
         self.courseHoles = courseHoles
         self.initialHole = initialHole
         self.onSave = onSave
+        self.startInEditMode = startInEditMode
         self._editableHoles = State(initialValue: allHoles)
     }
 
@@ -330,12 +333,9 @@ private struct ShotMapSheet: View {
                             stagePendingShot(at: location)
                         },
                         onChangeClub: { shotId, currentClub in
-                            clubPickerShotId = shotId
-                            clubPickerInitialClub = currentClub
-                            showClubPicker = true
+                            requestClubPicker(shotId: shotId, currentClub: currentClub)
                         }
                     )
-                    .id("\(hole.id)-\(hole.shots.map(\.id.uuidString).sorted().joined())")
                     .ignoresSafeArea()
                 } else {
                     ShotMapView(holes: [hole], courseHoles: courseHoles)
@@ -430,7 +430,13 @@ private struct ShotMapSheet: View {
                     if editMode {
                         Button {
                             if dirty {
-                                showSaveConfirm = true
+                                if startInEditMode {
+                                    // In-round: save immediately, no confirm needed
+                                    saveEdits()
+                                    dismiss()
+                                } else {
+                                    showSaveConfirm = true
+                                }
                             } else {
                                 selectedShotId = nil
                                 editMode = false
@@ -474,19 +480,21 @@ private struct ShotMapSheet: View {
                 Button("Yes") { saveEdits(); selectedShotId = nil; editMode = false }
                 Button("No", role: .destructive) { selectedShotId = nil; dirty = false; editMode = false }
             }
-            .sheet(isPresented: $showClubPicker, onDismiss: {
-                // If club picker was cancelled (pendingShot still set), remove the staged shot
-                if let pending = pendingShot {
-                    cancelPendingShot(pending.id)
-                }
-            }) {
-                MarkShotSheet(selectedClub: $clubPickerInitialClub) { club in
-                    if let sid = clubPickerShotId {
-                        changeClub(shotId: sid, club: club)
+            .sheet(isPresented: $showClubPicker) {
+                MarkShotSheet(
+                    selectedClub: $clubPickerInitialClub,
+                    onConfirm: { club in
+                        let sid = clubPickerShotId
+                        pendingShot = nil
+                        clubPickerShotId = nil
+                        if let sid { changeClub(shotId: sid, club: club) }
+                        showClubPicker = false
+                    },
+                    onCancel: {
+                        if let pending = pendingShot { cancelPendingShot(pending.id) }
+                        showClubPicker = false
                     }
-                    pendingShot = nil
-                    clubPickerShotId = nil
-                }
+                )
             }
             .sheet(isPresented: $showReorderSheet) {
                 ReorderShotsSheet(shots: hole.shots.sorted { $0.sequence < $1.sequence }) { reordered in
@@ -496,8 +504,14 @@ private struct ShotMapSheet: View {
         }
         .onAppear {
             currentIndex = holesWithShots.firstIndex { $0.id == initialHole.id } ?? 0
-            if initialHole.shots.isEmpty { editMode = true }
+            if initialHole.shots.isEmpty || startInEditMode { editMode = true }
         }
+    }
+
+    private func requestClubPicker(shotId: UUID, currentClub: ClubType) {
+        clubPickerShotId = shotId
+        clubPickerInitialClub = currentClub
+        showClubPicker = true
     }
 
     private func changeClub(shotId: UUID, club: ClubType) {
@@ -537,10 +551,9 @@ private struct ShotMapSheet: View {
         recalcStrokes(hi)
         selectedShotId = shot.id
         pendingShot = (shot.id, location)
-        clubPickerShotId = shot.id
-        clubPickerInitialClub = .unknown
-        showClubPicker = true
         dirty = true
+        let defaultClub = ClubBag.shared.enabledClubs.first ?? .unknown
+        requestClubPicker(shotId: shot.id, currentClub: defaultClub)
     }
 
     private func cancelPendingShot(_ id: UUID) {
@@ -582,15 +595,18 @@ private struct ShotMapSheet: View {
     }
 
     private func saveEdits() {
-        // Rebuild the round with edited holes and save
-        guard let roundId = findRoundId() else { return }
-        let store = RoundStore()
-        guard var round = (try? store.loadAll())?.first(where: { $0.id == roundId }) else { return }
-        round.holes = editableHoles
-        round.totalStrokes = editableHoles.reduce(0) { $0 + $1.strokes }
-        round.totalPutts = editableHoles.reduce(0) { $0 + $1.putts }
-        try? store.save(round)
+        // Always notify caller with updated holes
         onSave(editableHoles)
+        // Persist to disk if this round exists in the store (completed rounds)
+        if let roundId = findRoundId() {
+            let store = RoundStore()
+            if var round = (try? store.loadAll())?.first(where: { $0.id == roundId }) {
+                round.holes = editableHoles
+                round.totalStrokes = editableHoles.reduce(0) { $0 + $1.strokes }
+                round.totalPutts = editableHoles.reduce(0) { $0 + $1.putts }
+                try? store.save(round)
+            }
+        }
     }
 
     private func findRoundId() -> String? {
