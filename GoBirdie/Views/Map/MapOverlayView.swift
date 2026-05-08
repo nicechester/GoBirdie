@@ -33,11 +33,11 @@ struct MapOverlayView: View {
                     let yards = Int((meters * 1.09361).rounded())
                     let mid = CGPoint(x: (from.x + pt.x) / 2, y: (from.y + pt.y) / 2)
                     Text("\(yards)y")
-                        .font(.system(size: 9, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 4).padding(.vertical, 2)
+                        .padding(.horizontal, 6).padding(.vertical, 4)
                         .background(Color.black.opacity(0.7))
-                        .cornerRadius(3)
+                        .cornerRadius(4)
                         .position(mid)
                 }
             }
@@ -53,11 +53,11 @@ struct MapOverlayView: View {
                     let yards = Int((meters * 1.09361).rounded())
                     let mid = CGPoint(x: (lastPt.x + greenPt.x) / 2, y: (lastPt.y + greenPt.y) / 2)
                     Text("\(yards)y")
-                        .font(.system(size: 9, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 4).padding(.vertical, 2)
+                        .padding(.horizontal, 6).padding(.vertical, 4)
                         .background(Color.green.opacity(0.7))
-                        .cornerRadius(3)
+                        .cornerRadius(4)
                         .position(mid)
                 }
             }
@@ -159,12 +159,12 @@ private struct ShotDot: View {
 
             if !label.isEmpty {
                 Text(label)
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 4).padding(.vertical, 2)
+                    .padding(.horizontal, 6).padding(.vertical, 4)
                     .background(Color.black.opacity(0.7))
-                    .cornerRadius(3)
-                    .offset(y: 18)
+                    .cornerRadius(4)
+                    .offset(y: 20)
             }
         }
         .position(item.point)

@@ -54,9 +54,13 @@ struct EditableShotMapView: UIViewRepresentable {
     func updateUIView(_ uiView: MLNMapView, context: Context) {
         context.coordinator.selectedShotId = selectedShotId
         // Refresh overlays when shot locations change (e.g. after drag-move)
+        // or when shot count/clubs change
         // but only after the style has loaded (annotations array is non-nil)
-        if context.coordinator.renderedHole != hole {
+        let shotsSummary = hole.shots.sorted { $0.sequence < $1.sequence }.map { "\($0.id)-\($0.club.rawValue)" }.joined(separator: "|")
+        let lastShotsSummary = context.coordinator.lastShotsSummary
+        if context.coordinator.renderedHole != hole || lastShotsSummary != shotsSummary {
             context.coordinator.renderedHole = hole
+            context.coordinator.lastShotsSummary = shotsSummary
             if uiView.style != nil {
                 uiView.removeAnnotations(uiView.annotations ?? [])
                 context.coordinator.refreshOverlays(mapView: uiView)
@@ -88,6 +92,7 @@ struct EditableShotMapView: UIViewRepresentable {
         private var shotAnnotations: [UUID: MLNPointAnnotation] = [:]
         private var draggingShotId: UUID?
         private var suppressNextTap = false
+        var lastShotsSummary: String = ""
 
         private static func clubColor(for club: ClubType) -> UIColor {
             switch club {
@@ -196,8 +201,14 @@ struct EditableShotMapView: UIViewRepresentable {
                 return
             }
             guard resetCamera else { return }
+
+            let center = CLLocationCoordinate2D(
+                latitude: (allCoords.map(\.latitude).min()! + allCoords.map(\.latitude).max()!) / 2,
+                longitude: (allCoords.map(\.longitude).min()! + allCoords.map(\.longitude).max()!) / 2
+            )
+
             let heading: CLLocationDirection
-            let teeGreenDist: Double
+            let altitude: Double
             if let ch = courseHole, let tee = ch.tee, let green = ch.greenCenter {
                 let dLon = (green.lon - tee.lon) * .pi / 180
                 let lat1 = tee.lat * .pi / 180
@@ -205,18 +216,13 @@ struct EditableShotMapView: UIViewRepresentable {
                 let y = sin(dLon) * cos(lat2)
                 let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon)
                 heading = (atan2(y, x) * 180 / .pi + 360).truncatingRemainder(dividingBy: 360)
-                teeGreenDist = tee.distanceMeters(to: green)
+                let teeGreenDist = tee.distanceMeters(to: green)
+                altitude = min(max(teeGreenDist * 3.5, 200), 2000)
             } else {
                 heading = 0
-                let latSpan = allCoords.map(\.latitude).max()! - allCoords.map(\.latitude).min()!
-                let lonSpan = allCoords.map(\.longitude).max()! - allCoords.map(\.longitude).min()!
-                teeGreenDist = max(latSpan, lonSpan) * 111_000
+                altitude = 500
             }
-            let center = CLLocationCoordinate2D(
-                latitude: (allCoords.map(\.latitude).min()! + allCoords.map(\.latitude).max()!) / 2,
-                longitude: (allCoords.map(\.longitude).min()! + allCoords.map(\.longitude).max()!) / 2
-            )
-            let altitude = max(teeGreenDist * 3.5, 200)
+
             let camera = MLNMapCamera(lookingAtCenter: center, altitude: altitude, pitch: 0, heading: heading)
             mapView.setCamera(camera, animated: false)
         }
