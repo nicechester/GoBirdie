@@ -30,6 +30,10 @@ final class WatchRoundSession: NSObject, ObservableObject {
     @Published var teeDetectionHole: Int? = nil
     @Published var selectedClub: String = "unknown"
     @Published var clubPickerCountdown: Int = 15
+    @Published var expectedVersionHash: String? = nil
+    @Published var currentMapLocation: CLLocation?
+    @Published var isReceivingData: Bool = false
+
     var clubBag: [String] = []
     private var clubPickerTimer: Timer?
     private var countdownTimer: Timer?
@@ -45,7 +49,11 @@ final class WatchRoundSession: NSObject, ObservableObject {
     private var greenFront: CLLocation?
     private var greenCenter: CLLocation?
     private var greenBack: CLLocation?
-    private var currentLocation: CLLocation?
+    private var currentLocation: CLLocation? {
+        didSet {
+            currentMapLocation = currentLocation
+        }
+    }
 
     private let locationManager = CLLocationManager()
     private let healthStore = HKHealthStore()
@@ -173,6 +181,8 @@ final class WatchRoundSession: NSObject, ObservableObject {
         greenBack = nil
         dismissClubPicker()
         clubBag = []
+        expectedVersionHash = nil
+        currentMapLocation = nil
     }
 
     func startWorkout() {
@@ -430,6 +440,17 @@ final class WatchRoundSession: NSObject, ObservableObject {
     private func handleMessage(_ context: [String: Any]) {
         if let action = context["action"] as? String {
             switch action {
+            case "roundStart":
+                isReceivingData = true
+                if let versionHash = context["versionHash"] as? String {
+                    expectedVersionHash = versionHash
+                    WatchSnapshotStore.shared.clearIfVersionMismatch(expected: versionHash)
+                }
+                // Clear indicator after 3 seconds (snapshots should arrive by then)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                    self?.isReceivingData = false
+                }
+                return
             case "roundCancelled":
                 endWorkout()
                 resetToWaiting()
@@ -524,28 +545,52 @@ extension WatchRoundSession: CLLocationManagerDelegate {
 
 extension WatchRoundSession: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
+        print("[Watch-WC] activationDidCompleteWith state=\(state.rawValue) error=\(String(describing: error))")
         guard state == .activated else { return }
         let ctx = session.receivedApplicationContext
+        print("[Watch-WC] receivedApplicationContext isEmpty=\(ctx.isEmpty)")
         if !ctx.isEmpty {
             Task { @MainActor in self.handleMessage(ctx) }
         }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        print("[Watch-WC] didReceiveApplicationContext keys=\(applicationContext.keys.joined(separator: ","))")
         Task { @MainActor in
             self.handleMessage(applicationContext)
         }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
+        print("[Watch-WC] didReceiveUserInfo keys=\(userInfo.keys.joined(separator: ","))")
         Task { @MainActor in
             self.handleMessage(userInfo)
         }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        print("[Watch-WC] didReceiveMessage keys=\(message.keys.joined(separator: ","))")
         Task { @MainActor in
             self.handleMessage(message)
+        }
+    }
+
+    nonisolated func session(_ session: WCSession, didReceive file: WCSessionFile) {
+        let srcURL = file.fileURL
+        let metadata = file.metadata as? [String: Any]
+        print("[Watch-WC] didReceive file=\(srcURL.lastPathComponent) metadata keys=\(metadata?.keys.joined(separator: ",") ?? "nil")")
+
+        // Copy synchronously — system deletes srcURL when this method returns
+        let tempDest = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString + ".jpg")
+        do {
+            try FileManager.default.copyItem(at: srcURL, to: tempDest)
+            print("[Watch-WC] file copied to \(tempDest.lastPathComponent)")
+        } catch {
+            print("[Watch-WC] ERROR copying file: \(error)")
+        }
+        Task { @MainActor in
+            WatchSnapshotStore.shared.receive(fileURL: tempDest, metadata: metadata)
         }
     }
 }

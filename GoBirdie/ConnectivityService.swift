@@ -17,6 +17,8 @@ final class ConnectivityService: NSObject, ObservableObject {
     @Published var isWatchAvailable: Bool = false
 
     private let session = WCSession.default
+    private var pendingMessages: [(msg: [String: Any], isTransient: Bool)] = []
+    private var isActivated: Bool = false
 
     override init() {
         super.init()
@@ -89,35 +91,61 @@ final class ConnectivityService: NSObject, ObservableObject {
         }
     }
 
-    // Transient messages — sendMessage only, no transferUserInfo queue
+    /// Send round start context with version hash to Watch.
+    func sendRoundStartContext(versionHash: String, courseId: String) {
+        let msg: [String: Any] = [
+            "action": "roundStart",
+            "versionHash": versionHash,
+            "courseId": courseId
+        ]
+        sendTransient(msg)
+    }
+
+    /// Transfer a snapshot file to the Watch with metadata.
+    func transferSnapshotFile(at url: URL, metadata: [String: Any]) -> WCSessionFileTransfer? {
+        guard session.isReachable else { return nil }
+        return session.transferFile(url, metadata: metadata)
+    }
+
     private func sendTransient(_ msg: [String: Any]) {
         guard WCSession.isSupported() else { return }
+        guard isActivated else {
+            pendingMessages.append((msg: msg, isTransient: true))
+            return
+        }
         if session.isReachable {
             session.sendMessage(msg, replyHandler: nil) { error in
                 print("[Connectivity] sendTransient failed: \(error)")
             }
         }
-        // Also update context so watch gets it on next activation if currently unreachable,
-        // but do NOT use transferUserInfo which would queue stale messages into future rounds
         try? session.updateApplicationContext(msg)
     }
 
     private func send(_ ctx: [String: Any]) {
         guard WCSession.isSupported() else { return }
-        // Always persist to applicationContext so Watch gets it on launch
+        guard isActivated else {
+            pendingMessages.append((msg: ctx, isTransient: false))
+            return
+        }
         do {
             try session.updateApplicationContext(ctx)
         } catch {
             print("[Connectivity] updateApplicationContext failed: \(error)")
         }
-        // Also sendMessage for immediate delivery if Watch is reachable
         if session.isReachable {
             session.sendMessage(ctx, replyHandler: nil) { error in
                 print("[Connectivity] sendMessage failed: \(error)")
             }
         } else {
-            // transferUserInfo is queued and delivered reliably even when not reachable
             session.transferUserInfo(ctx)
+        }
+    }
+
+    private func flushPendingMessages() {
+        let pending = pendingMessages
+        pendingMessages.removeAll()
+        for item in pending {
+            if item.isTransient { sendTransient(item.msg) } else { send(item.msg) }
         }
     }
 }
@@ -127,16 +155,26 @@ final class ConnectivityService: NSObject, ObservableObject {
 extension ConnectivityService: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
         Task { @MainActor in
+            self.isActivated = state == .activated
             self.isWatchAvailable = state == .activated
+            if state == .activated {
+                self.flushPendingMessages()
+            }
         }
     }
 
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {
-        Task { @MainActor in self.isWatchAvailable = false }
+        Task { @MainActor in
+            self.isActivated = false
+            self.isWatchAvailable = false
+        }
     }
 
     nonisolated func sessionDidDeactivate(_ session: WCSession) {
-        Task { @MainActor in self.isWatchAvailable = false }
+        Task { @MainActor in
+            self.isActivated = false
+            self.isWatchAvailable = false
+        }
         session.activate()
     }
 
@@ -155,6 +193,12 @@ extension ConnectivityService: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
         Task { @MainActor in
             self.handleWatchMessage(userInfo)
+        }
+    }
+
+    nonisolated func session(_ session: WCSession, didFinish fileTransfer: WCSessionFileTransfer, error: Error?) {
+        Task { @MainActor in
+            WatchSnapshotTransferManager.shared.handleFileTransferCompleted(fileTransfer, error: error)
         }
     }
 

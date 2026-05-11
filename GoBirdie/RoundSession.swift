@@ -254,6 +254,9 @@ final class RoundSession: ObservableObject {
                 strokes: holeScore.strokes,
                 putts: holeScore.putts
             )
+
+            // Prioritize this hole's snapshot
+            WatchSnapshotTransferManager.shared.prioritizeHole(holeNumber, courseId: course.id)
         }
     }
 

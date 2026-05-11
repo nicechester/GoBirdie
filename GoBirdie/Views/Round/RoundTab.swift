@@ -4,6 +4,7 @@
 
 import SwiftUI
 import GoBirdieCore
+import CryptoKit
 
 struct RoundTab: View {
     @EnvironmentObject var appState: AppState
@@ -59,6 +60,14 @@ private struct ActiveRoundView: View {
                             showMoveShotsSheet = true
                         } label: {
                             Label("Move Shots to Hole...", systemImage: "arrow.triangle.swap")
+                        }
+                        Divider()
+                    }
+                    if ConnectivityService.shared.isWatchReachable {
+                        Button {
+                            resyncMaps()
+                        } label: {
+                            Label("Re-sync Maps", systemImage: "arrow.clockwise")
                         }
                         Divider()
                     }
@@ -155,6 +164,29 @@ private struct ActiveRoundView: View {
                 }
             }
         }
+    }
+
+    private func resyncMaps() {
+        let course = viewModel.course
+        let courseHash = computeCourseHash(course: course)
+        Task.detached(priority: .userInitiated) {
+            await WatchSnapshotTransferManager.shared.transferAllHoles(
+                for: course,
+                courseId: course.id,
+                versionHash: courseHash
+            )
+        }
+    }
+
+    private func computeCourseHash(course: Course) -> String {
+        let coordStrings = course.holes.compactMap { hole in
+            guard let tee = hole.tee, let green = hole.greenCenter else { return nil }
+            return "\(tee.lat),\(tee.lon),\(green.lat),\(green.lon)"
+        }.joined(separator: "|")
+
+        let data = Data(coordStrings.utf8)
+        let digest = CryptoKit.SHA256.hash(data: data)
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 }
 

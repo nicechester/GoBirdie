@@ -1,0 +1,23 @@
+{
+  "version": 8,
+  "name": "GoBirdie Watch Map",
+  "metadata": {
+    "maputnik:renderer": "mbgljs"
+  },
+  "sources": {
+    "osm": {
+      "type": "raster",
+      "tiles": ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      "tileSize": 256,
+      "minzoom": 0,
+      "maxzoom": 19
+    }
+  },
+  "layers": [
+    {
+      "id": "osm-background",
+      "type": "raster",
+      "source": "osm"
+    }
+  ]
+}
