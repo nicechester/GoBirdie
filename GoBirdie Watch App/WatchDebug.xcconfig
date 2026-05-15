@@ -1,0 +1,4 @@
+// Build configuration for Watch App Debug builds
+// Enables static hole map snapshots for simulator testing
+
+OTHER_SWIFT_FLAGS = -D USE_STATIC_HOLE_MAPS $(inherited)

@@ -85,17 +85,40 @@ private struct StartView: View {
 
 private struct RoundPagesView: View {
     @EnvironmentObject var session: WatchRoundSession
-    @State private var showEndPage = false
+    @State private var currentPage: Int = 1  // 0=map, 1=distance, 2=end round
+
+    private var minPage: Int { HoleMapSnapshotLoader.shared.isEnabled() ? 0 : 1 }
 
     var body: some View {
+        let pages: [Int: AnyView] = [
+            0: AnyView(HoleMapView()),
+            1: AnyView(ActiveRoundView()),
+            2: AnyView(EndRoundPage()),
+        ]
+
         ZStack {
-            if showEndPage {
-                EndRoundPage(showEndPage: $showEndPage)
-            } else {
-                ActiveRoundView(showEndPage: $showEndPage)
-            }
+            pages[currentPage] ?? pages[1]!
         }
-        .animation(.easeInOut(duration: 0.2), value: showEndPage)
+        .gesture(
+            DragGesture(minimumDistance: 30).onEnded { value in
+                let h = value.translation.width
+                let v = value.translation.height
+                if abs(v) > abs(h) {
+                    if v > 0 {
+                        currentPage = max(minPage, currentPage - 1)
+                    } else {
+                        currentPage = min(2, currentPage + 1)
+                    }
+                } else if currentPage == 1 {
+                    if h > 0, session.holeNumber > 1 {
+                        session.navigateToHole(session.holeNumber - 1)
+                    } else if h < 0, session.holeNumber < session.totalHoles {
+                        session.navigateToHole(session.holeNumber + 1)
+                    }
+                }
+            }
+        )
+        .animation(.easeInOut(duration: 0.2), value: currentPage)
     }
 }
 
@@ -103,7 +126,6 @@ private struct RoundPagesView: View {
 
 private struct ActiveRoundView: View {
     @EnvironmentObject var session: WatchRoundSession
-    @Binding var showEndPage: Bool
     @State private var crownHole: Int = 1
 
     var body: some View {
@@ -128,22 +150,6 @@ private struct ActiveRoundView: View {
         ) { _ in
         } onIdle: {
         }
-        .gesture(
-            DragGesture()
-                .onEnded { value in
-                    let h = value.translation.width
-                    let v = value.translation.height
-                    if abs(v) > abs(h) {
-                        if v < -30 { showEndPage = true }
-                    } else {
-                        if h > 30, session.holeNumber > 1 {
-                            session.navigateToHole(session.holeNumber - 1)
-                        } else if h < -30, session.holeNumber < session.totalHoles {
-                            session.navigateToHole(session.holeNumber + 1)
-                        }
-                    }
-                }
-        )
         .onAppear { crownHole = session.holeNumber }
         .onChange(of: crownHole) { newValue in
             if newValue != session.holeNumber {
@@ -309,7 +315,6 @@ private struct PuttModeView: View {
 
 private struct EndRoundPage: View {
     @EnvironmentObject var session: WatchRoundSession
-    @Binding var showEndPage: Bool
 
     var body: some View {
         VStack(spacing: 12) {
@@ -336,13 +341,6 @@ private struct EndRoundPage: View {
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
         }
-        .gesture(
-            DragGesture().onEnded { value in
-                if value.translation.height > 30, abs(value.translation.height) > abs(value.translation.width) {
-                    showEndPage = false
-                }
-            }
-        )
     }
 }
 

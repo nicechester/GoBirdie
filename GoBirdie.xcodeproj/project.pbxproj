@@ -662,6 +662,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "GoBirdie Watch App/GoBirdie Watch App.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 8;
@@ -679,6 +680,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.7;
+				"OTHER_SWIFT_FLAGS[arch=*]" = "-DUSE_STATIC_HOLE_MAPS";
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.nicechester.GoBirdie.watchkit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -700,6 +702,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "GoBirdie Watch App/GoBirdie Watch App.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 8;
@@ -739,6 +742,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GoBirdie/GoBirdie.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 8;
@@ -748,6 +752,9 @@
 				INFOPLIST_FILE = GoBirdie/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GoBirdie;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "GoBirdie uses HealthKit to track your golf workout.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "GoBirdie uses HealthKit to track your golf workout and keep GPS active.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "GoBirdie uses the local network to sync rounds with the desktop app.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "GoBirdie uses your location in the background to track your round and update distances on your Apple Watch.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GoBirdie uses your location to show distances to the green and find nearby courses.\n";
@@ -781,6 +788,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GoBirdie/GoBirdie.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 8;
@@ -790,6 +798,9 @@
 				INFOPLIST_FILE = GoBirdie/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GoBirdie;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "GoBirdie uses HealthKit to track your golf workout.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "GoBirdie uses HealthKit to track your golf workout and keep GPS active.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "GoBirdie uses the local network to sync rounds with the desktop app.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "GoBirdie uses your location in the background to track your round and update distances on your Apple Watch.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GoBirdie uses your location to show distances to the green and find nearby courses.\n";

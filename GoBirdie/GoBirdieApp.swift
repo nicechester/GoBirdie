@@ -27,7 +27,7 @@ struct GoBirdieApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
-                .onAppear {
+                .task {
                     appState.getLocationService().requestPermission()
                     appState.checkForInProgressRound()
                 }

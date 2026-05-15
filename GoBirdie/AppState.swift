@@ -10,9 +10,16 @@ import Combine
 import UIKit
 import OSLog
 import CoreLocation
+import CryptoKit
 import GoBirdieCore
 
 private let appStateLogger = Logger(subsystem: "com.gobirdie", category: "AppState")
+
+// Helper function for debug logging that will show in Xcode console
+private func debugLog(_ message: String) {
+    os_log("[SNAPSHOT] %{public}@", log: .default, type: .debug, message)
+    print("[SNAPSHOT-DEBUG] \(message)")
+}
 
 /// Manages global app state and round lifecycle.
 /// Handles auto-detection of starting hole and creation of new rounds.
@@ -140,6 +147,7 @@ final class AppState: ObservableObject {
 
     /// Check for an in-progress round on launch.
     func checkForInProgressRound() {
+        guard activeRound == nil else { return }
         if let snapshot = inProgressStore.load() {
             print("[AppState] Found in-progress round: \(snapshot.round.courseName)")
             pendingResume = snapshot
@@ -148,6 +156,9 @@ final class AppState: ObservableObject {
 
     /// Resume a previously saved in-progress round.
     func resumeRound(snapshot: InProgressSnapshot) {
+        os_log("[ENTRY-POINT] resumeRound CALLED", log: .default, type: .debug)
+        debugLog("=== resumeRound() ENTERED ===")
+
         let courseStore = CourseStore()
         guard let course = try? courseStore.load(id: snapshot.courseId) else {
             print("[AppState] Cannot resume — course \(snapshot.courseId) not found")
@@ -176,10 +187,30 @@ final class AppState: ObservableObject {
             )
         }
 
+        // Compute course hash and trigger snapshot generation
+        let courseHash = computeCourseHash(course: course)
+        debugLog("resumeRound: computed courseHash: \(courseHash)")
+        ConnectivityService.shared.sendRoundStartContext(versionHash: courseHash, courseId: course.id)
+
+        // Fire async task to generate and transfer snapshots
+        debugLog("resumeRound: creating background task for snapshot generation")
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            debugLog("Background task (resume) EXECUTING")
+            guard let self = self else {
+                debugLog("ERROR: self was deallocated (resume)")
+                return
+            }
+            Task {
+                debugLog("Creating Task on background queue (resume)")
+                await self.generateAndTransferSnapshots(course: course, courseHash: courseHash)
+                debugLog("generateAndTransferSnapshots completed (resume)")
+            }
+        }
+
         startAutoSave()
         resetIdleTimer()
         pendingResume = nil
-        print("[AppState] Resumed round on hole \(holeNumber)")
+        NSLog("[AppState] Resumed round on hole %d", holeNumber)
     }
 
     /// Discard the saved in-progress round.
@@ -219,6 +250,9 @@ final class AppState: ObservableObject {
     // MARK: - Start Round
 
     func startRound(course: Course, playerLocation: GpsPoint) -> RoundSession {
+        os_log("[ENTRY-POINT] startRound CALLED for course: %{public}@", log: .default, type: .debug, course.name)
+        debugLog("=== startRound() ENTERED ===")
+
         // Create HoleScore structs for all 18 holes from course definition
         let holeScores = course.holes.map { hole in
             HoleScore(
@@ -276,6 +310,26 @@ final class AppState: ObservableObject {
                 totalStrokes: 0,
                 totalHoles: course.holes.count
             )
+        }
+
+        // Compute course hash and trigger snapshot generation
+        let courseHash = computeCourseHash(course: course)
+        debugLog("startRound: computed courseHash: \(courseHash)")
+        ConnectivityService.shared.sendRoundStartContext(versionHash: courseHash, courseId: course.id)
+
+        // Fire async task to generate and transfer snapshots
+        debugLog("startRound: creating background task for snapshot generation")
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            debugLog("Background task EXECUTING")
+            guard let self = self else {
+                debugLog("ERROR: self was deallocated")
+                return
+            }
+            Task {
+                debugLog("Creating Task on background queue")
+                await self.generateAndTransferSnapshots(course: course, courseHash: courseHash)
+                debugLog("generateAndTransferSnapshots completed")
+            }
         }
 
         return session
@@ -383,6 +437,11 @@ final class AppState: ObservableObject {
         teeHitCounts.removeAll()
         dismissedTees.removeAll()
         inProgressStore.clear()
+
+        if let courseId = activeRoundViewModel?.course.id {
+            WatchSnapshotTransferManager.shared.clearCachedSnapshots(courseId: courseId)
+        }
+
         activeRoundViewModel?.stopRound()
         activeRound = nil
         activeRoundViewModel = nil
@@ -391,5 +450,92 @@ final class AppState: ObservableObject {
     /// Get the current location service (for testing or advanced usage).
     func getLocationService() -> LocationService {
         locationService
+    }
+
+    // MARK: - Snapshot Generation
+
+    /// Compute hash for a course based on all hole coordinates.
+    private func computeCourseHash(course: Course) -> String {
+        let coordStrings = course.holes.compactMap { hole in
+            guard let tee = hole.tee, let green = hole.greenCenter else { return nil }
+            return "\(tee.lat),\(tee.lon),\(green.lat),\(green.lon)"
+        }.joined(separator: "|")
+
+        let data = Data(coordStrings.utf8)
+        let digest = CryptoKit.SHA256.hash(data: data)
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// Generate snapshots for all holes and transfer them to the watch.
+    private func generateAndTransferSnapshots(course: Course, courseHash: String) async {
+        debugLog("generateAndTransferSnapshots STARTED for course: \(course.name) hash: \(courseHash)")
+        let engine = HoleSnapshotEngine()
+
+        // Get style URL from resources
+        guard let styleURL = Bundle.main.url(forResource: "watch_snapshot_style", withExtension: "json") else {
+            debugLog("ERROR: Could not find watch_snapshot_style.json")
+            return
+        }
+
+        let imageSize = CGSize(width: 272, height: 340) // Typical watch screen size
+        debugLog("Starting snapshot generation for \(course.holes.count) holes")
+
+        var generatedCount = 0
+        for hole in course.holes {
+            do {
+                debugLog("Generating snapshot for hole \(hole.number)...")
+                let (image, metadata) = try await engine.generate(
+                    for: hole,
+                    styleURL: styleURL,
+                    imageSize: imageSize
+                )
+                debugLog("Generated snapshot for hole \(hole.number), saving metadata...")
+
+                // Save metadata JSON alongside image
+                try saveSnapshotMetadata(metadata, holeNumber: hole.number)
+                generatedCount += 1
+                debugLog("Completed hole \(hole.number) (\(generatedCount)/\(course.holes.count))")
+            } catch {
+                debugLog("ERROR: Failed to generate snapshot for hole \(hole.number): \(error)")
+            }
+        }
+
+        debugLog("Completed snapshot generation: \(generatedCount) of \(course.holes.count) holes")
+
+        // After all snapshots generated, transfer them
+        let startingHoleNumber = self.activeRound?.currentHoleNumber ?? 1
+        debugLog("Starting file transfers for \(course.holes.count) holes, starting with hole \(startingHoleNumber)")
+        await WatchSnapshotTransferManager.shared.transferAllHoles(
+            for: course,
+            courseId: course.id,
+            versionHash: courseHash
+        )
+        WatchSnapshotTransferManager.shared.prioritizeHole(
+            startingHoleNumber,
+            courseId: course.id
+        )
+        debugLog("File transfer requests submitted to WatchConnectivity")
+    }
+
+    /// Save snapshot metadata JSON file.
+    private func saveSnapshotMetadata(_ metadata: HoleSnapshotMetadata, holeNumber: Int) throws {
+        let fileManager = FileManager.default
+        let documentsURL = try fileManager.url(
+            for: .documentDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: false
+        )
+        let dirURL = documentsURL.appendingPathComponent("GoBirdie/watch_snapshots", isDirectory: true)
+        try fileManager.createDirectory(at: dirURL, withIntermediateDirectories: true, attributes: nil)
+
+        let filename = "\(holeNumber).json"
+        let fileURL = dirURL.appendingPathComponent(filename)
+
+        let encoder = JSONEncoder()
+        let jsonData = try encoder.encode(metadata)
+        try jsonData.write(to: fileURL)
+
+        debugLog("Saved metadata for hole \(holeNumber) at \(fileURL.path)")
     }
 }
