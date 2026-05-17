@@ -129,7 +129,7 @@ private struct ShotDot: View {
     private var dotColor: Color {
         switch item.shot.club {
         case .driver: return .red
-        case .wood3, .wood5: return .orange
+        case .miniDriver, .wood3, .wood5, .wood7, .wood9: return .orange
         case .hybrid3, .hybrid4, .hybrid5: return .teal
         case .iron4, .iron5, .iron6, .iron7, .iron8, .iron9: return .yellow
         case .pitchingWedge, .gapWedge, .sandWedge, .lobWedge: return .cyan
