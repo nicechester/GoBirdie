@@ -220,6 +220,10 @@ private struct ScorecardDetailView: View {
                     TotalsRow(round: currentRound, playedHoles: playedHoles, parTotal: parTotal)
                         .padding(.vertical, 4)
 
+                    // Key Insights
+                    InsightsCard(round: currentRound, courseHoles: courseHoles)
+                        .padding(.top, 8)
+
                     // Stats
                     Divider().padding(.top, 4)
                     StatsSection(
