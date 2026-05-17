@@ -97,7 +97,7 @@ struct EditableShotMapView: UIViewRepresentable {
         private static func clubColor(for club: ClubType) -> UIColor {
             switch club {
             case .driver:                                          return .systemRed
-            case .wood3, .wood5:                                   return .systemOrange
+            case .miniDriver, .wood3, .wood5, .wood7, .wood9:      return .systemOrange
             case .hybrid3, .hybrid4, .hybrid5:                     return .systemTeal
             case .iron4, .iron5, .iron6, .iron7, .iron8, .iron9:  return .systemBlue
             case .pitchingWedge, .gapWedge, .sandWedge, .lobWedge: return .systemPurple
