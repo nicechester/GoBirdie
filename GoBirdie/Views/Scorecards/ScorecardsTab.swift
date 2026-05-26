@@ -150,6 +150,10 @@ private struct ScorecardDetailView: View {
         (try? CourseStore().load(id: currentRound.courseId))?.holes ?? []
     }
 
+    private var historicalRounds: [Round] {
+        (try? RoundStore().loadAll()) ?? []
+    }
+
     private var dateString: String {
         currentRound.startedAt.formatted(date: .abbreviated, time: .shortened)
     }
@@ -221,7 +225,7 @@ private struct ScorecardDetailView: View {
                         .padding(.vertical, 4)
 
                     // Key Insights
-                    InsightsCard(round: currentRound, courseHoles: courseHoles)
+                    InsightsCard(round: currentRound, courseHoles: courseHoles, historicalRounds: historicalRounds)
                         .padding(.top, 8)
 
                     // Stats

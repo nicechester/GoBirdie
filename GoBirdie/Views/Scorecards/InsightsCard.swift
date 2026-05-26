@@ -8,9 +8,10 @@ import GoBirdieCore
 struct InsightsCard: View {
     let round: Round
     let courseHoles: [Hole]
+    var historicalRounds: [Round] = []
 
     private var insights: [RoundInsight] {
-        RoundInsightsEngine.generate(round: round, courseHoles: courseHoles)
+        RoundInsightsEngine.generate(round: round, courseHoles: courseHoles, historicalRounds: historicalRounds)
     }
 
     var body: some View {

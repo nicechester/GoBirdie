@@ -12,7 +12,52 @@ public struct RoundInsight: Sendable {
 
 public struct RoundInsightsEngine {
 
-    public static func generate(round: Round, courseHoles: [Hole] = []) -> [RoundInsight] {
+    /// Returns the trimmed mean of `values`, dropping the bottom and top `trimFraction` of samples.
+    private static func trimmedMean(_ values: [Double], trimFraction: Double = 0.2) -> Double? {
+        guard values.count >= 3 else { return values.isEmpty ? nil : values.reduce(0, +) / Double(values.count) }
+        let sorted = values.sorted()
+        let drop = max(1, Int((Double(sorted.count) * trimFraction).rounded()))
+        let trimmed = Array(sorted.dropFirst(drop).dropLast(drop))
+        guard !trimmed.isEmpty else { return nil }
+        return trimmed.reduce(0, +) / Double(trimmed.count)
+    }
+
+    /// Collects driver distances (yards) from a set of rounds.
+    private static func driverDistances(from rounds: [Round]) -> [Double] {
+        rounds.flatMap { round in
+            round.holes.compactMap { hole -> Double? in
+                let sorted = hole.shots.sorted { $0.sequence < $1.sequence }
+                guard sorted.count >= 2,
+                      sorted[0].club == .driver else { return nil }
+                let yards = sorted[0].location.distanceMeters(to: sorted[1].location) * 1.09361
+                guard yards > 50 else { return nil } // ignore chip-outs
+                return yards
+            }
+        }
+    }
+
+    /// Collects approach proximity (yards left to pin) from a set of rounds.
+    /// Approach = last non-putt shot that has a distanceToPinYards on the following shot.
+    private static func approachProximities(from rounds: [Round]) -> [Double] {
+        rounds.flatMap { round in
+            round.holes.compactMap { hole -> Double? in
+                let sorted = hole.shots.sorted { $0.sequence < $1.sequence }
+                // Find last shot before putts: the shot whose next shot is a putter or end of shots
+                guard sorted.count >= 2 else { return nil }
+                // The result of the approach = distanceToPinYards of the shot after the approach
+                // We use the second-to-last shot's result (last non-putt)
+                let nonPutts = sorted.filter { $0.club != .putter && $0.club != .unknown }
+                guard let approach = nonPutts.last,
+                      let nextShot = sorted.first(where: { $0.sequence == approach.sequence + 1 }),
+                      let proximity = nextShot.distanceToPinYards,
+                      proximity < 100 // exclude wild misses
+                else { return nil }
+                return Double(proximity)
+            }
+        }
+    }
+
+    public static func generate(round: Round, courseHoles: [Hole] = [], historicalRounds: [Round] = []) -> [RoundInsight] {
         let played = round.holes.filter { $0.strokes > 0 }
         guard played.count >= 4 else { return [] }
 
@@ -67,6 +112,13 @@ public struct RoundInsightsEngine {
             let yards = Int((first.location.distanceMeters(to: target) * 1.09361).rounded())
             if yards > (longestDriveYards ?? 0) { longestDriveYards = yards }
         }
+
+        // Historical comparisons (up to 10 past rounds, excluding current)
+        let history = Array(historicalRounds.filter { $0.id != round.id }.prefix(10))
+        let histDriverAvg = trimmedMean(driverDistances(from: history))
+        let currDriverAvg = trimmedMean(driverDistances(from: [round]))
+        let histApproachAvg = trimmedMean(approachProximities(from: history))
+        let currApproachAvg = trimmedMean(approachProximities(from: [round]))
 
         // --- Evaluate insights ---
         var insights: [RoundInsight] = []
@@ -129,6 +181,26 @@ public struct RoundInsightsEngine {
         // Longest drive callout
         if let ld = longestDriveYards, ld >= 270 {
             insights.append(.init(severity: .positive, message: "Longest drive: \(ld) yards — great power off the tee."))
+        }
+
+        // Driver distance vs history
+        if let curr = currDriverAvg, let hist = histDriverAvg, history.count >= 3 {
+            let diff = curr - hist
+            if diff <= -15 {
+                insights.append(.init(severity: .warning, message: "Avg driver distance \(Int(curr))y — \(Int(-diff))y shorter than your recent average (\(Int(hist))y)."))
+            } else if diff >= 10 {
+                insights.append(.init(severity: .positive, message: "Avg driver distance \(Int(curr))y — \(Int(diff))y longer than your recent average (\(Int(hist))y)."))
+            }
+        }
+
+        // Approach proximity vs history
+        if let curr = currApproachAvg, let hist = histApproachAvg, history.count >= 3 {
+            let diff = curr - hist // positive = worse (farther from pin)
+            if diff >= 8 {
+                insights.append(.init(severity: .warning, message: "Approaches averaged \(Int(curr))y from pin — \(Int(diff))y worse than your recent average (\(Int(hist))y)."))
+            } else if diff <= -6 {
+                insights.append(.init(severity: .positive, message: "Approaches averaged \(Int(curr))y from pin — \(Int(-diff))y closer than your recent average (\(Int(hist))y)."))
+            }
         }
 
         // Rank: critical first, then warning, then positive/info. Return top 3.
