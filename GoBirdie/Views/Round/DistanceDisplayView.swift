@@ -8,33 +8,48 @@ import GoBirdieCore
 /// Three-column distance display: Front | Flag (center, large, green) | Back
 struct DistanceDisplayView: View {
     let distances: DistanceEngine.Distances
+    let hasGpsLock: Bool
 
     var body: some View {
-        HStack(spacing: 0) {
-            // Front
-            DistanceColumn(
-                label: "Front",
-                value: distances.frontYards.map { "\($0)" } ?? "—",
-                style: .secondary
-            )
+        if !hasGpsLock {
+            VStack(spacing: 12) {
+                ProgressView()
+                    .scaleEffect(1.2)
+                Text("Acquiring GPS...")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+        } else {
+            HStack(spacing: 0) {
+                // Front
+                DistanceColumn(
+                    label: "Front",
+                    value: distances.frontYards.map { "\($0)" } ?? "—",
+                    style: .secondary
+                )
 
-            // Flag — center, largest, green
-            DistanceColumn(
-                label: "Flag",
-                value: distances.pinYards.map { "\($0)" } ?? "—",
-                style: .primary
-            )
+                // Flag — center, largest, green
+                DistanceColumn(
+                    label: "Flag",
+                    value: distances.pinYards.map { "\($0)" } ?? "—",
+                    style: .primary
+                )
 
-            // Back
-            DistanceColumn(
-                label: "Back",
-                value: distances.backYards.map { "\($0)" } ?? "—",
-                style: .secondary
-            )
+                // Back
+                DistanceColumn(
+                    label: "Back",
+                    value: distances.backYards.map { "\($0)" } ?? "—",
+                    style: .secondary
+                )
+            }
+            .frame(maxWidth: .infinity)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
         }
-        .frame(maxWidth: .infinity)
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
     }
 }
 
@@ -70,7 +85,7 @@ private struct DistanceColumn: View {
     distances.frontYards = 187
     distances.pinYards = 204
     distances.backYards = 221
-    return DistanceDisplayView(distances: distances)
+    return DistanceDisplayView(distances: distances, hasGpsLock: true)
         .padding()
         .background(Color.black)
 }

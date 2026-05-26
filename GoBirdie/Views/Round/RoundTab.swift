@@ -94,8 +94,11 @@ private struct ActiveRoundView: View {
             .padding(.top, 8)
             .padding(.bottom, 8)
 
-            DistanceDisplayView(distances: viewModel.distances)
-                .padding(.horizontal, 16)
+            DistanceDisplayView(
+                distances: viewModel.distances,
+                hasGpsLock: appState.getLocationService().hasReceivedLocation
+            )
+            .padding(.horizontal, 16)
 
             HoleControlsView(
                 session: session,
