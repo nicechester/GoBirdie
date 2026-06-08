@@ -59,7 +59,10 @@ final class RoundViewModel: ObservableObject {
 
     deinit { locationTask?.cancel() }
 
-    func startRound() { locationService.start() }
+    func startRound() {
+        locationService.hasReceivedLocation = false
+        locationService.start()
+    }
     func stopRound()  { locationService.stop() }
 
 

@@ -18,6 +18,7 @@ final class LocationService: NSObject, ObservableObject {
     @Published var currentLocation: GpsPoint?
     @Published var currentAltitude: Double?
     @Published var isRunning: Bool = false
+    @Published var hasReceivedLocation: Bool = false
 
     private let locationManager = CLLocationManager()
 
@@ -103,6 +104,9 @@ extension LocationService: CLLocationManagerDelegate {
         Task { @MainActor in
             self.currentLocation = gpsPoint
             self.currentAltitude = altitude
+            if !self.hasReceivedLocation {
+                self.hasReceivedLocation = true
+            }
         }
     }
 
