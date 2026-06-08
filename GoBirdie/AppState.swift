@@ -12,7 +12,6 @@ import OSLog
 import CoreLocation
 import CryptoKit
 import GoBirdieCore
-
 private let appStateLogger = Logger(subsystem: "com.gobirdie", category: "AppState")
 
 // Helper function for debug logging that will show in Xcode console
@@ -31,6 +30,9 @@ final class AppState: ObservableObject {
     @Published var pendingResume: InProgressSnapshot?
     @Published var teeColor: String = UserDefaults.standard.string(forKey: "teeColor") ?? "Blue" {
         didSet { UserDefaults.standard.set(teeColor, forKey: "teeColor") }
+    }
+    @Published var sgBaseline: SGBaseline = SGBaseline(rawValue: UserDefaults.standard.string(forKey: "sgBaseline") ?? "") ?? .bogey {
+        didSet { UserDefaults.standard.set(sgBaseline.rawValue, forKey: "sgBaseline") }
     }
     @Published var syncServerEnabled: Bool = false {
         didSet {

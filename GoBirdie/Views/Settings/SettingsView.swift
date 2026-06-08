@@ -32,6 +32,7 @@ struct SettingsView: View {
                     }
                 }
 
+                InsightsSection()
                 SyncServerSection()
                 TeeSection()
                 if !isPatron {
@@ -54,6 +55,27 @@ struct SettingsView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+// MARK: - Insights Section
+
+private struct InsightsSection: View {
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        Section {
+            Picker("SG Baseline", selection: $appState.sgBaseline) {
+                ForEach(SGBaseline.allCases, id: \.self) { baseline in
+                    Text(baseline.displayName).tag(baseline)
+                }
+            }
+        } header: {
+            Text("Insights")
+        } footer: {
+            Text("Strokes gained insights compare your round against this benchmark. Choose the level that best matches your current game.")
+                .font(.caption)
         }
     }
 }

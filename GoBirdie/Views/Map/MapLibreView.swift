@@ -184,8 +184,16 @@ struct MapLibreView: UIViewRepresentable {
         func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
             let parent = MapLibreView(viewModel: viewModel)
             parent.updateGolfLayers(style, hole: viewModel.currentHole)
-            zoomToHole(mapView, animated: lastHoleIndex == -1 ? false : true)
+            let isInitialLoad = lastHoleIndex == -1
+            zoomToHole(mapView, animated: !isInitialLoad)
             lastHoleIndex = viewModel.currentHoleIndex
+            if isInitialLoad {
+                // Non-animated zoom — regionDidChangeAnimated won't fire reliably,
+                // so defer one runloop tick to let the camera settle first.
+                DispatchQueue.main.async { [weak self] in self?.updateScreenPoints() }
+            } else {
+                updateScreenPoints()
+            }
         }
 
         func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {

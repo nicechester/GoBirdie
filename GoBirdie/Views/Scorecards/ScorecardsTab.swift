@@ -128,6 +128,7 @@ private struct RoundRow: View {
 private struct ScorecardDetailView: View {
     let round: Round
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appState: AppState
     @State private var shotMapHole: HoleScore?
     @State private var currentRound: Round
 
@@ -225,7 +226,7 @@ private struct ScorecardDetailView: View {
                         .padding(.vertical, 4)
 
                     // Key Insights
-                    InsightsCard(round: currentRound, courseHoles: courseHoles, historicalRounds: historicalRounds)
+                    InsightsCard(round: currentRound, courseHoles: courseHoles, historicalRounds: historicalRounds, baseline: appState.sgBaseline)
                         .padding(.top, 8)
 
                     // Stats
