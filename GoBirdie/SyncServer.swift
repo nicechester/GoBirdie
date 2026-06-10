@@ -1,9 +1,11 @@
 import Foundation
 import MultipeerConnectivity
+import Network
 import OSLog
 import GoBirdieCore
 
 private let logger = Logger(subsystem: "com.gobirdie", category: "SyncServer")
+let SYNC_PORT: UInt16 = 7743
 
 final class SyncServer: NSObject {
     private let roundStore: RoundStore
@@ -13,6 +15,11 @@ final class SyncServer: NSObject {
     private var session: MCSession?
     private var isAdvertising = false
     var onStateChange: (@Sendable (Bool) -> Void)?
+
+    // HTTP + mDNS for Windows / cross-platform sync
+    private var httpListener: NWListener?
+    private var nwAdvertiser: NWListener?
+    private var mdnsBrowser: NWBrowser?
 
     init(roundStore: RoundStore) {
         self.roundStore = roundStore
@@ -39,6 +46,8 @@ final class SyncServer: NSObject {
         adv.startAdvertisingPeer()
         isAdvertising = true
         logger.info("Advertising as \(peer.displayName)")
+
+        startHTTPServer()
         onStateChange?(true)
     }
 
@@ -49,11 +58,78 @@ final class SyncServer: NSObject {
         session = nil
         peerID = nil
         isAdvertising = false
+        stopHTTPServer()
         logger.info("Stopped")
         onStateChange?(false)
     }
 
-    // MARK: - Request handling
+    // MARK: - HTTP Server (cross-platform WiFi sync)
+
+    private func startHTTPServer() {
+        do {
+            let params = NWParameters.tcp
+            let listener = try NWListener(using: params, on: NWEndpoint.Port(rawValue: SYNC_PORT)!)
+
+            listener.newConnectionHandler = { [weak self] connection in
+                connection.start(queue: .global(qos: .userInitiated))
+                self?.handleHTTPConnection(connection)
+            }
+
+            listener.serviceRegistrationChangeHandler = { change in
+                if case .add(let endpoint) = change {
+                    logger.info("mDNS registered: \(endpoint.debugDescription)")
+                }
+            }
+
+            // Advertise as _gobirdie._tcp via NWListener's built-in Bonjour
+            listener.service = NWListener.Service(
+                name: UIDevice.current.name,
+                type: "_gobirdie._tcp"
+            )
+
+            listener.start(queue: .global(qos: .userInitiated))
+            httpListener = listener
+            logger.info("HTTP sync server started on port \(SYNC_PORT)")
+        } catch {
+            logger.error("Failed to start HTTP server: \(error)")
+        }
+    }
+
+    private func stopHTTPServer() {
+        httpListener?.cancel()
+        httpListener = nil
+    }
+
+    private func handleHTTPConnection(_ connection: NWConnection) {
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 4096) { [weak self] data, _, isComplete, error in
+            guard let self, let data, let request = String(data: data, encoding: .utf8) else { return }
+            let firstLine = request.components(separatedBy: "\r\n").first ?? ""
+            let parts = firstLine.components(separatedBy: " ")
+            guard parts.count >= 2 else { return }
+            let path = parts[1]
+
+            let (status, body) = self.handleHTTPRequest(path: path)
+            let response = "HTTP/1.1 \(status)\r\nContent-Type: application/json\r\nContent-Length: \(body.count)\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
+            let responseData = response.data(using: .utf8)! + body
+            connection.send(content: responseData, completion: .contentProcessed { _ in
+                connection.cancel()
+            })
+        }
+    }
+
+    private func handleHTTPRequest(path: String) -> (String, Data) {
+        if path == "/api/rounds" {
+            return ("200 OK", buildRoundList())
+        }
+        if path.hasPrefix("/api/rounds/") {
+            let id = String(path.dropFirst("/api/rounds/".count))
+            let data = buildRound(id: id)
+            return data.isEmpty ? ("404 Not Found", Data("[]".utf8)) : ("200 OK", data)
+        }
+        return ("404 Not Found", Data("[]".utf8))
+    }
+
+    // MARK: - Request handling (MultipeerConnectivity)
 
     private func handleRequest(_ message: String, from peer: MCPeerID) {
         logger.debug("Request from \(peer.displayName): \(message)")
