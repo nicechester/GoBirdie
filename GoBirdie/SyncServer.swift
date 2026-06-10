@@ -75,12 +75,6 @@ final class SyncServer: NSObject {
                 self?.handleHTTPConnection(connection)
             }
 
-            listener.serviceRegistrationChangeHandler = { change in
-                if case .add(let endpoint) = change {
-                    logger.info("mDNS registered: \(endpoint.debugDescription)")
-                }
-            }
-
             // Advertise as _gobirdie._tcp via NWListener's built-in Bonjour
             listener.service = NWListener.Service(
                 name: UIDevice.current.name,
