@@ -108,6 +108,13 @@ final class AppState: ObservableObject {
                 }
             }
         }
+
+        // Restore sync server state after all properties are initialized
+        if UserDefaults.standard.bool(forKey: "syncServerEnabled") {
+            syncServer.start()
+            syncServerEnabled = true
+            syncServerRunning = true
+        }
     }
 
     // MARK: - Sync Server
