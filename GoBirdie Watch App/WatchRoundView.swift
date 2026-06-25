@@ -77,6 +77,10 @@ private struct StartView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
             }
+
+            Label("Heart Rate & Workout", systemImage: "heart.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(.red.opacity(0.8))
         }
     }
 }
@@ -134,6 +138,11 @@ private struct ActiveRoundView: View {
                 Text("Hole \(session.holeNumber)")
                     .font(.caption).fontWeight(.bold)
                 Spacer()
+                if let hr = session.latestHeartRate {
+                    Label("\(hr)", systemImage: "heart.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.red)
+                }
                 Text("Par \(session.par)")
                     .font(.caption).foregroundStyle(.secondary)
             }

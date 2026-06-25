@@ -63,14 +63,12 @@ private struct ActiveRoundView: View {
                         }
                         Divider()
                     }
-                    if ConnectivityService.shared.isWatchReachable {
-                        Button {
-                            resyncMaps()
-                        } label: {
-                            Label("Re-sync Maps", systemImage: "arrow.clockwise")
-                        }
-                        Divider()
+                    Button {
+                        syncWatch()
+                    } label: {
+                        Label("Sync Watch", systemImage: "applewatch")
                     }
+                    Divider()
                     Button(role: .destructive) {
                         showEndConfirm = true
                     } label: {
@@ -169,9 +167,21 @@ private struct ActiveRoundView: View {
         }
     }
 
-    private func resyncMaps() {
+    private func syncWatch() {
         let course = viewModel.course
+        let holeNumber = session.currentHoleNumber
+        guard let hole = course.holes.first(where: { $0.number == holeNumber }) else { return }
         let courseHash = computeCourseHash(course: course)
+        ConnectivityService.shared.sendRoundStartContext(versionHash: courseHash, courseId: course.id)
+        ConnectivityService.shared.sendHoleData(
+            hole: hole,
+            holeNumber: holeNumber,
+            courseName: course.name,
+            totalStrokes: session.round.totalStrokes,
+            totalHoles: course.holes.count,
+            strokes: session.currentHole?.strokes ?? 0,
+            putts: session.currentHole?.putts ?? 0
+        )
         Task.detached(priority: .userInitiated) {
             await WatchSnapshotTransferManager.shared.transferAllHoles(
                 for: course,
