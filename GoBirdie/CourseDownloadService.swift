@@ -32,15 +32,19 @@ class CourseDownloadService {
         location: GpsPoint,
         teeColor: String
     ) async throws -> DownloadResult {
-        // 1. Find nearby OSM relation
-        let nearbyOsm = try await overpassClient.searchCourses(location: location, radius: 2_000)
-        let osmMatch = nearbyOsm.first
+        // 1. Resolve OSM id — use the known id directly if available, else find by proximity
+        let osmId: Int64?
+        if courseId.hasPrefix("osm-"), let raw = courseId.dropFirst(4).split(separator: "-").first, let id = Int64(raw) {
+            osmId = id
+        } else {
+            osmId = try await overpassClient.searchCourses(location: location, radius: 2_000).first?.osmId
+        }
 
         // 2. Download OSM geometry
         var osmCourses: [Course] = []
-        if let osm = osmMatch {
+        if let id = osmId {
             osmCourses = (try? await overpassClient.downloadCourse(
-                osmRelationId: osm.osmId,
+                osmRelationId: id,
                 name: courseName
             )) ?? []
         }

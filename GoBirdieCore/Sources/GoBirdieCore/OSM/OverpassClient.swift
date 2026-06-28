@@ -38,6 +38,10 @@ public actor OverpassClient {
         self.session = session
     }
 
+    public func clearCache() async {
+        await OverpassCache.shared.clear()
+    }
+
     // MARK: - Course Search
 
     /// Search for golf courses near a location within a given radius.
@@ -158,12 +162,25 @@ out geom tags;
         let geometryData = try await post(query: geometryQuery)
         let geometryResponse = try JSONDecoder().decode(OverpassResponse.self, from: geometryData)
 
+        // Filter hole ways to only those whose tee falls inside the course boundary polygon.
+        // This prevents nearby courses (e.g. Harding) from leaking in via the padded bbox.
+        let boundaryPolygon = element.geometry ?? []
+        let filteredElements: [OverpassElement]
+        if boundaryPolygon.count >= 3 {
+            filteredElements = geometryResponse.elements.filter { el in
+                guard el.tags?["golf"] == "hole", let tee = el.geometry?.first else { return true }
+                return pointInPolygon(tee, polygon: boundaryPolygon)
+            }
+        } else {
+            filteredElements = geometryResponse.elements
+        }
+
         let courseLocation = GpsPoint(lat: (minLat + maxLat) / 2, lon: (minLon + maxLon) / 2)
         let anchor = playerLocation ?? courseLocation
         let version = element.version ?? 1
 
         // Check for multi-course complex (duplicate hole refs)
-        let holeLines = geometryResponse.elements.filter { $0.tags?["golf"] == "hole" }
+        let holeLines = filteredElements.filter { $0.tags?["golf"] == "hole" }
         let refCounts = Dictionary(grouping: holeLines.compactMap { $0.tags?["ref"].flatMap(Int.init) }, by: { $0 })
         let hasDuplicates = refCounts.values.contains { $0.count > 1 }
 
@@ -171,7 +188,7 @@ out geom tags;
             let groups = splitCoursesByWayIdGap(holeLines)
             print("[Overpass] Multi-course complex: \(groups.count) courses detected")
             return groups.enumerated().map { idx, groupIds in
-                let groupElements = geometryResponse.elements.filter { el in
+                let groupElements = filteredElements.filter { el in
                     el.tags?["golf"] == "hole" ? groupIds.contains(el.id) : true
                 }
                 let holes = buildHoles(from: groupElements, anchor: anchor)
@@ -187,7 +204,7 @@ out geom tags;
             }
         }
 
-        let holes = buildHoles(from: geometryResponse.elements, anchor: anchor)
+        let holes = buildHoles(from: filteredElements, anchor: anchor)
         return [Course(
             id: "osm-\(osmRelationId)",
             name: name,
@@ -274,6 +291,14 @@ out geom tags;
             print("[Overpass] Backing off \(backoff)s before retry")
             try await Task.sleep(nanoseconds: UInt64(backoff * 1_000_000_000))
             return try await post(query: query, retries: retries - 1)
+        case 406:
+            // Transient server error disguised as 4xx — retry like a 503
+            let body = String(data: data, encoding: .utf8)?.prefix(100) ?? ""
+            print("[Overpass] HTTP 406 — retries left: \(retries). Body: \(body)")
+            guard retries > 0 else { throw OverpassError.serverError }
+            let backoff = 3.0 * pow(2.0, Double(3 - retries))
+            try await Task.sleep(nanoseconds: UInt64(backoff * 1_000_000_000))
+            return try await post(query: query, retries: retries - 1)
         case 400...499:
             let body = String(data: data, encoding: .utf8)?.prefix(200) ?? ""
             print("[Overpass] HTTP \(httpResponse.statusCode) invalid query. Body: \(body)")
@@ -311,10 +336,12 @@ out geom tags;
             let par = line.tags?["par"].flatMap(Int.init) ?? 4
             let handicap = line.tags?["handicap"].flatMap(Int.init)
 
-            // Snap to nearest green polygon for front/back
+            // Snap to nearest green polygon for front/back — use a 50m threshold to
+            // avoid cross-hole snapping on compact par-3 courses
             let nearestGreen = greenPolygons
                 .compactMap { $0.geometry }
                 .filter { $0.count >= 3 }
+                .filter { centroid(of: $0).distanceMeters(to: greenCenter) < 50 }
                 .min { centroid(of: $0).distanceMeters(to: greenCenter) < centroid(of: $1).distanceMeters(to: greenCenter) }
 
             let (greenFront, greenBack): (GpsPoint?, GpsPoint?)
@@ -352,6 +379,21 @@ out geom tags;
         holes.sort { $0.number < $1.number }
 
         return holes
+    }
+
+    private func pointInPolygon(_ point: GpsPoint, polygon: [GpsPoint]) -> Bool {
+        var inside = false
+        var j = polygon.count - 1
+        for i in 0..<polygon.count {
+            let xi = polygon[i].lon, yi = polygon[i].lat
+            let xj = polygon[j].lon, yj = polygon[j].lat
+            if ((yi > point.lat) != (yj > point.lat)) &&
+               (point.lon < (xj - xi) * (point.lat - yi) / (yj - yi) + xi) {
+                inside = !inside
+            }
+            j = i
+        }
+        return inside
     }
 
     private func centroid(of points: [GpsPoint]) -> GpsPoint {

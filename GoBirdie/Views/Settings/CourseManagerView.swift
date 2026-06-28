@@ -16,6 +16,7 @@ struct CourseManagerView: View {
 
     private let courseDownloadService = CourseDownloadService()
     private let golfCourseAPI = GolfCourseAPIClient(apiKey: Config.golfCourseAPIKey)
+    private let overpassClient = OverpassClient()
 
     var body: some View {
         List {
@@ -115,6 +116,7 @@ struct CourseManagerView: View {
             try? store.delete(id: savedCourses[idx].id)
         }
         savedCourses.remove(atOffsets: offsets)
+        Task { await overpassClient.clearCache() }
     }
 
     private func search() {
