@@ -11,7 +11,8 @@
 7. [Apple Watch](#7-apple-watch)
 8. [Exploring Courses](#8-exploring-courses)
 9. [Syncing to Desktop](#9-syncing-to-desktop)
-10. [Tips](#tips)
+10. [Tournaments](#10-tournaments)
+11. [Tips](#tips)
 
 ---
 
@@ -158,7 +159,7 @@ Use the **< >** arrows in the hole info bar to move between holes. You can go ba
 
 Tap the **Scorecards** tab to see all completed rounds. Each card shows the course name, date, total score, and score vs par.
 
-</td></tr>
+</td><td valign="top"><img src="screenshots/scorecard-list.png" width="220"></td></tr>
 </table>
 
 <table>
@@ -168,7 +169,31 @@ Tap the **Scorecards** tab to see all completed rounds. Each card shows the cour
 
 Tap a round to see the full scorecard with per-hole breakdown: score, putts, and penalties per hole. Stats are shown below the table: holes played, GIR, and longest drive. The course name is followed by the date and weather conditions (temperature and sky condition recorded at round end).
 
+The toolbar shows:
+- **QR icon** — share your score as a QR code for tournament hosts to scan
+- **Trophy icon** — create a tournament from this round (see [Tournaments](#10-tournaments))
+
 </td><td valign="top"><img src="screenshots/score-card-detail.png" width="220"></td></tr>
+</table>
+
+<table>
+<tr><td valign="top"><img src="screenshots/qr-code.png" width="220"></td><td valign="top" width="60%">
+
+### Step 11a: Share Score via QR
+
+Tap the **QR icon** in the scorecard detail toolbar to display a QR code containing your per-hole scores. Have the tournament host scan it with their device to import your round into the tournament.
+
+</td></tr>
+</table>
+
+<table>
+<tr><td valign="top" width="60%">
+
+### Step 11b: Key Insights
+
+Scroll down past the shot map in the scorecard detail to see key insights for the round — patterns and stats derived from your shot data.
+
+</td><td valign="top"><img src="screenshots/keyinsights.png" width="220"></td></tr>
 </table>
 
 <table>
@@ -398,6 +423,50 @@ GoBirdie syncs rounds to the [GoBirdie Desktop](https://github.com/nicechester/G
 4. The desktop discovers the iPhone automatically and pulls all new rounds
 
 Round data includes shot positions, club selections, heart rate, altitude, and green center coordinates. The desktop app provides timeline charts, shot analysis, and course statistics.
+
+---
+
+## 10. Tournaments
+
+Tournaments let you compare scores with other players. The host creates a tournament from their own round, then scans each player's QR code to import their scores.
+
+<table>
+<tr><td valign="top" width="60%">
+
+### Step 27: Switch to Tournaments
+
+In the **Scorecards** tab, tap **Tournaments** in the segmented picker at the top to switch to the tournaments list.
+
+</td><td valign="top"><img src="screenshots/tournaments-list.png" width="220"></td></tr>
+</table>
+
+<table>
+<tr><td valign="top"><img src="screenshots/tournament-scorecards.png" width="220"></td><td valign="top" width="60%">
+
+### Step 28: Create a Tournament
+
+Tap **+** to create a new tournament, or tap the **trophy icon** in any scorecard detail to instantly create a tournament from that round. Your own round is added automatically as the first player.
+
+Once inside the tournament detail:
+- Tap the **QR scanner icon** (top-left) to scan another player's QR code
+- Tap **+** (top-left) to add a player manually by name
+- Tap **Done** (top-right) when finished
+
+</td></tr>
+</table>
+
+<table>
+<tr><td valign="top" width="60%">
+
+### Step 29: Manage Players
+
+Long-press any player row to open the action menu:
+- **Edit Scores** — adjust per-hole strokes manually
+- **Rename** — change the player's display name
+- **Remove** — remove the player from the tournament
+
+</td><td valign="top"><img src="screenshots/tournament-context-menu.png" width="220"></td></tr>
+</table>
 
 ---
 
