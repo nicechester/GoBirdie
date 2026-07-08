@@ -9,11 +9,14 @@ struct ScorecardsTab: View {
     @EnvironmentObject var appState: AppState
     @State private var rounds: [Round] = []
     @State private var selectedRound: Round?
+    @State private var selectedTab = 0
 
     var body: some View {
         NavigationStack {
             Group {
-                if rounds.isEmpty {
+                if selectedTab == 1 {
+                    TournamentsTab()
+                } else if rounds.isEmpty {
                     EmptyScorecardsView()
                 } else {
                     List(rounds) { round in
@@ -37,6 +40,16 @@ struct ScorecardsTab: View {
             }
             .navigationTitle("Scorecards")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Picker("", selection: $selectedTab) {
+                        Text("Rounds").tag(0)
+                        Text("Tournaments").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 220)
+                }
+            }
             .sheet(item: $selectedRound) { round in
                 ScorecardDetailView(round: round)
             }
@@ -131,6 +144,8 @@ private struct ScorecardDetailView: View {
     @EnvironmentObject var appState: AppState
     @State private var shotMapHole: HoleScore?
     @State private var currentRound: Round
+    @State private var showQrShare = false
+    @State private var tournamentToOpen: Tournament?
 
     init(round: Round) {
         self.round = round
@@ -247,6 +262,16 @@ private struct ScorecardDetailView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    HStack {
+                        Button { createTournament() } label: {
+                            Image(systemName: "trophy")
+                        }
+                        Button { showQrShare = true } label: {
+                            Image(systemName: "qrcode")
+                        }
+                    }
+                }
             }
             .sheet(item: $shotMapHole) { hole in
                 ShotMapSheet(allHoles: currentRound.holes, courseHoles: courseHoles, initialHole: hole) { updatedHoles in
@@ -255,7 +280,27 @@ private struct ScorecardDetailView: View {
                     currentRound.totalPutts = updatedHoles.reduce(0) { $0 + $1.putts }
                 }
             }
+            .sheet(isPresented: $showQrShare) {
+                QrShareView(round: currentRound)
+            }
+            .sheet(item: $tournamentToOpen) { t in
+                TournamentDetailView(tournament: t, onDismiss: { tournamentToOpen = nil })
+            }
         }
+    }
+
+    private func createTournament() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let date = formatter.string(from: currentRound.startedAt)
+        let tournament = Tournament(
+            courseId: currentRound.courseId,
+            courseName: currentRound.courseName,
+            date: date,
+            players: [TournamentPlayer(name: "Me", holes: currentRound.holes, source: .self)]
+        )
+        try? TournamentStore().save(tournament)
+        tournamentToOpen = tournament
     }
 
     private func showHoleMap(_ hole: HoleScore) {
