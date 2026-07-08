@@ -6,5 +6,7 @@
 	<array>
 		<string>_gobirdie._tcp</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to scan QR codes from other players' scorecards for tournament collection.</string>
 </dict>
 </plist>
