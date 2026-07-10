@@ -31,6 +31,8 @@ struct TournamentsTab: View {
     @State private var tournaments: [Tournament] = []
     @State private var showCreate = false
     @State private var selectedTournament: Tournament?
+    @State private var renamingTournament: Tournament?
+    @State private var renameText = ""
 
     var body: some View {
         Group {
@@ -81,9 +83,32 @@ struct TournamentsTab: View {
                                     Label("Delete", systemImage: "trash")
                                 }
                             }
+                            .contextMenu {
+                                Button { renamingTournament = tournament; renameText = tournament.title ?? tournament.courseName } label: {
+                                    Label("Rename", systemImage: "pencil")
+                                }
+                                Button(role: .destructive) { delete(tournament) } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                     .listStyle(.plain)
+                    .alert("Rename Tournament", isPresented: Binding(
+                        get: { renamingTournament != nil },
+                        set: { if !$0 { renamingTournament = nil } }
+                    )) {
+                        TextField("Name", text: $renameText)
+                        Button("Save") {
+                            guard let t = renamingTournament, !renameText.isEmpty else { return }
+                            var updated = t
+                            updated.title = renameText
+                            try? TournamentStore().save(updated)
+                            load()
+                            renamingTournament = nil
+                        }
+                        Button("Cancel", role: .cancel) { renamingTournament = nil }
+                    }
                 }
             }
             .navigationTitle("Tournaments")
@@ -239,149 +264,131 @@ struct TournamentDetailView: View {
     @State private var tournament: Tournament
     let onDismiss: () -> Void
 
-    @State private var editingPlayer: TournamentPlayer?
+    @EnvironmentObject private var appState: AppState
     @State private var showAddManual = false
-    @State private var showQrScan = false
     @State private var longPressPlayer: TournamentPlayer?
     @State private var showRenameAlert = false
     @State private var renameText = ""
-    @State private var showRemoveConfirm = false
+    @State private var editingCell: (playerId: String, hole: Int)?
+    @State private var editingStrokeText = ""
 
     init(tournament: Tournament, onDismiss: @escaping () -> Void) {
         self._tournament = State(initialValue: tournament)
         self.onDismiss = onDismiss
     }
 
-    private var sorted: [TournamentPlayer] {
-        tournament.players.sorted {
-            if $0.totalStrokes == 0 { return false }
-            if $1.totalStrokes == 0 { return true }
-            return $0.scoreVsPar < $1.scoreVsPar
-        }
+    private var isLiveRoundActive: Bool {
+        guard let session = appState.activeRound else { return false }
+        return session.round.courseId == tournament.courseId
     }
 
+
     var body: some View {
-        Group {
-            if let player = editingPlayer {
-                EditPlayerScoreView(
-                    player: player,
-                    parReference: tournament.players.first(where: { $0.source == .self })?.holes ?? [],
-                    onSave: { updated in
-                        save(updated)
-                        editingPlayer = nil
-                    },
-                    onDismiss: { editingPlayer = nil }
-                )
-            } else if showQrScan {
-                QrScanView(
-                    onScanned: { payload, name in
-                        let player = payload.toTournamentPlayer(name: name)
-                        tournament.players.append(player)
-                        persist()
-                    },
-                    onDismiss: { showQrScan = false }
-                )
-            } else {
-                detailView
-            }
-        }
+        detailView
     }
 
     private var detailView: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                if tournament.players.isEmpty {
-                    Spacer()
-                    Text("No players yet. Tap + or scan a QR code.")
-                        .foregroundStyle(.secondary).multilineTextAlignment(.center).padding()
-                    Spacer()
-                } else {
-                    ScrollView(.horizontal) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            // Header
-                            ScoreGridHeader(maxHole: maxHole)
-                            Divider()
-                            // Player rows
-                            ForEach(sorted) { player in
-                                ScoreGridRow(player: player, maxHole: maxHole)
-                                    .background(player.source == .self ? Color.green.opacity(0.08) : Color.clear)
-                                    .onLongPressGesture {
-                                        longPressPlayer = player
-                                        renameText = player.name
-                                    }
-                                Divider()
+            detailContent
+                .navigationTitle(tournament.title ?? tournament.courseName)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { detailToolbar }
+                .sheet(isPresented: $showAddManual) {
+                    AddPlayerSheet(
+                        onAdd: { name in
+                            let blank = TournamentPlayer(name: name, holes: [], source: .manual)
+                            tournament.players.append(blank)
+                            persist()
+                        },
+                        onScanned: { payload, name in
+                            let player = payload.toTournamentPlayer(name: name)
+                            tournament.players.append(player)
+                            persist()
+                        }
+                    )
+                }
+                .modifier(LiveScoreUpdater(tournament: $tournament, isLive: isLiveRoundActive, activeHoles: appState.activeRound?.round.holes, persist: persist))
+                .modifier(PlayerEditDialogs(
+                    longPressPlayer: $longPressPlayer,
+                    showRenameAlert: $showRenameAlert,
+                    renameText: $renameText,
+                    onRename: { p, name in
+                        tournament.players = tournament.players.map {
+                            $0.id == p.id ? TournamentPlayer(id: $0.id, name: name, holes: $0.holes, source: $0.source) : $0
+                        }
+                        persist()
+                    }
+                ))
+                .sheet(isPresented: Binding(
+                    get: { editingCell != nil },
+                    set: { if !$0 { editingCell = nil } }
+                )) {
+                    if let cell = editingCell {
+                        StrokePickerSheet(current: editingStrokeText) { val in
+                            guard let pIdx = tournament.players.firstIndex(where: { $0.id == cell.playerId })
+                            else { editingCell = nil; return }
+                            if let hIdx = tournament.players[pIdx].holes.firstIndex(where: { $0.number == cell.hole }) {
+                                tournament.players[pIdx].holes[hIdx].strokes = val
+                            } else {
+                                let par = tournament.players.first(where: { $0.source == .self })?.holes.first(where: { $0.number == cell.hole })?.par ?? 4
+                                tournament.players[pIdx].holes.append(HoleScore(number: cell.hole, par: par, strokes: val))
                             }
-                        }
-                    }
-                    Spacer()
-                }
-            }
-            .navigationTitle(tournament.title ?? tournament.courseName)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    HStack {
-                        Button { showQrScan = true } label: {
-                            Image(systemName: "qrcode.viewfinder")
-                        }
-                        Button { showAddManual = true } label: {
-                            Image(systemName: "plus")
+                            persist()
+                            editingCell = nil
                         }
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { onDismiss() }
-                }
-            }
-            .sheet(isPresented: $showAddManual) {
-                AddPlayerSheet { name in
-                    let blank = TournamentPlayer(name: name, holes: [], source: .manual)
-                    tournament.players.append(blank)
-                    persist()
-                    editingPlayer = blank
-                }
-            }
-            .confirmationDialog(longPressPlayer?.name ?? "", isPresented: Binding(
-                get: { longPressPlayer != nil && !showRenameAlert && !showRemoveConfirm },
-                set: { if !$0 && !showRenameAlert && !showRemoveConfirm { longPressPlayer = nil } }
-            ), titleVisibility: .visible) {
-                Button("Edit Scores") {
-                    editingPlayer = longPressPlayer
-                    longPressPlayer = nil
-                }
-                Button("Rename") { showRenameAlert = true }
-                Button("Remove", role: .destructive) { showRemoveConfirm = true }
-                Button("Cancel", role: .cancel) { longPressPlayer = nil }
-            }
-            .alert("Rename Player", isPresented: $showRenameAlert) {
-                TextField("Name", text: $renameText)
-                Button("Save") {
-                    guard let p = longPressPlayer, !renameText.isEmpty else { return }
-                    tournament.players = tournament.players.map {
-                        $0.id == p.id ? TournamentPlayer(id: $0.id, name: renameText, holes: $0.holes, source: $0.source) : $0
+        }
+    }
+
+    private var detailContent: some View {
+        VStack(spacing: 0) {
+            if tournament.players.isEmpty {
+                Spacer()
+                Text("No players yet. Tap + or scan a QR code.")
+                    .foregroundStyle(.secondary).multilineTextAlignment(.center).padding()
+                Spacer()
+            } else {
+                ScoreGrid(
+                    players: tournament.players,
+                    onLongPress: { player in
+                        longPressPlayer = player
+                        renameText = player.name
+                        showRenameAlert = true
+                    },
+                    onTapCell: { playerId, hole in
+                        editingStrokeText = ""
+                        if let p = tournament.players.first(where: { $0.id == playerId }),
+                           let h = p.holes.first(where: { $0.number == hole }) {
+                            editingStrokeText = h.strokes > 0 ? "\(h.strokes)" : ""
+                        }
+                        editingCell = (playerId, hole)
                     }
-                    persist()
-                    longPressPlayer = nil
-                }
-                Button("Cancel", role: .cancel) { longPressPlayer = nil }
-            }
-            .alert("Remove \(longPressPlayer?.name ?? "player")?", isPresented: $showRemoveConfirm) {
-                Button("Remove", role: .destructive) {
-                    guard let p = longPressPlayer else { return }
-                    tournament.players.removeAll { $0.id == p.id }
-                    persist()
-                    longPressPlayer = nil
-                }
-                Button("Cancel", role: .cancel) { longPressPlayer = nil }
+                )
+                Spacer()
             }
         }
     }
 
-    private var maxHole: Int {
-        tournament.players.flatMap { $0.holes }.map { $0.number }.max() ?? 18
+    @ToolbarContentBuilder
+    private var detailToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            HStack {
+                Button { showAddManual = true } label: { Image(systemName: "plus") }
+                if isLiveRoundActive {
+                    Label("Live", systemImage: "dot.radiowaves.left.and.right")
+                        .font(.caption).fontWeight(.semibold)
+                        .foregroundStyle(.green)
+                        .labelStyle(.titleAndIcon)
+                }
+            }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+            Button("Done") { onDismiss() }
+        }
     }
 
-    private func save(_ updated: TournamentPlayer) {
+private func save(_ updated: TournamentPlayer) {
         tournament.players = tournament.players.map { $0.id == updated.id ? updated : $0 }
         persist()
     }
@@ -391,71 +398,181 @@ struct TournamentDetailView: View {
     }
 }
 
-// MARK: - Score Grid
+// MARK: - Stroke Picker Sheet
 
-private struct ScoreGridHeader: View {
-    let maxHole: Int
-    private let nameW: CGFloat = 100
-    private let cellW: CGFloat = 32
-    private let totalW: CGFloat = 44
+private struct StrokePickerSheet: View {
+    let current: String
+    let onSelect: (Int) -> Void
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        HStack(spacing: 0) {
-            Text("Player").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
-                .frame(width: nameW, alignment: .leading).padding(.horizontal, 4)
-            ForEach(1...maxHole, id: \.self) { n in
-                Text("\(n)").font(.system(size: 10)).fontWeight(.bold).foregroundStyle(.secondary)
-                    .frame(width: cellW)
+        let cur = Int(current)
+        VStack(spacing: 16) {
+            Text("Strokes")
+                .font(.headline)
+                .padding(.top, 20)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
+                ForEach(1...10, id: \.self) { n in
+                    Button {
+                        onSelect(n)
+                        dismiss()
+                    } label: {
+                        Text("\(n)")
+                            .font(.title3).fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(cur == n ? Color.accentColor : Color(.systemGray5))
+                            .foregroundStyle(cur == n ? Color.white : Color.primary)
+                            .cornerRadius(10)
+                    }
+                }
             }
-            Text("Tot").font(.caption).fontWeight(.bold).foregroundStyle(.secondary).frame(width: totalW)
-            Text("+/−").font(.caption).fontWeight(.bold).foregroundStyle(.secondary).frame(width: totalW)
+            .padding(.horizontal, 24)
+            Button("Clear") {
+                onSelect(0)
+                dismiss()
+            }
+            .foregroundStyle(.secondary)
+            .padding(.bottom, 20)
         }
-        .padding(.vertical, 8)
+        .presentationDetents([.height(280)])
     }
 }
 
-private struct ScoreGridRow: View {
-    let player: TournamentPlayer
-    let maxHole: Int
-    private let nameW: CGFloat = 100
-    private let cellW: CGFloat = 32
-    private let totalW: CGFloat = 44
+// MARK: - ViewModifiers extracted to help Swift type-checker
 
-    var body: some View {
-        HStack(spacing: 0) {
-            Text(player.name)
-                .font(.caption)
-                .fontWeight(player.source == .self ? .bold : .regular)
-                .lineLimit(1)
-                .frame(width: nameW, alignment: .leading)
-                .padding(.horizontal, 4)
+private struct LiveScoreUpdater: ViewModifier {
+    @Binding var tournament: Tournament
+    let isLive: Bool
+    let activeHoles: [HoleScore]?
+    let persist: () -> Void
 
-            ForEach(1...maxHole, id: \.self) { n in
-                let hole = player.holes.first { $0.number == n }
-                ScoreCell(strokes: hole?.strokes ?? 0, par: hole?.par ?? 4)
-                    .frame(width: cellW)
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .watchStrokeUpdate)) { notification in
+                guard isLive,
+                      let holeNumber = notification.userInfo?["holeNumber"] as? Int,
+                      let strokes = notification.userInfo?["strokes"] as? Int,
+                      let idx = tournament.players.firstIndex(where: { $0.source == .self }),
+                      let holeIdx = tournament.players[idx].holes.firstIndex(where: { $0.number == holeNumber })
+                else { return }
+                tournament.players[idx].holes[holeIdx].strokes = strokes
+                if let putts = notification.userInfo?["putts"] as? Int {
+                    tournament.players[idx].holes[holeIdx].putts = putts
+                }
+                persist()
             }
+            .onChange(of: activeHoles) { holes in
+                guard isLive, let holes else { return }
+                guard let idx = tournament.players.firstIndex(where: { $0.source == .self }) else { return }
+                tournament.players[idx].holes = holes.filter { $0.strokes > 0 }
+                persist()
+            }
+    }
+}
 
-            let total = player.totalStrokes
-            Text(total > 0 ? "\(total)" : "—")
-                .font(.caption).fontWeight(.bold)
-                .foregroundStyle(diffColor(player.scoreVsPar, hasScore: total > 0))
-                .frame(width: totalW)
+private struct PlayerEditDialogs: ViewModifier {
+    @Binding var longPressPlayer: TournamentPlayer?
+    @Binding var showRenameAlert: Bool
+    @Binding var renameText: String
+    let onRename: (TournamentPlayer, String) -> Void
 
-            let diff = player.scoreVsPar
-            Text(total == 0 ? "—" : diff == 0 ? "E" : diff > 0 ? "+\(diff)" : "\(diff)")
-                .font(.caption).fontWeight(.bold)
-                .foregroundStyle(diffColor(diff, hasScore: total > 0))
-                .frame(width: totalW)
-        }
-        .padding(.vertical, 6)
+    func body(content: Content) -> some View {
+        content
+            .alert("Rename Player", isPresented: $showRenameAlert) {
+                TextField("Name", text: $renameText)
+                Button("Save") {
+                    guard let p = longPressPlayer, !renameText.isEmpty else { return }
+                    onRename(p, renameText)
+                    longPressPlayer = nil
+                }
+                Button("Cancel", role: .cancel) { longPressPlayer = nil }
+            }
+    }
+}
+
+// MARK: - Score Grid (transposed: rows = holes, columns = players)
+
+private struct ScoreGrid: View {
+    let players: [TournamentPlayer]
+    let onLongPress: (TournamentPlayer) -> Void
+    let onTapCell: (String, Int) -> Void  // (playerId, holeNumber)
+    private let labelW: CGFloat = 44
+    private let cellW: CGFloat = 60
+
+    private var playedHoles: [Int] {
+        let scored = Set(players.flatMap { $0.holes }.filter { $0.strokes > 0 }.map { $0.number })
+        return scored.sorted()
     }
 
-    private func diffColor(_ diff: Int, hasScore: Bool) -> Color {
-        guard hasScore else { return .secondary }
-        if diff < 0 { return .green }
-        if diff == 0 { return .primary }
-        return .red
+    var body: some View {
+        ScrollView(.vertical) {
+            VStack(spacing: 0) {
+                // Header row: blank label + player names (long-press to edit)
+                HStack(spacing: 0) {
+                    Text("").frame(width: labelW)
+                    ForEach(players) { player in
+                        Text(player.name)
+                            .font(.subheadline).fontWeight(player.source == .self ? .bold : .regular)
+                            .lineLimit(1)
+                            .frame(width: cellW)
+                            .foregroundStyle(player.source == .self ? Color.green : Color.primary)
+                            .onLongPressGesture { onLongPress(player) }
+                    }
+                }
+                .padding(.vertical, 8)
+                Divider()
+
+                // One row per played hole
+                ForEach(playedHoles, id: \.self) { n in
+                    HStack(spacing: 0) {
+                        Text("H\(n)")
+                            .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
+                            .frame(width: labelW)
+                        ForEach(players) { player in
+                            let hole = player.holes.first { $0.number == n }
+                            ScoreCell(strokes: hole?.strokes ?? 0, par: hole?.par ?? 4)
+                                .frame(width: cellW)
+                                .onTapGesture { onTapCell(player.id, n) }
+                        }
+                    }
+                    Divider()
+                }
+
+                // Total row
+                HStack(spacing: 0) {
+                    Text("Tot")
+                        .font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                        .frame(width: labelW)
+                    ForEach(players) { player in
+                        let total = player.totalStrokes
+                        Text(total > 0 ? "\(total)" : "—")
+                            .font(.subheadline).fontWeight(.bold)
+                            .frame(width: cellW)
+                    }
+                }
+                .padding(.vertical, 6)
+                Divider()
+
+                // +/− row
+                HStack(spacing: 0) {
+                    Text("+/−")
+                        .font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                        .frame(width: labelW)
+                    ForEach(players) { player in
+                        let total = player.totalStrokes
+                        let diff = player.scoreVsPar
+                        let label = total == 0 ? "—" : diff == 0 ? "E" : diff > 0 ? "+\(diff)" : "\(diff)"
+                        let color: Color = total == 0 ? .secondary : diff < 0 ? .green : diff == 0 ? .primary : .red
+                        Text(label)
+                            .font(.caption).fontWeight(.bold)
+                            .foregroundStyle(color)
+                            .frame(width: cellW)
+                    }
+                }
+                .padding(.vertical, 6)
+            }
+        }
     }
 }
 
@@ -480,7 +597,7 @@ private struct ScoreCell: View {
 
     var body: some View {
         Text(strokes > 0 ? "\(strokes)" : "—")
-            .font(.system(size: 11))
+            .font(.subheadline).fontWeight(.bold)
             .foregroundStyle(fg)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
@@ -488,102 +605,49 @@ private struct ScoreCell: View {
     }
 }
 
-// MARK: - Edit Player Score
+// MARK: - Edit Tournament Sheet
 
-private struct EditPlayerScoreView: View {
-    let player: TournamentPlayer
-    let parReference: [HoleScore]
-    let onSave: (TournamentPlayer) -> Void
-    let onDismiss: () -> Void
+private struct EditTournamentSheet: View {
+    let tournament: Tournament
+    let onSave: (Tournament) -> Void
+    @State private var title: String
+    @State private var date: String
+    @Environment(\.dismiss) var dismiss
 
-    @State private var holes: [HoleScore]
-
-    init(player: TournamentPlayer, parReference: [HoleScore], onSave: @escaping (TournamentPlayer) -> Void, onDismiss: @escaping () -> Void) {
-        self.player = player
-        self.parReference = parReference
+    init(tournament: Tournament, onSave: @escaping (Tournament) -> Void) {
+        self.tournament = tournament
         self.onSave = onSave
-        self.onDismiss = onDismiss
-        self._holes = State(initialValue: (1...18).map { n in
-            player.holes.first { $0.number == n }
-                ?? parReference.first { $0.number == n }.map { HoleScore(number: n, par: $0.par, strokes: 0) }
-                ?? HoleScore(number: n, par: 4, strokes: 0)
-        })
+        self._title = State(initialValue: tournament.title ?? "")
+        self._date = State(initialValue: tournament.date)
     }
-
-    private var total: Int { holes.reduce(0) { $0 + $1.strokes } }
-    private var par: Int { holes.reduce(0) { $0 + $1.par } }
-    private var diff: Int { total - par }
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(holes.indices, id: \.self) { i in
-                    HoleStepperRow(hole: $holes[i])
+            Form {
+                Section("Course") {
+                    Text(tournament.courseName).foregroundStyle(.secondary)
                 }
                 Section {
-                    HStack {
-                        Text("Total").fontWeight(.bold)
-                        Spacer()
-                        Text("\(total)").fontWeight(.bold)
-                            .foregroundStyle(diff < 0 ? .green : diff == 0 ? .primary : .red)
-                        Text(diff == 0 ? "E" : diff > 0 ? "+\(diff)" : "\(diff)")
-                            .font(.caption).fontWeight(.semibold)
-                            .foregroundStyle(diff < 0 ? .green : diff == 0 ? .primary : .red)
-                    }
+                    TextField("Date (yyyy-MM-dd)", text: $date)
+                    TextField("Title (optional)", text: $title)
                 }
             }
-            .navigationTitle(player.name)
+            .navigationTitle("Edit Tournament")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onDismiss() }
-                }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        onSave(TournamentPlayer(
-                            id: player.id,
-                            name: player.name,
-                            holes: holes.filter { $0.strokes > 0 },
-                            source: player.source
-                        ))
+                        var updated = tournament
+                        updated.title = title.isEmpty ? nil : title
+                        updated.date = date
+                        onSave(updated)
+                        dismiss()
                     }
                     .fontWeight(.bold)
+                    .disabled(date.isEmpty)
                 }
             }
-        }
-    }
-}
-
-private struct HoleStepperRow: View {
-    @Binding var hole: HoleScore
-
-    private var diff: Int { hole.strokes > 0 ? hole.strokes - hole.par : Int.min }
-    private var scoreColor: Color {
-        guard hole.strokes > 0 else { return .secondary }
-        if diff <= -2 { return .yellow }
-        if diff == -1 { return .green }
-        if diff == 0  { return .primary }
-        if diff == 1  { return .orange }
-        return .red
-    }
-
-    var body: some View {
-        HStack {
-            Text("H\(hole.number)").font(.subheadline).fontWeight(.semibold).frame(width: 36, alignment: .leading)
-            Text("P\(hole.par)").font(.caption).foregroundStyle(.secondary).frame(width: 28)
-            Spacer()
-            Button { if hole.strokes > 0 { hole.strokes -= 1 } } label: {
-                Image(systemName: "minus.circle.fill").font(.title3).foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-            Text(hole.strokes > 0 ? "\(hole.strokes)" : "—")
-                .font(.subheadline).fontWeight(.bold)
-                .foregroundStyle(scoreColor)
-                .frame(width: 32, alignment: .center)
-            Button { hole.strokes += 1 } label: {
-                Image(systemName: "plus.circle.fill").font(.title3).foregroundStyle(.green)
-            }
-            .buttonStyle(.plain)
         }
     }
 }
@@ -592,22 +656,38 @@ private struct HoleStepperRow: View {
 
 private struct AddPlayerSheet: View {
     let onAdd: (String) -> Void
+    let onScanned: (QrRoundPayload, String) -> Void
     @State private var name = ""
+    @State private var showQrScan = false
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Player name", text: $name)
-            }
-            .navigationTitle("Add Player")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") { onAdd(name.trimmingCharacters(in: .whitespaces)); dismiss() }
-                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
-                        .fontWeight(.bold)
+        if showQrScan {
+            QrScanView(
+                playerName: name.trimmingCharacters(in: .whitespaces),
+                onScanned: { payload, playerName in
+                    onScanned(payload, playerName)
+                    dismiss()
+                },
+                onDismiss: { showQrScan = false }
+            )
+        } else {
+            NavigationStack {
+                Form {
+                    TextField("Player name", text: $name)
+                    Button { showQrScan = true } label: {
+                        Label("Scan QR Code", systemImage: "qrcode.viewfinder")
+                    }
+                }
+                .navigationTitle("Add Player")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Add") { onAdd(name.trimmingCharacters(in: .whitespaces)); dismiss() }
+                            .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                            .fontWeight(.bold)
+                    }
                 }
             }
         }
@@ -675,12 +755,11 @@ struct QrShareView: View {
 // MARK: - QR Scan (receiver)
 
 private struct QrScanView: View {
+    var playerName: String = ""
     let onScanned: (QrRoundPayload, String) -> Void
     let onDismiss: () -> Void
 
     @State private var scannedPayload: QrRoundPayload?
-    @State private var playerName = ""
-    @State private var showNameAlert = false
 
     var body: some View {
         NavigationStack {
@@ -691,7 +770,8 @@ private struct QrScanView: View {
                           let payload = try? JSONDecoder().decode(QrRoundPayload.self, from: data)
                     else { return }
                     scannedPayload = payload
-                    showNameAlert = true
+                    onScanned(payload, playerName.isEmpty ? payload.c : playerName)
+                    onDismiss()
                 }
                 .ignoresSafeArea()
                 VStack {
@@ -707,17 +787,6 @@ private struct QrScanView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { onDismiss() }
                 }
-            }
-            .alert("Player Name", isPresented: $showNameAlert, presenting: scannedPayload) { payload in
-                TextField("Player name", text: $playerName)
-                Button("Add Player") {
-                    guard !playerName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    onScanned(payload, playerName.trimmingCharacters(in: .whitespaces))
-                    onDismiss()
-                }
-                Button("Re-scan", role: .cancel) { scannedPayload = nil; playerName = "" }
-            } message: { payload in
-                Text("\(payload.c)  ·  \(payload.d)\n\(payload.h.reduce(0) { $0 + ($1.first ?? 0) }) strokes")
             }
         }
     }
