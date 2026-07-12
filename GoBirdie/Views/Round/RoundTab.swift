@@ -37,6 +37,7 @@ private struct ActiveRoundView: View {
     @Binding var showMenu: Bool
     @State private var showEndConfirm = false
     @State private var showMoveShotsSheet = false
+    @State private var showTournamentSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -67,6 +68,11 @@ private struct ActiveRoundView: View {
                         syncWatch()
                     } label: {
                         Label("Sync Watch", systemImage: "applewatch")
+                    }
+                    Button {
+                        showTournamentSheet = true
+                    } label: {
+                        Label("Create Tournament", systemImage: "trophy")
                     }
                     Divider()
                     Button(role: .destructive) {
@@ -145,6 +151,14 @@ private struct ActiveRoundView: View {
         }
         .sheet(isPresented: $showMoveShotsSheet) {
             MoveShotsSheet(session: session, course: viewModel.course)
+        }
+        .sheet(isPresented: $showTournamentSheet) {
+            CreateTournamentFromRoundSheet(
+                round: session.round,
+                course: viewModel.course,
+                appState: appState,
+                onDismiss: { showTournamentSheet = false }
+            )
         }
         .overlay {
             if appState.isSavingRound {
@@ -330,5 +344,63 @@ private struct ResumeRoundView: View {
             }
             .padding(.bottom, 32)
         }
+    }
+}
+
+// MARK: - Create Tournament from Round Sheet
+
+private struct CreateTournamentFromRoundSheet: View {
+    let round: Round
+    let course: Course
+    @ObservedObject var appState: AppState
+    let onDismiss: () -> Void
+
+    @State private var title = ""
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Tournament") {
+                    TextField("Title (optional)", text: $title)
+                }
+
+                Section("Round") {
+                    Text(round.courseName).foregroundStyle(.secondary)
+                    Text(round.startedAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.caption).foregroundStyle(.secondary)
+                    Text("\(round.totalStrokes) strokes")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("New Tournament")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Create") { createTournament() }
+                        .fontWeight(.bold)
+                }
+            }
+        }
+    }
+
+    private func createTournament() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let date = formatter.string(from: round.startedAt)
+
+        let tournament = Tournament(
+            title: title.isEmpty ? nil : title,
+            courseId: round.courseId,
+            courseName: round.courseName,
+            date: date,
+            players: [TournamentPlayer(name: "Me", holes: round.holes, source: .self)]
+        )
+
+        try? TournamentStore().save(tournament)
+        onDismiss()
     }
 }
