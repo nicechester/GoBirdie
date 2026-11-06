@@ -13,23 +13,40 @@ final class RoundLiveActivityManager {
 
     func start(courseName: String, holeNumber: Int, totalHoles: Int, scoreVsPar: Int) {
         let info = ActivityAuthorizationInfo()
-        print("[LiveActivity] areActivitiesEnabled=\(info.areActivitiesEnabled)")
         guard info.areActivitiesEnabled else {
-            print("[LiveActivity] ERROR: Live Activities not enabled — check Settings → GoBirdie → Live Activities")
+            print("[LiveActivity] ERROR: Live Activities not enabled")
             return
         }
-        let state = GoBirdieRoundAttributes.RoundState(
-            courseName: courseName,
-            holeNumber: holeNumber,
-            totalHoles: totalHoles,
-            scoreVsPar: scoreVsPar
-        )
-        let content = ActivityContent(state: state, staleDate: nil)
-        do {
-            activity = try Activity.request(attributes: GoBirdieRoundAttributes(), content: content)
-            print("[LiveActivity] Started: id=\(activity?.id ?? "nil")")
-        } catch {
-            print("[LiveActivity] ERROR starting: \(error)")
+        // End any existing activities before starting a new one
+        Task {
+            for orphan in Activity<GoBirdieRoundAttributes>.activities {
+                await orphan.end(nil, dismissalPolicy: .immediate)
+            }
+            let state = GoBirdieRoundAttributes.RoundState(
+                courseName: courseName,
+                holeNumber: holeNumber,
+                totalHoles: totalHoles,
+                scoreVsPar: scoreVsPar
+            )
+            do {
+                self.activity = try Activity.request(
+                    attributes: GoBirdieRoundAttributes(),
+                    content: ActivityContent(state: state, staleDate: nil)
+                )
+                print("[LiveActivity] Started: id=\(self.activity?.id ?? "nil")")
+            } catch {
+                print("[LiveActivity] ERROR starting: \(error)")
+            }
+        }
+    }
+
+    /// Call on app launch to clean up any activities left over from a previous session.
+    func endOrphans() {
+        Task {
+            for orphan in Activity<GoBirdieRoundAttributes>.activities {
+                await orphan.end(nil, dismissalPolicy: .immediate)
+            }
+            self.activity = nil
         }
     }
 
