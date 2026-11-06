@@ -42,6 +42,11 @@ struct GoBirdieApp: App {
                 .onReceive(appState.$activeRound) { round in
                     AppDelegate.orientationLock = round != nil ? .portrait : .all
                 }
+                .onOpenURL { url in
+                    if url.scheme == "gobirdie", url.host == "round", appState.activeRound != nil {
+                        appState.selectedTab = 1
+                    }
+                }
         }
     }
 }

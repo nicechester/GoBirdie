@@ -216,6 +216,14 @@ final class AppState: ObservableObject {
             }
         }
 
+        let scoreVsPar = snapshot.round.holes.filter { $0.strokes > 0 }.reduce(0) { $0 + $1.scoreVsPar }
+        RoundLiveActivityManager.shared.start(
+            courseName: course.name,
+            holeNumber: holeNumber,
+            totalHoles: course.holes.count,
+            scoreVsPar: scoreVsPar
+        )
+
         startAutoSave()
         resetIdleTimer()
         pendingResume = nil
@@ -341,6 +349,15 @@ final class AppState: ObservableObject {
             }
         }
 
+        let totalPar = holeScores.reduce(0) { $0 + $1.par }
+        _ = totalPar  // par available for future use
+        RoundLiveActivityManager.shared.start(
+            courseName: course.name,
+            holeNumber: startingHoleNumber,
+            totalHoles: course.holes.count,
+            scoreVsPar: 0
+        )
+
         return session
     }
 
@@ -359,6 +376,7 @@ final class AppState: ObservableObject {
         }
 
         ConnectivityService.shared.sendRoundEnded()
+        RoundLiveActivityManager.shared.end()
         cleanupRound()
 
         // Fetch weather async and update saved round in background
@@ -386,6 +404,7 @@ final class AppState: ObservableObject {
         if !fromWatch {
             ConnectivityService.shared.sendRoundCancelled()
         }
+        RoundLiveActivityManager.shared.end()
         cleanupRound()
     }
 
