@@ -45,9 +45,15 @@ final class RoundLiveActivityManager {
     }
 
     func end() {
-        guard let activity else { return }
         Task {
-            await activity.end(nil, dismissalPolicy: .immediate)
+            // End the tracked activity
+            if let activity {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+            // Also end any orphaned activities (e.g. after app restart)
+            for orphan in Activity<GoBirdieRoundAttributes>.activities {
+                await orphan.end(nil, dismissalPolicy: .immediate)
+            }
             self.activity = nil
         }
     }
