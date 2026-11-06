@@ -30,6 +30,7 @@ struct GoBirdieApp: App {
                 .task {
                     appState.getLocationService().requestPermission()
                     appState.checkForInProgressRound()
+                    RoundLiveActivityManager.shared.endOrphans()
                 }
                 .onChange(of: scenePhase) { phase in
                     if phase == .background {
