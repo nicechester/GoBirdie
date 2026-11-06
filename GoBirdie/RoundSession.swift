@@ -258,6 +258,7 @@ final class RoundSession: ObservableObject {
             // Prioritize this hole's snapshot
             WatchSnapshotTransferManager.shared.prioritizeHole(holeNumber, courseId: course.id)
         }
+        updateLiveActivity()
     }
 
     /// End the round immediately and mark it complete.
@@ -275,6 +276,16 @@ final class RoundSession: ObservableObject {
     private func recomputeTotals() {
         round.totalStrokes = round.holes.reduce(0) { $0 + $1.strokes }
         round.totalPutts = round.holes.reduce(0) { $0 + $1.putts }
+        updateLiveActivity()
+    }
+
+    private func updateLiveActivity() {
+        let scoreVsPar = round.holes.reduce(0) { $0 + $1.scoreVsPar }
+        RoundLiveActivityManager.shared.update(
+            holeNumber: currentHoleNumber,
+            totalHoles: round.holes.count,
+            scoreVsPar: scoreVsPar
+        )
     }
 
 }

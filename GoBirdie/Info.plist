@@ -8,5 +8,16 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Used to scan QR codes from other players' scorecards for tournament collection.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gobirdie</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
