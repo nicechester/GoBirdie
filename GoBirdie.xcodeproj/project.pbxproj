@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		452D7E1B309E7E47007E872B /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 452D7E1A309E7E47007E872B /* WidgetKit.framework */; };
+		452D7E1D309E7E47007E872B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 452D7E1C309E7E47007E872B /* SwiftUI.framework */; };
+		452D7E2A309E7E48007E872B /* GoBirdieWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 452D7E19309E7E47007E872B /* GoBirdieWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		455FBF2A2F88239E008A4D0A /* GoBirdieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 455FBF292F88239E008A4D0A /* GoBirdieCore */; };
 		455FBF2C2F8823B7008A4D0A /* GoBirdieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 455FBF2B2F8823B7008A4D0A /* GoBirdieCore */; };
 		456AA47F2F88BAB800AC1A95 /* tip.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 456AA47E2F88BAB800AC1A95 /* tip.storekit */; };
@@ -30,6 +33,13 @@
 			remoteGlobalIDString = 45985F2B2F86F41A00EB0B97;
 			remoteInfo = GoBirdie;
 		};
+		452D7E28309E7E48007E872B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45985F242F86F41A00EB0B97 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 452D7E18309E7E47007E872B;
+			remoteInfo = GoBirdieWidgetsExtension;
+		};
 		45985F3B2F86F41C00EB0B97 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 45985F242F86F41A00EB0B97 /* Project object */;
@@ -40,6 +50,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		452D7E2F309E7E48007E872B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				452D7E2A309E7E48007E872B /* GoBirdieWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		45985F492F86F41C00EB0B97 /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -57,6 +78,9 @@
 		450024E92FA5B8A3009929E0 /* GoBirdie Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "GoBirdie Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4528B5E72F981E1900CB4185 /* GoBirdieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GoBirdieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4528B5FA2F9825F600CB4185 /* GoBirdie.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = GoBirdie.xctestplan; sourceTree = "<group>"; };
+		452D7E19309E7E47007E872B /* GoBirdieWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GoBirdieWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		452D7E1A309E7E47007E872B /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		452D7E1C309E7E47007E872B /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		454B1F9E2F92F80200DF34A3 /* H01-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H01-S3.gpx"; path = "GPX/H01-S3.gpx"; sourceTree = "<group>"; };
 		454B1F9F2F92F80200DF34A3 /* H08-S3.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H08-S3.gpx"; path = "GPX/H08-S3.gpx"; sourceTree = "<group>"; };
 		454B1FA02F92F80200DF34A3 /* H09-S1.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "H09-S1.gpx"; path = "GPX/H09-S1.gpx"; sourceTree = "<group>"; };
@@ -84,6 +108,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		452D7E2E309E7E48007E872B /* Exceptions for "GoBirdieWidgets" folder in "GoBirdieWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 452D7E18309E7E47007E872B /* GoBirdieWidgetsExtension */;
+		};
+		452D7E34309E7F26007E872B /* Exceptions for "GoBirdieWidgets" folder in "GoBirdie" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				GoBirdieRoundActivity.swift,
+			);
+			target = 45985F2B2F86F41A00EB0B97 /* GoBirdie */;
+		};
 		457D75502FA67C33001EA77B /* Exceptions for "GoBirdieUITests" folder in "GoBirdie Watch AppUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -114,6 +152,15 @@
 			path = GoBirdieUITests;
 			sourceTree = "<group>";
 		};
+		452D7E1E309E7E47007E872B /* GoBirdieWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				452D7E34309E7F26007E872B /* Exceptions for "GoBirdieWidgets" folder in "GoBirdie" target */,
+				452D7E2E309E7E48007E872B /* Exceptions for "GoBirdieWidgets" folder in "GoBirdieWidgetsExtension" target */,
+			);
+			path = GoBirdieWidgets;
+			sourceTree = "<group>";
+		};
 		456AA3402F88B12300AC1A95 /* GoBirdie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -141,6 +188,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		452D7E16309E7E47007E872B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				452D7E1D309E7E47007E872B /* SwiftUI.framework in Frameworks */,
+				452D7E1B309E7E47007E872B /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,6 +251,7 @@
 				45985F3D2F86F41C00EB0B97 /* GoBirdie Watch App */,
 				4528B5E82F981E1900CB4185 /* GoBirdieUITests */,
 				450024EA2FA5B8A3009929E0 /* GoBirdie Watch AppUITests */,
+				452D7E1E309E7E47007E872B /* GoBirdieWidgets */,
 				45985F502F86F45B00EB0B97 /* Frameworks */,
 				45985F2D2F86F41A00EB0B97 /* Products */,
 			);
@@ -207,6 +264,7 @@
 				45985F392F86F41C00EB0B97 /* GoBirdie Watch App.app */,
 				4528B5E72F981E1900CB4185 /* GoBirdieUITests.xctest */,
 				450024E92FA5B8A3009929E0 /* GoBirdie Watch AppUITests.xctest */,
+				452D7E19309E7E47007E872B /* GoBirdieWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -214,6 +272,8 @@
 		45985F502F86F45B00EB0B97 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				452D7E1A309E7E47007E872B /* WidgetKit.framework */,
+				452D7E1C309E7E47007E872B /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -267,6 +327,28 @@
 			productReference = 4528B5E72F981E1900CB4185 /* GoBirdieUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		452D7E18309E7E47007E872B /* GoBirdieWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 452D7E2B309E7E48007E872B /* Build configuration list for PBXNativeTarget "GoBirdieWidgetsExtension" */;
+			buildPhases = (
+				452D7E15309E7E47007E872B /* Sources */,
+				452D7E16309E7E47007E872B /* Frameworks */,
+				452D7E17309E7E47007E872B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				452D7E1E309E7E47007E872B /* GoBirdieWidgets */,
+			);
+			name = GoBirdieWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = GoBirdieWidgetsExtension;
+			productReference = 452D7E19309E7E47007E872B /* GoBirdieWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		45985F2B2F86F41A00EB0B97 /* GoBirdie */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 45985F4A2F86F41C00EB0B97 /* Build configuration list for PBXNativeTarget "GoBirdie" */;
@@ -275,11 +357,13 @@
 				45985F292F86F41A00EB0B97 /* Frameworks */,
 				45985F2A2F86F41A00EB0B97 /* Resources */,
 				45985F492F86F41C00EB0B97 /* Embed Watch Content */,
+				452D7E2F309E7E48007E872B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				45985F3C2F86F41C00EB0B97 /* PBXTargetDependency */,
+				452D7E29309E7E48007E872B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				456AA3402F88B12300AC1A95 /* GoBirdie */,
@@ -335,6 +419,9 @@
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = 45985F2B2F86F41A00EB0B97;
 					};
+					452D7E18309E7E47007E872B = {
+						CreatedOnToolsVersion = 26.2;
+					};
 					45985F2B2F86F41A00EB0B97 = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -365,6 +452,7 @@
 				45985F382F86F41C00EB0B97 /* GoBirdie Watch App */,
 				4528B5E62F981E1900CB4185 /* GoBirdieUITests */,
 				450024E82FA5B8A3009929E0 /* GoBirdie Watch AppUITests */,
+				452D7E18309E7E47007E872B /* GoBirdieWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -378,6 +466,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4528B5E52F981E1900CB4185 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		452D7E17309E7E47007E872B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -416,6 +511,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		452D7E15309E7E47007E872B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		45985F282F86F41A00EB0B97 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -442,6 +544,11 @@
 			isa = PBXTargetDependency;
 			target = 45985F2B2F86F41A00EB0B97 /* GoBirdie */;
 			targetProxy = 4528B5ED2F981E1900CB4185 /* PBXContainerItemProxy */;
+		};
+		452D7E29309E7E48007E872B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 452D7E18309E7E47007E872B /* GoBirdieWidgetsExtension */;
+			targetProxy = 452D7E28309E7E48007E872B /* PBXContainerItemProxy */;
 		};
 		45985F3C2F86F41C00EB0B97 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -537,6 +644,73 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = GoBirdie;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		452D7E2C309E7E48007E872B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K92B539W6W;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GoBirdieWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GoBirdieWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.nicechester.GoBirdie.GoBirdieWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		452D7E2D309E7E48007E872B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K92B539W6W;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GoBirdieWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GoBirdieWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.nicechester.GoBirdie.GoBirdieWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -745,7 +919,7 @@
 				CODE_SIGN_ENTITLEMENTS = GoBirdie/GoBirdie.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = K92B539W6W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -768,7 +942,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.16;
+				MARKETING_VERSION = 1.17;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.nicechester.GoBirdie;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -791,7 +965,7 @@
 				CODE_SIGN_ENTITLEMENTS = GoBirdie/GoBirdie.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = K92B539W6W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -814,7 +988,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.16;
+				MARKETING_VERSION = 1.17;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.nicechester.GoBirdie;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -847,6 +1021,15 @@
 			buildConfigurations = (
 				4528B5EF2F981E1900CB4185 /* Debug */,
 				4528B5F02F981E1900CB4185 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		452D7E2B309E7E48007E872B /* Build configuration list for PBXNativeTarget "GoBirdieWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				452D7E2C309E7E48007E872B /* Debug */,
+				452D7E2D309E7E48007E872B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -216,6 +216,14 @@ final class AppState: ObservableObject {
             }
         }
 
+        let scoreVsPar = snapshot.round.holes.filter { $0.strokes > 0 }.reduce(0) { $0 + $1.scoreVsPar }
+        RoundLiveActivityManager.shared.start(
+            courseName: course.name,
+            holeNumber: holeNumber,
+            totalHoles: course.holes.count,
+            scoreVsPar: scoreVsPar
+        )
+
         startAutoSave()
         resetIdleTimer()
         pendingResume = nil

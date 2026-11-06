@@ -280,7 +280,7 @@ final class RoundSession: ObservableObject {
     }
 
     private func updateLiveActivity() {
-        let scoreVsPar = round.holes.reduce(0) { $0 + $1.scoreVsPar }
+        let scoreVsPar = round.holes.filter { $0.strokes > 0 }.reduce(0) { $0 + $1.scoreVsPar }
         RoundLiveActivityManager.shared.update(
             holeNumber: currentHoleNumber,
             totalHoles: round.holes.count,
