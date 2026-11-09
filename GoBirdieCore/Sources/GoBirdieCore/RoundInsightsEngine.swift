@@ -130,7 +130,8 @@ public struct RoundInsightsEngine {
         // Club stats
         let clubStats = buildClubStats(played: played)
         let best  = clubStats.max(by: { $0.avgSg < $1.avgSg }).flatMap { $0.shots >= 2 && $0.avgSg > 0.2  ? $0 : nil }
-        let worst = clubStats.min(by: { $0.avgSg < $1.avgSg }).flatMap { $0.shots >= 2 && $0.avgSg < -0.2 ? $0 : nil }
+        // Issue #38 Finding 4: lowered from -0.2 to -0.05 so WORST_CLUB_SG can fire
+        let worst = clubStats.min(by: { $0.avgSg < $1.avgSg }).flatMap { $0.shots >= 2 && $0.avgSg < -0.05 ? $0 : nil }
         let driverStats = clubStats.first(where: { $0.name == "Driver" })
 
         // Health
@@ -303,6 +304,15 @@ public struct RoundInsightsEngine {
             add("SG_APPROACH_STRONG", .positive, 1,
                 "Ball striking was excellent — \(sgFmt(sg.approach)) strokes gained on approach shots. That kind of iron play creates birdie looks.")
         }
+        // Issue #38: Add missing SG_SHORT_GAME_STRONG and SG_OFF_TEE_STRONG positives
+        if sg.shortGame > 0.8 {
+            add("SG_SHORT_GAME_STRONG", .positive, 1,
+                "Your short game was a weapon — \(sgFmt(sg.shortGame)) strokes gained around the greens. Great touch and creativity when you missed.")
+        }
+        if sg.offTee > 1.0 {
+            add("SG_OFF_TEE_STRONG", .positive, 1,
+                "Tee shots were dialed in — \(sgFmt(sg.offTee)) strokes gained off the tee. You set yourself up well all day.")
+        }
         if sg.total > 2.0 {
             add("SG_TOTAL_POSITIVE", .positive, 1,
                 "Overall you gained \(sgFmt(sg.total)) strokes vs your baseline today — a genuinely strong all-around performance.")
@@ -329,9 +339,11 @@ public struct RoundInsightsEngine {
             add("GOOD_SCRAMBLING", .positive, 2,
                 "Only \(ctx.girPct)% GIR but scrambled \(ctx.scramblingPct)% — your short game saved several strokes and kept the score respectable.")
         }
-        if ctx.scramblingPct < 25 && ctx.girPct < 45 {
+        // Issue #38 Finding 1: Gate POOR_SCRAMBLING on baseline-adjusted sgShortGame.
+        // Suppress when SG >= 0 (not losing strokes vs chosen baseline). Removed hardcoded "4-5 strokes" claim.
+        if ctx.scramblingPct < 25 && ctx.girPct < 45 && sg.shortGame < 0 {
             add("POOR_SCRAMBLING", .critical, 2,
-                "Missed \(100 - ctx.girPct)% of greens and only scrambled \(ctx.scramblingPct)% — short game is costing you 4-5 strokes per round.")
+                "Missed \(100 - ctx.girPct)% of greens and only scrambled \(ctx.scramblingPct)% — short game needs work.")
         }
         if let f = ctx.frontScore, let b = ctx.backScore {
             if b > f + 4 {
