@@ -422,12 +422,12 @@ private struct HoleInfoBar: View {
 
             if let hole {
                 VStack(spacing: 2) {
-                    Text("Hole \(hole.number)")
+                    Text("round.hole".localized(with: hole.number))
                         .font(.headline)
                     HStack(spacing: 8) {
-                        Text("Par \(hole.par)")
+                        Text("round.par".localized(with: hole.par))
                         if let yds = hole.yardage {
-                            Text("\(yds) yd")
+                            Text("\(yds) \("common.yds".localized)")
                         }
                         if let hcp = hole.handicap {
                             Text("HCP \(hcp)")

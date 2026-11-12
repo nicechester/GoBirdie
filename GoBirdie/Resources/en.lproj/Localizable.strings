@@ -122,6 +122,8 @@
 "round.inProgress" = "Round In Progress";
 "round.hole" = "Hole %d";
 "round.par" = "Par %d";
+"round.holeParYards" = "Hole %d  Par %d  %d yds";
+"round.holePar" = "Hole %d  Par %d";
 "round.startOnHole" = "Start on Hole %d";
 "round.whichHole" = "Which hole are you starting on?";
 "round.markShot" = "Mark Shot";
@@ -230,3 +232,4 @@
 "common.save" = "Save";
 "common.clear" = "Clear";
 "common.close" = "Close";
+"common.yds" = "yds";

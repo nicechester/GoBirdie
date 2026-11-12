@@ -337,7 +337,11 @@ private struct StartingHoleView: View {
 
             Picker("Starting Hole", selection: $selectedHole) {
                 ForEach(course.holes, id: \.number) { hole in
-                    Text("Hole \(hole.number)  Par \(hole.par)\(hole.yardage.map { "  \($0) yds" } ?? "")").tag(hole.number)
+                    if let yardage = hole.yardage {
+                        Text("round.holeParYards".localized(with: hole.number, hole.par, yardage)).tag(hole.number)
+                    } else {
+                        Text("round.holePar".localized(with: hole.number, hole.par)).tag(hole.number)
+                    }
                 }
             }
             .pickerStyle(.wheel)

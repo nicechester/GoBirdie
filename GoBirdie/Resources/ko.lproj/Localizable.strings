@@ -122,6 +122,8 @@
 "round.inProgress" = "라운드 진행 중";
 "round.hole" = "%d번 홀";
 "round.par" = "파 %d";
+"round.holeParYards" = "%d번 홀  파 %d  %d야드";
+"round.holePar" = "%d번 홀  파 %d";
 "round.startOnHole" = "%d번 홀에서 시작";
 "round.whichHole" = "몇 번 홀에서 시작하시나요?";
 "round.markShot" = "샷 기록";
@@ -230,3 +232,4 @@
 "common.save" = "저장";
 "common.clear" = "지우기";
 "common.close" = "닫기";
+"common.yds" = "야드";
