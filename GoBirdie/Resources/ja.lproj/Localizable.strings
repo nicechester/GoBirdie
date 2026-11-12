@@ -1,0 +1,276 @@
+/*
+  Localizable.strings (Japanese)
+  GoBirdie
+*/
+
+// MARK: - Tabs
+"tab.map" = "コースマップ";
+"tab.scorecards" = "スコアカード";
+"tab.settings" = "設定";
+
+// MARK: - Settings
+"settings.title" = "設定";
+"settings.courses" = "コース";
+"settings.manageCourses" = "コースを管理";
+"settings.equipment" = "用具";
+"settings.myClubs" = "マイクラブ";
+"settings.insights" = "インサイト";
+"settings.sgBaseline" = "SG 基準";
+"settings.sgBaselineFooter" = "ストロークゲインのインサイトは、ラウンドをこの基準と比較して分析します。現在のプレーに最も近いレベルを選んでください。";
+"settings.sync" = "同期";
+"settings.desktopSync" = "デスクトップ同期";
+"settings.status" = "ステータス";
+"settings.discoverable" = "検出可能";
+"settings.starting" = "開始中…";
+"settings.syncFooter" = "近くにある GoBirdie デスクトップアプリからこの iPhone を検出できるようにします。同じ WiFi は必要ありません。";
+"settings.tee" = "ティー";
+"settings.teeColor" = "ティーの色";
+"settings.supportDevelopment" = "開発を応援";
+"settings.tipJarFooter" = "GoBirdie は広告なしで無料です。チップは年間 $99 の Apple 開発者登録料の支払いに充てられます。";
+"settings.thankYou" = "ありがとうございます！ ⛳️ サポーターになりました。";
+"settings.loadProductsFailed" = "商品を読み込めませんでした。スキームに StoreKit の設定があるか確認してください。";
+"settings.about" = "情報";
+"settings.version" = "バージョン";
+"settings.manual" = "マニュアル";
+"settings.mapData" = "地図データ";
+"settings.maps" = "マップ";
+"settings.license" = "ライセンス";
+"settings.language" = "言語";
+"settings.languageFooter" = "アプリで使用する言語を選択してください。";
+
+// MARK: - Tee Colors
+"tee.black" = "ブラック";
+"tee.blue" = "ブルー";
+"tee.white" = "ホワイト";
+"tee.yellow" = "イエロー";
+"tee.red" = "レッド";
+
+// MARK: - Tip Jar Products
+"tip.sleeve" = "⛳️ ゴルフボール 1スリーブ";
+"tip.snack" = "🌭 ラウンド中のおやつ";
+"tip.drink" = "🍺 ラウンド後の一杯";
+
+// MARK: - SG Baselines
+"baseline.scratch" = "スクラッチ";
+"baseline.single" = "シングルハンディ";
+"baseline.bogey" = "ボギーゴルファー";
+"baseline.highCap" = "ハイハンディキャップ";
+
+// MARK: - Languages
+"language.en" = "English";
+"language.ko" = "한국어";
+"language.es" = "Español";
+"language.ja" = "日本語";
+"language.system" = "システム設定";
+
+// MARK: - Course Manager
+"courses.noCourses" = "ダウンロード済みのコースはまだありません";
+"courses.noCoursesFound" = "コースが見つかりません";
+"courses.searching" = "検索中...";
+"courses.searchingMore" = "さらにコースを検索中...";
+"courses.holesDownloaded" = "%d ホール · %@ にダウンロード済み";
+"courses.downloading" = "%@ をダウンロード中...";
+"courses.gettingGeometry" = "コースの形状を取得中";
+
+// MARK: - My Clubs
+"clubs.footer" = "選択したクラブは、ラウンド中のショット記録画面に表示されます。";
+"clubs.resetToDefault" = "初期設定に戻す";
+
+// MARK: - Club Names
+"club.unknown" = "未設定";
+"club.driver" = "ドライバー";
+"club.md" = "ミニドライバー";
+"club.3w" = "3番ウッド";
+"club.5w" = "5番ウッド";
+"club.7w" = "7番ウッド";
+"club.9w" = "9番ウッド";
+"club.3h" = "3番ユーティリティ";
+"club.4h" = "4番ユーティリティ";
+"club.5h" = "5番ユーティリティ";
+"club.4i" = "4番アイアン";
+"club.5i" = "5番アイアン";
+"club.6i" = "6番アイアン";
+"club.7i" = "7番アイアン";
+"club.8i" = "8番アイアン";
+"club.9i" = "9番アイアン";
+"club.pw" = "ピッチングウェッジ";
+"club.gw" = "ギャップウェッジ";
+"club.sw" = "サンドウェッジ";
+"club.lw" = "ロブウェッジ";
+"club.putter" = "パター";
+
+// MARK: - Map Tab
+"map.exploreCourses" = "コースを探索";
+"map.exploreDescription" = "ラウンドを記録せずにコースのレイアウトを見る";
+"map.startExploring" = "探索を開始";
+"map.pickCourse" = "探索するコースを選択";
+"map.pickAnotherCourse" = "別のコースを選択";
+"map.discoverNearby" = "近くのコースを探す";
+"map.locationPermission" = "最高の精度を得るには、位置情報を「使用中のみ」に設定してください";
+"map.enableLocation" = "確認が表示されたら、設定で位置情報を有効にしてください";
+"map.findingLocation" = "現在地を検索中...";
+"map.acquiringGps" = "GPS を取得中...";
+"map.startRoundPrompt" = "コースマップを表示するにはラウンドを開始してください";
+"map.noSavedCourses" = "保存されたコースがありません。先にコースをダウンロードしてください。";
+
+// MARK: - Round
+"round.title" = "ラウンド";
+"round.strokes" = "打数";
+"round.tot" = "合計";
+"round.plusMinus" = "+/−";
+"round.noActiveRound" = "進行中のラウンドはありません";
+"round.startRound" = "ラウンドを開始";
+"round.startRoundDescription" = "距離を測定してショットを記録するために\nラウンドを開始してください";
+"round.inProgress" = "ラウンド進行中";
+"round.hole" = "%dホール";
+"round.par" = "パー%d";
+"round.holeParYards" = "%dホール  パー%d  %dヤード";
+"round.holePar" = "%dホール  パー%d";
+"round.startOnHole" = "%dホールからスタート";
+"round.whichHole" = "何番ホールからスタートしますか？";
+"round.markShot" = "ショットを記録";
+"round.strokes" = "打数";
+"round.putts" = "パット";
+"round.puttsCount" = "%d パット";
+"round.penalty" = "ペナルティ";
+"round.scorecard" = "スコアカード";
+"round.total" = "合計";
+"round.pen" = "罰打";
+"round.savingRound" = "ラウンドを保存中...";
+"round.saveAndFinish" = "このラウンドを保存して終了しますか？";
+"round.idlePrompt" = "30分間操作がありません。";
+"round.teeDetected" = "%dホールのティーボックス付近にいます。";
+"round.finish" = "終了";
+"round.next" = "次へ";
+"round.selectClub" = "クラブを選択";
+"round.moveShotsTo" = "ショットを別のホールへ移動...";
+"round.syncWatch" = "Watch と同期";
+"round.endRound" = "ラウンドを終了";
+"round.cancelRound" = "ラウンドを取り消す";
+"round.stillPlaying" = "まだプレー中ですか？";
+"round.yesStillPlaying" = "はい、まだプレー中です";
+"round.moveToHole" = "%dホールへ移動";
+"round.stay" = "そのまま";
+"round.strokesCount" = "%d打";
+"round.moveShotsFrom" = "%2$dホールから%1$d件のショットを移動:";
+"round.moveShots" = "ショットを移動";
+"round.holeStarted" = "%dホール  ·  %@ 開始";
+"round.resumeRound" = "ラウンドを再開";
+
+// MARK: - Distance
+"distance.front" = "フロント";
+"distance.flag" = "ピン";
+"distance.back" = "バック";
+
+// MARK: - Insights
+"insights.title" = "主なインサイト";
+"insights.vsBaseline" = "%@ 比";
+
+// MARK: - Scorecards
+"scorecards.title" = "スコアカード";
+"scorecards.rounds" = "ラウンド";
+"scorecards.tournaments" = "トーナメント";
+"scorecards.noScorecards" = "スコアカードがありません";
+"scorecards.noScorecardsDescription" = "完了したラウンドがここに表示されます";
+"scorecards.noTournaments" = "トーナメントがありません";
+"scorecards.tapToCreate" = "+ をタップして作成";
+
+// MARK: - Shot Map
+"shotMap.dragToMove" = "ピンをドラッグして移動";
+"shotMap.tapToAdd" = "マップをタップしてショットを追加";
+"shotMap.tapToSelect" = "ピンをタップして選択";
+"shotMap.selectClub" = "クラブを選択して確定";
+"shotMap.deleteShot" = "ショットを削除";
+"shotMap.reorderShots" = "ショットの順序を変更";
+"shotMap.shot" = "ショット %d";
+"shotMap.deleteConfirm" = "このショットを削除しますか？";
+"shotMap.saveConfirm" = "変更を保存しますか？";
+
+// MARK: - Tournament
+"tournament.title" = "トーナメント";
+"tournament.titleOptional" = "タイトル（任意）";
+"tournament.new" = "新規トーナメント";
+"tournament.create" = "トーナメントを作成";
+"tournament.createButton" = "作成";
+"tournament.course" = "コース";
+"tournament.selectCourse" = "コースを選択";
+"tournament.dateFormat" = "日付 (yyyy-MM-dd)";
+"tournament.edit" = "トーナメントを編集";
+"tournament.rename" = "名前を変更";
+"tournament.renameTournament" = "トーナメント名を変更";
+"tournament.renamePlayer" = "プレーヤー名を変更";
+"tournament.name" = "名前";
+"tournament.playerName" = "プレーヤー名";
+"tournament.shareScore" = "スコアを共有";
+"tournament.scanScore" = "スコアをスキャン";
+"tournament.addPlayer" = "プレーヤーを追加";
+"tournament.noPlayers" = "プレーヤーがいません。+ をタップするか QR コードをスキャンしてください。";
+"tournament.scanQr" = "GoBirdie の QR コードにカメラを向けてください";
+"tournament.hostScan" = "トーナメントの主催者にこのコードをスキャンしてもらってください";
+"tournament.autoAdd" = "最新のラウンド（%@）が自動的に追加されます。";
+
+// MARK: - AI Coaching
+"ai.promptCopied" = "AI コーチングのプロンプトをコピーしました！";
+"ai.promptInstructions" = "プロンプトを ChatGPT または Gemini に貼り付けると、パーソナライズされたコーチングのフィードバックが得られます。";
+"ai.openChatGpt" = "ChatGPT を開く";
+"ai.openGemini" = "Gemini を開く";
+
+// MARK: - Common
+"common.done" = "完了";
+"common.cancel" = "キャンセル";
+"common.confirm" = "確認";
+"common.edit" = "編集";
+"common.add" = "追加";
+"common.delete" = "削除";
+"common.retry" = "再試行";
+"common.error" = "エラー";
+"common.discard" = "破棄";
+"common.undo" = "元に戻す";
+"common.prev" = "前へ";
+"common.ok" = "OK";
+"common.yes" = "はい";
+"common.no" = "いいえ";
+"common.fix" = "修正";
+"common.save" = "保存";
+"common.clear" = "クリア";
+"common.close" = "閉じる";
+"common.yds" = "ヤード";
+
+// MARK: - Stats
+"stats.holesPlayed" = "プレーしたホール";
+"stats.longestDrive" = "最長ドライブ";
+
+// MARK: - Insights Messages
+"insight.SG_PUTTING_CRITICAL" = "パッティングがスコアカードで最大の弱点でした — グリーンで %@ 打を失いました。長いパットのスピードコントロールが最も手早い改善策です。";
+"insight.SG_APPROACH_CRITICAL" = "アプローチがアキレス腱でした — グリーンを狙ったショットで %@ 打を失いました。距離感とアイアンの精度を改善する必要があります。";
+"insight.SG_OFF_TEE_CRITICAL" = "ティーショットが大きな問題でした — ティーショットで %@ 打を失いました。狭いホールでは飛距離より正確性を優先しましょう。";
+"insight.SG_SHORT_GAME_CRITICAL" = "ショートゲームで %@ 打を失いました。アップ・アンド・ダウンの成功率を高めることが、スコアを最も早く縮める方法です。";
+"insight.SG_PUTTING_STRONG" = "パターが絶好調でした — グリーンで %@ 打を獲得しました。ペースのコントロールとグリーンの読みが素晴らしかったです。";
+"insight.SG_APPROACH_STRONG" = "ボールストライキングが素晴らしかったです — アプローチショットで %@ 打を獲得しました。このようなアイアンショットがバーディーチャンスを生みます。";
+"insight.SG_SHORT_GAME_STRONG" = "ショートゲームが武器でした — グリーン周りで %@ 打を獲得しました。ミスした時のタッチと創意工夫が光りました。";
+"insight.SG_OFF_TEE_STRONG" = "ティーショットが安定していました — ティーショットで %@ 打を獲得しました。一日を通して良い位置につけていました。";
+"insight.SG_TOTAL_POSITIVE" = "本日はベースラインと比べて合計 %@ 打を獲得しました — 総合的に非常に力強いパフォーマンスです。";
+"insight.HIGH_FIR_LOW_GIR" = "フェアウェイキープは %@%% でしたが、グリーンオンは %@%% のみ — ティーショットで良い位置を作れていますが、アイアンがそれを生かせていません。";
+"insight.LOW_FIR_HIGH_GIR" = "フェアウェイキープは %@%% でしたが、GIR は %@%% — アイアンでのリカバリーが見事です。ティーショットを改善すればさらに手強くなります。";
+"insight.THREE_PUTTS_CRITICAL" = "スリーパットが %@ 回ありました — 1回ごとに打数を失っています。1打目のパットを 3 フィート以内に寄せれば被害を防げます。";
+"insight.THREE_PUTTS_WARNING" = "本日のスリーパットは %@ 回です。遠距離からのロングパットの距離感を見直す必要があります。";
+"insight.GOOD_SCRAMBLING" = "GIR は %@%% でしたが、スクランブルは %@%% — ショートゲームで何打も救い、スコアを守りました。";
+"insight.POOR_SCRAMBLING" = "グリーンを %@%% 外し、スクランブルは %@%% のみでした — ショートゲームの改善が必要です。";
+"insight.FRONT_BACK_WORSE" = "前半 %@、後半 %@ — %@ 打の落ち込み。ラウンド後半は疲労や集中力の低下が出やすいです。";
+"insight.FRONT_BACK_BETTER" = "後半に強いフィニッシュ — 前半（%2$@）から後半（%3$@）へ、%1$@ 打改善しました。体が温まってから調子が上がるタイプです。";
+"insight.PAR3_STRUGGLES" = "パー3 の平均はパー比 +%@ — 短いホールでのティーショットのアイアン精度を改善する必要があります。";
+"insight.PAR5_SCORING" = "パー5 の平均はパー比 +%@ — スコアを伸ばせるホールを生かせていません。より良いコースマネジメントでバーディーが生まれるはずです。";
+"insight.PAR5_BIRDIE_MACHINE" = "パー5 はスコアを伸ばせるホールです — 本日の平均は %@。このホールでの飛距離とコースマネジメントは本当の強みです。";
+"insight.CONSECUTIVE_BOGEYS" = "%@ 連続ボギー — 悪い流れは一つのミスショットから雪だるま式に広がることが多いです。ホールの合間にリセットするルーティンが鍵です。";
+"insight.HIGH_HR_LATE_ROUND" = "心拍数が前半から後半で %@ bpm 上昇 — 疲労やプレッシャーが後半のホールに影響した可能性があります。";
+"insight.WORST_CLUB_SG" = "%1$@ が最も弱いクラブでした — %3$@ショットの平均 SG は %2$@。このクラブを重点的に練習すると効果があるでしょう。";
+"insight.BEST_CLUB_SG" = "%1$@ は絶好調でした — %3$@ショットの平均 SG は %2$@。プレッシャーの中でも信頼できるクラブです。";
+"insight.DRIVER_INCONSISTENT" = "ドライバーの飛距離にばらつきがありました（±%@ ヤード）— 最大飛距離より芯で捉えることに集中すると、安定感が増します。";
+"insight.ONE_PUTTS_HIGH" = "本日のワンパットは %@ 回 — 近距離からのパットを安定して沈めました。これは本当のスコアリングの武器です。";
+"insight.ZERO_THREE_PUTTS" = "スリーパットはゼロ — ロングパットの距離感が素晴らしかったです。グリーンの読みとペースの判断も見事でした。";
+"insight.LONGEST_DRIVE" = "最長ドライブ: %@ ヤード — ティーショットでの素晴らしいパワーです。";
+"insight.DRIVER_DOWN_VS_HISTORY" = "ドライバーの平均飛距離が直近の平均より約 %@ ヤード短くなりました。疲労やスイングの変化がパワーに影響していないか確認してください。";
+"insight.DRIVER_UP_VS_HISTORY" = "ドライバーの平均飛距離が直近の平均より約 %@ ヤード伸びました — 本日はスイングが好調でした。";
+"insight.APPROACH_WORSE_VS_HISTORY" = "アプローチの平均が直近の平均よりピンから約 %@ ヤード遠くなりました — 本日はアイアンのキレが今ひとつでした。";
+"insight.APPROACH_BETTER_VS_HISTORY" = "アプローチの平均が直近の平均よりピンから約 %@ ヤード近くなりました — 本日はアイアンが正確でした。";
+"insight.ROUND_DURATION_LONG" = "ラウンドに %@ 分かかりました — 4時間以上の精神的な疲労は、後半のホールでの判断に影響することがあります。";

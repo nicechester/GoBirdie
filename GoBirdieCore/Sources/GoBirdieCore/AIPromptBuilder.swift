@@ -10,6 +10,7 @@ public struct AIPromptBuilder {
         case english = "en"
         case korean = "ko"
         case spanish = "es"
+        case japanese = "ja"
     }
     
     public static func build(
@@ -96,6 +97,24 @@ public struct AIPromptBuilder {
             }
             summary += "\n## Hole-by-Hole Scorecard\n"
             summary += "Hole | Par | Score | +/- | Score Type | Putts\n"
+        case .japanese:
+            summary = "## ラウンドサマリー\n"
+            summary += "日付: \(dateStr)\n"
+            summary += "コース: \(round.courseName)"
+            if let rating = courseRating, let sl = slope {
+                summary += " (レーティング \(String(format: "%.1f", rating)), スロープ \(sl))"
+            }
+            summary += "\nハンディキャップ: \(handicap)\n"
+            summary += "スコア: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) パー\(totalPar)比\n"
+            if played.count >= 16 {
+                summary += "前半: \(frontScore) | 後半: \(backScore)\n"
+            }
+            summary += "ホール数: \(played.count)、所要時間: \(durationMin)分\n"
+            if avgHr > 0 {
+                summary += "平均心拍数: \(avgHr) bpm、最大心拍数: \(maxHr) bpm\n"
+            }
+            summary += "\n## ホール別スコアカード\n"
+            summary += "ホール | パー | スコア | +/- | スコアタイプ | パット\n"
         }
         summary += "-----|-----|-------|-----|------------|------\n"
         
@@ -108,6 +127,7 @@ public struct AIPromptBuilder {
         switch language {
         case .korean: instruction = koreanInstruction
         case .spanish: instruction = spanishInstruction
+        case .japanese: instruction = japaneseInstruction
         case .english: instruction = englishInstruction
         }
         
@@ -130,6 +150,17 @@ public struct AIPromptBuilder {
             case 2: return "더블보기"
             case 3: return "트리플보기"
             default: return "+4 오버파"
+            }
+        case .japanese:
+            switch diff {
+            case ...(-3): return "アルバトロス"
+            case -2: return "イーグル"
+            case -1: return "バーディー"
+            case 0: return "パー"
+            case 1: return "ボギー"
+            case 2: return "ダブルボギー"
+            case 3: return "トリプルボギー"
+            default: return "+4 オーバーパー"
             }
         case .spanish, .english:
             // Golf terms stay in English for Spanish
@@ -177,5 +208,16 @@ public struct AIPromptBuilder {
     4. Un enfoque de práctica accionable
 
     Sé directo. Cita números. Sin consejos genéricos.
+    """
+
+    private static let japaneseInstruction = """
+    あなたはゴルフコーチです。ラウンドを分析し、400〜600文字程度のフィードバックを提供してください。
+
+    1. 全体的なパフォーマンス vs ハンディキャップ(コースの難易度/スロープを必ず考慮)
+    2. 良かった点と改善が必要な点(具体的なホール/数値を引用)
+    3. 心拍数のパターンとスコアとの相関
+    4. 実践すべき練習ポイントを1つ
+
+    具体的に数値を引用してください。一般的なアドバイスは避けてください。
     """
 }

@@ -115,10 +115,12 @@ struct MapLibreView: UIViewRepresentable {
         }
 
         let sourceID = "golf-geometry"
+        // Remove layers before the source: layers still referencing the source
+        // can make removeSource a silent no-op, which then trips addSource below.
+        removeGolfLayers(from: style)
         if let existing = style.source(withIdentifier: sourceID) {
             style.removeSource(existing)
         }
-        removeGolfLayers(from: style)
 
         let source = HoleGeoJSONBuilder.makeSource(for: geometry, sourceID: sourceID)
         style.addSource(source)

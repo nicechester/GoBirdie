@@ -60,6 +60,7 @@
 "language.en" = "English";
 "language.ko" = "한국어";
 "language.es" = "Español";
+"language.ja" = "日本語";
 "language.system" = "Predeterminado del Sistema";
 
 // MARK: - Course Manager
