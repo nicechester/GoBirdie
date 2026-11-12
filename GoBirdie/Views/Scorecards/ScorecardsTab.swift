@@ -309,7 +309,7 @@ private struct ScorecardDetailView: View {
     }
 
     private func copyAIPrompt() {
-        let lang: AIPromptBuilder.Language = LocalizationManager.shared.isKorean ? .korean : .english
+        let lang: AIPromptBuilder.Language = AIPromptBuilder.Language(rawValue: LocalizationManager.shared.effectiveLanguageCode) ?? .english
         let prompt = AIPromptBuilder.build(
             round: currentRound,
             handicap: appState.sgBaseline.displayName,
