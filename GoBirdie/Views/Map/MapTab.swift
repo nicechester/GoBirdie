@@ -179,7 +179,7 @@ private struct ExploreCoursePicker: View {
                         .font(.caption)
                         .foregroundStyle(.primary)
                     Spacer()
-                    Button("Fix") {
+                    Button("common.fix".localized) {
                         appState.getLocationService().openSettings()
                     }
                     .font(.caption)

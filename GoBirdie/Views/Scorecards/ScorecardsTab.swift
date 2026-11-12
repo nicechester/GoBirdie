@@ -455,7 +455,7 @@ struct ShotMapSheet: View {
                                 Button(role: .cancel) {
                                     cancelPendingShot(pending.id)
                                 } label: {
-                                    Label("Cancel", systemImage: "xmark")
+                                    Label("common.cancel".localized, systemImage: "xmark")
                                         .font(.caption).fontWeight(.semibold)
                                         .foregroundStyle(.white)
                                         .padding(.horizontal, 12).padding(.vertical, 6)

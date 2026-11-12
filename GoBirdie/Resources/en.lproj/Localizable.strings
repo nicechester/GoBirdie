@@ -72,6 +72,7 @@
 
 // MARK: - My Clubs
 "clubs.footer" = "Selected clubs appear in the Mark Shot picker during a round.";
+"clubs.resetToDefault" = "Reset to Default";
 
 // MARK: - Map Tab
 "map.exploreCourses" = "Explore Courses";
@@ -202,6 +203,7 @@
 "common.ok" = "OK";
 "common.yes" = "Yes";
 "common.no" = "No";
+"common.fix" = "Fix";
 "common.save" = "Save";
 "common.clear" = "Clear";
 "common.close" = "Close";

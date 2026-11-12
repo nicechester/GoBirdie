@@ -31,7 +31,7 @@ struct MyClubsView: View {
             }
 
             Section {
-                Button("Reset to Default") {
+                Button("clubs.resetToDefault".localized) {
                     bag.resetToDefault()
                 }
             }

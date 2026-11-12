@@ -72,6 +72,7 @@
 
 // MARK: - My Clubs
 "clubs.footer" = "선택한 클럽은 라운드 중 샷 기록 시 표시됩니다.";
+"clubs.resetToDefault" = "기본값으로 재설정";
 
 // MARK: - Map Tab
 "map.exploreCourses" = "코스 탐색";
@@ -202,6 +203,7 @@
 "common.ok" = "확인";
 "common.yes" = "예";
 "common.no" = "아니오";
+"common.fix" = "수정";
 "common.save" = "저장";
 "common.clear" = "지우기";
 "common.close" = "닫기";
