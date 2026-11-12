@@ -39,33 +39,34 @@ public struct AIPromptBuilder {
         let maxHr = hrSamples.map(\.bpm).max() ?? 0
         
         // Build summary
-        var summary = "## Round Summary\n"
-        summary += "Date: \(dateStr)\n"
-        summary += "Course: \(round.courseName)"
+        let isKorean = language == .korean
+        var summary = isKorean ? "## 라운드 요약\n" : "## Round Summary\n"
+        summary += isKorean ? "날짜: \(dateStr)\n" : "Date: \(dateStr)\n"
+        summary += isKorean ? "코스: \(round.courseName)" : "Course: \(round.courseName)"
         if let rating = courseRating, let sl = slope {
-            summary += " (Rating \(String(format: "%.1f", rating)), Slope \(sl))"
+            summary += isKorean ? " (레이팅 \(String(format: "%.1f", rating)), 슬로프 \(sl))" : " (Rating \(String(format: "%.1f", rating)), Slope \(sl))"
         }
         summary += "\n"
-        summary += "Your Handicap: \(handicap)\n"
-        summary += "Score: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) over par \(totalPar)\n"
+        summary += isKorean ? "핸디캡: \(handicap)\n" : "Your Handicap: \(handicap)\n"
+        summary += isKorean ? "스코어: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) 파 \(totalPar) 대비\n" : "Score: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) over par \(totalPar)\n"
         
         if played.count >= 16 {
-            summary += "Front: \(frontScore) | Back: \(backScore)\n"
+            summary += isKorean ? "전반: \(frontScore) | 후반: \(backScore)\n" : "Front: \(frontScore) | Back: \(backScore)\n"
         }
         
-        summary += "Holes: \(played.count), Duration: \(durationMin) min\n"
+        summary += isKorean ? "홀: \(played.count), 소요시간: \(durationMin)분\n" : "Holes: \(played.count), Duration: \(durationMin) min\n"
         if avgHr > 0 {
-            summary += "Avg HR: \(avgHr) bpm, Max HR: \(maxHr) bpm\n"
+            summary += isKorean ? "평균 심박수: \(avgHr) bpm, 최대 심박수: \(maxHr) bpm\n" : "Avg HR: \(avgHr) bpm, Max HR: \(maxHr) bpm\n"
         }
         
         // Scorecard table
-        summary += "\n## Hole-by-Hole Scorecard\n"
-        summary += "Hole | Par | Score | +/- | Score Type | Putts\n"
+        summary += isKorean ? "\n## 홀별 스코어카드\n" : "\n## Hole-by-Hole Scorecard\n"
+        summary += isKorean ? "홀 | 파 | 스코어 | +/- | 스코어 타입 | 퍼팅\n" : "Hole | Par | Score | +/- | Score Type | Putts\n"
         summary += "-----|-----|-------|-----|------------|------\n"
         
         for hole in played.sorted(by: { $0.number < $1.number }) {
             let diff = hole.strokes - hole.par
-            summary += "H\(String(format: "%02d", hole.number)) | \(hole.par) | \(hole.strokes) | \(diff >= 0 ? "+" : "")\(diff) | \(scoreType(diff)) | \(hole.putts)\n"
+            summary += "H\(String(format: "%02d", hole.number)) | \(hole.par) | \(hole.strokes) | \(diff >= 0 ? "+" : "")\(diff) | \(scoreType(diff, korean: isKorean)) | \(hole.putts)\n"
         }
         
         let instruction = language == .korean ? koreanInstruction : englishInstruction
@@ -77,16 +78,16 @@ public struct AIPromptBuilder {
         """
     }
     
-    private static func scoreType(_ diff: Int) -> String {
+    private static func scoreType(_ diff: Int, korean: Bool) -> String {
         switch diff {
-        case ...(-3): return "Albatross"
-        case -2: return "Eagle"
-        case -1: return "Birdie"
-        case 0: return "Par"
-        case 1: return "Bogey"
-        case 2: return "Double Bogey"
-        case 3: return "Triple Bogey"
-        default: return "+4 Over Par"
+        case ...(-3): return korean ? "알바트로스" : "Albatross"
+        case -2: return korean ? "이글" : "Eagle"
+        case -1: return korean ? "버디" : "Birdie"
+        case 0: return korean ? "파" : "Par"
+        case 1: return korean ? "보기" : "Bogey"
+        case 2: return korean ? "더블보기" : "Double Bogey"
+        case 3: return korean ? "트리플보기" : "Triple Bogey"
+        default: return korean ? "+4 오버파" : "+4 Over Par"
         }
     }
     
