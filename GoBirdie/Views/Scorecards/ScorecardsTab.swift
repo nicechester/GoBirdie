@@ -25,12 +25,12 @@ struct ScorecardsTab: View {
                         }
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) { deleteRound(round) } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label("common.delete".localized, systemImage: "trash")
                             }
                         }
                         .swipeActions(edge: .leading) {
                             Button { resumeRound(round) } label: {
-                                Label("Resume", systemImage: "play.fill")
+                                Label("round.resumeRound".localized, systemImage: "play.fill")
                             }
                             .tint(.green)
                         }
@@ -38,13 +38,13 @@ struct ScorecardsTab: View {
                     .listStyle(.plain)
                 }
             }
-            .navigationTitle("Scorecards")
+            .navigationTitle("scorecards.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Picker("", selection: $selectedTab) {
-                        Text("Rounds").tag(0)
-                        Text("Tournaments").tag(1)
+                        Text("scorecards.rounds".localized).tag(0)
+                        Text("scorecards.tournaments".localized).tag(1)
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 220)
@@ -261,7 +261,7 @@ private struct ScorecardDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done".localized) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     HStack {
@@ -290,28 +290,30 @@ private struct ScorecardDetailView: View {
             .sheet(item: $tournamentToOpen) { t in
                 TournamentDetailView(tournament: t, onDismiss: { tournamentToOpen = nil })
             }
-            .alert("AI Coaching Prompt Copied!", isPresented: $showAIPromptCopied) {
-                Button("Open ChatGPT") {
+            .alert("ai.promptCopied".localized, isPresented: $showAIPromptCopied) {
+                Button("ai.openChatGpt".localized) {
                     if let url = URL(string: "https://chat.openai.com") {
                         UIApplication.shared.open(url)
                     }
                 }
-                Button("Open Gemini") {
+                Button("ai.openGemini".localized) {
                     if let url = URL(string: "https://gemini.google.com") {
                         UIApplication.shared.open(url)
                     }
                 }
-                Button("OK", role: .cancel) { }
+                Button("common.ok".localized, role: .cancel) { }
             } message: {
-                Text("Paste the prompt into ChatGPT or Gemini for personalized coaching feedback.")
+                Text("ai.promptInstructions".localized)
             }
         }
     }
 
     private func copyAIPrompt() {
+        let lang: AIPromptBuilder.Language = LocalizationManager.shared.isKorean ? .korean : .english
         let prompt = AIPromptBuilder.build(
             round: currentRound,
-            handicap: appState.sgBaseline.displayName
+            handicap: appState.sgBaseline.displayName,
+            language: lang
         )
         UIPasteboard.general.string = prompt
         showAIPromptCopied = true
@@ -432,7 +434,7 @@ struct ShotMapSheet: View {
                             Button {
                                 showDeleteConfirm = true
                             } label: {
-                                Label("Delete Shot", systemImage: "trash")
+                                Label("shotMap.deleteShot".localized, systemImage: "trash")
                                     .font(.caption).fontWeight(.semibold)
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 12).padding(.vertical, 6)
@@ -440,7 +442,7 @@ struct ShotMapSheet: View {
                                     .cornerRadius(6)
                             }
                             Spacer()
-                            Text("Drag pin to move")
+                            Text("shotMap.dragToMove".localized)
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 16).padding(.vertical, 6)
@@ -453,7 +455,7 @@ struct ShotMapSheet: View {
                                 Button(role: .cancel) {
                                     cancelPendingShot(pending.id)
                                 } label: {
-                                    Label("Cancel", systemImage: "xmark")
+                                    Label("common.cancel".localized, systemImage: "xmark")
                                         .font(.caption).fontWeight(.semibold)
                                         .foregroundStyle(.white)
                                         .padding(.horizontal, 12).padding(.vertical, 6)
@@ -461,17 +463,17 @@ struct ShotMapSheet: View {
                                         .cornerRadius(6)
                                 }
                                 Spacer()
-                                Text("Select club to confirm")
+                                Text("shotMap.selectClub".localized)
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                             .padding(.horizontal, 16).padding(.vertical, 4)
                             .background(.ultraThinMaterial)
                         } else {
                             HStack {
-                                Text("Tap map to add shot")
+                                Text("shotMap.tapToAdd".localized)
                                     .font(.caption).foregroundStyle(.secondary)
                                 Spacer()
-                                Text("Tap pin to select")
+                                Text("shotMap.tapToSelect".localized)
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                             .padding(.horizontal, 16).padding(.vertical, 4)
@@ -480,7 +482,7 @@ struct ShotMapSheet: View {
                     }
 
                     HStack(spacing: 16) {
-                        Text("Par \(hole.par)").font(.caption).foregroundStyle(.secondary)
+                        Text(String(format: "round.par".localized, hole.par)).font(.caption).foregroundStyle(.secondary)
                         Text("\(hole.strokes)").font(.title3).fontWeight(.bold).foregroundStyle(scoreColor)
                         Text(scoreName).font(.caption).fontWeight(.semibold).foregroundStyle(scoreColor)
                         Spacer()
@@ -491,7 +493,7 @@ struct ShotMapSheet: View {
                                         .font(.title3).foregroundStyle(.secondary)
                                 }
                                 .disabled(hole.putts <= 0)
-                                Text("\(hole.putts) Putts").font(.caption).foregroundStyle(.secondary)
+                                Text(String(format: "round.puttsCount".localized, hole.putts)).font(.caption).foregroundStyle(.secondary)
                                     .frame(minWidth: 50)
                                 Button { adjustPutts(1) } label: {
                                     Image(systemName: "plus.circle.fill")
@@ -499,7 +501,7 @@ struct ShotMapSheet: View {
                                 }
                             }
                         } else {
-                            Text("\(hole.putts) Putts").font(.caption).foregroundStyle(.secondary)
+                            Text(String(format: "round.puttsCount".localized, hole.putts)).font(.caption).foregroundStyle(.secondary)
                         }
                     }
                     .padding(.horizontal, 16).padding(.vertical, 8)
@@ -524,10 +526,10 @@ struct ShotMapSheet: View {
                                 editMode = false
                             }
                         } label: {
-                            Text("Done").fontWeight(.bold)
+                            Text("common.done".localized).fontWeight(.bold)
                         }
                     } else {
-                        Button { editMode = true } label: { Text("Edit") }
+                        Button { editMode = true } label: { Text("common.edit".localized) }
                     }
                 }
                 ToolbarItem(placement: .principal) {
@@ -535,7 +537,7 @@ struct ShotMapSheet: View {
                         Button { currentIndex -= 1; selectedShotId = nil } label: {
                             Image(systemName: "chevron.left")
                         }.disabled(currentIndex <= 0)
-                        Text("Hole \(hole.number)").fontWeight(.semibold)
+                        Text(String(format: "round.hole".localized, hole.number)).fontWeight(.semibold)
                         Button { currentIndex += 1; selectedShotId = nil } label: {
                             Image(systemName: "chevron.right")
                         }.disabled(currentIndex >= holesWithShots.count - 1)
@@ -550,17 +552,17 @@ struct ShotMapSheet: View {
                         }
                         .disabled(hole.shots.count < 2)
                     } else {
-                        Button("Close") { dismiss() }
+                        Button("common.close".localized) { dismiss() }
                     }
                 }
             }
-            .alert("Delete this shot?", isPresented: $showDeleteConfirm) {
-                Button("Delete", role: .destructive) { deleteSelectedShot() }
-                Button("Cancel", role: .cancel) { }
+            .alert("shotMap.deleteConfirm".localized, isPresented: $showDeleteConfirm) {
+                Button("common.delete".localized, role: .destructive) { deleteSelectedShot() }
+                Button("common.cancel".localized, role: .cancel) { }
             }
-            .alert("Do you want to save the changes?", isPresented: $showSaveConfirm) {
-                Button("Yes") { saveEdits(); selectedShotId = nil; editMode = false }
-                Button("No", role: .destructive) { selectedShotId = nil; dirty = false; editMode = false }
+            .alert("shotMap.saveConfirm".localized, isPresented: $showSaveConfirm) {
+                Button("common.yes".localized) { saveEdits(); selectedShotId = nil; editMode = false }
+                Button("common.no".localized, role: .destructive) { selectedShotId = nil; dirty = false; editMode = false }
             }
             .sheet(isPresented: $showClubPicker) {
                 MarkShotSheet(
@@ -715,7 +717,7 @@ private struct TotalsRow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Text("Total")
+            Text("round.total".localized)
                 .font(.caption).fontWeight(.bold)
                 .frame(width: 52, alignment: .leading)
 
@@ -791,9 +793,9 @@ private struct NineSection: View {
                 Text(title)
                     .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
                 Spacer()
-                Text("Putts").font(.system(size: 9)).foregroundStyle(.secondary)
+                Text("round.putts".localized).font(.system(size: 9)).foregroundStyle(.secondary)
                     .frame(width: 32, alignment: .center)
-                Text("Pen").font(.system(size: 9)).foregroundStyle(.secondary)
+                Text("round.pen".localized).font(.system(size: 9)).foregroundStyle(.secondary)
                     .frame(width: 28, alignment: .center)
                 Text("\(totalStrokes)")
                     .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
@@ -884,9 +886,9 @@ private struct EmptyScorecardsView: View {
             Spacer()
             Image(systemName: "list.bullet.clipboard")
                 .font(.system(size: 48)).foregroundStyle(.secondary)
-            Text("No Scorecards")
+            Text("scorecards.noScorecards".localized)
                 .font(.title3).fontWeight(.bold)
-            Text("Completed rounds will appear here")
+            Text("scorecards.noScorecardsDescription".localized)
                 .font(.subheadline).foregroundStyle(.secondary)
             Spacer()
         }
@@ -912,7 +914,7 @@ private struct ReorderShotsSheet: View {
                     HStack(spacing: 12) {
                         Image(systemName: "line.3.horizontal")
                             .foregroundStyle(.secondary)
-                        Text("Shot \(shots.firstIndex(where: { $0.id == shot.id }).map { $0 + 1 } ?? 0)")
+                        Text(String(format: "shotMap.shot".localized, shots.firstIndex(where: { $0.id == shot.id }).map { $0 + 1 } ?? 0))
                             .font(.subheadline)
                         Spacer()
                         Text(shot.club.shortName)
@@ -925,14 +927,14 @@ private struct ReorderShotsSheet: View {
                 }
             }
             .environment(\.editMode, .constant(.active))
-            .navigationTitle("Reorder Shots")
+            .navigationTitle("shotMap.reorderShots".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { onConfirm(shots); dismiss() }
+                    Button("common.done".localized) { onConfirm(shots); dismiss() }
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel".localized) { dismiss() }
                 }
             }
         }

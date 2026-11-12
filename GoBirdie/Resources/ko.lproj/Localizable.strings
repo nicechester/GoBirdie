@@ -1,0 +1,235 @@
+/* 
+  Localizable.strings (Korean)
+  GoBirdie
+*/
+
+// MARK: - Tabs
+"tab.map" = "코스 지도";
+"tab.scorecards" = "스코어카드";
+"tab.settings" = "설정";
+
+// MARK: - Settings
+"settings.title" = "설정";
+"settings.courses" = "코스";
+"settings.manageCourses" = "코스 관리";
+"settings.equipment" = "장비";
+"settings.myClubs" = "내 클럽";
+"settings.insights" = "인사이트";
+"settings.sgBaseline" = "SG 기준";
+"settings.sgBaselineFooter" = "스트로크 게인 인사이트는 이 기준과 비교하여 라운드를 분석합니다. 현재 실력에 맞는 레벨을 선택하세요.";
+"settings.sync" = "동기화";
+"settings.desktopSync" = "데스크톱 동기화";
+"settings.status" = "상태";
+"settings.discoverable" = "검색 가능";
+"settings.starting" = "시작 중…";
+"settings.syncFooter" = "근처의 GoBirdie 데스크톱 앱에서 이 iPhone을 검색할 수 있습니다. 같은 WiFi가 필요 없습니다.";
+"settings.tee" = "티";
+"settings.teeColor" = "티 색상";
+"settings.supportDevelopment" = "개발 지원";
+"settings.tipJarFooter" = "GoBirdie는 광고 없이 무료입니다. 팁은 연간 $99 Apple 개발자 비용을 충당하는 데 도움이 됩니다.";
+"settings.thankYou" = "감사합니다! ⛳️ 이제 후원자입니다.";
+"settings.loadProductsFailed" = "상품을 불러올 수 없습니다. StoreKit 설정을 확인하세요.";
+"settings.about" = "정보";
+"settings.version" = "버전";
+"settings.manual" = "사용 설명서";
+"settings.mapData" = "지도 데이터";
+"settings.maps" = "지도";
+"settings.license" = "라이선스";
+"settings.language" = "언어";
+"settings.languageFooter" = "앱에서 사용할 언어를 선택하세요.";
+
+// MARK: - Tee Colors
+"tee.black" = "블랙";
+"tee.blue" = "블루";
+"tee.white" = "화이트";
+"tee.yellow" = "옐로우";
+"tee.red" = "레드";
+
+// MARK: - Tip Jar Products
+"tip.sleeve" = "⛳️ 골프공 한 슬리브";
+"tip.snack" = "🌭 라운드 중 간식";
+"tip.drink" = "🍺 라운드 후 한 잔";
+
+// MARK: - SG Baselines
+"baseline.scratch" = "스크래치";
+"baseline.single" = "싱글 핸디캡";
+"baseline.bogey" = "보기 골퍼";
+"baseline.highCap" = "하이 핸디캡";
+
+// MARK: - Languages
+"language.en" = "English";
+"language.ko" = "한국어";
+"language.system" = "시스템 기본값";
+
+// MARK: - Course Manager
+"courses.noCourses" = "다운로드된 코스가 없습니다";
+"courses.noCoursesFound" = "코스를 찾을 수 없습니다";
+"courses.searching" = "검색 중...";
+"courses.searchingMore" = "더 많은 코스 검색 중...";
+"courses.holesDownloaded" = "%d홀 · %@ 다운로드됨";
+"courses.downloading" = "%@ 다운로드 중...";
+"courses.gettingGeometry" = "코스 정보 가져오는 중";
+
+// MARK: - My Clubs
+"clubs.footer" = "선택한 클럽은 라운드 중 샷 기록 시 표시됩니다.";
+"clubs.resetToDefault" = "기본값으로 재설정";
+
+// MARK: - Club Names
+"club.unknown" = "미지정";
+"club.driver" = "드라이버";
+"club.md" = "미니 드라이버";
+"club.3w" = "3번 우드";
+"club.5w" = "5번 우드";
+"club.7w" = "7번 우드";
+"club.9w" = "9번 우드";
+"club.3h" = "3번 하이브리드";
+"club.4h" = "4번 하이브리드";
+"club.5h" = "5번 하이브리드";
+"club.4i" = "4번 아이언";
+"club.5i" = "5번 아이언";
+"club.6i" = "6번 아이언";
+"club.7i" = "7번 아이언";
+"club.8i" = "8번 아이언";
+"club.9i" = "9번 아이언";
+"club.pw" = "피칭 웨지";
+"club.gw" = "갭 웨지";
+"club.sw" = "샌드 웨지";
+"club.lw" = "로브 웨지";
+"club.putter" = "퍼터";
+
+// MARK: - Map Tab
+"map.exploreCourses" = "코스 탐색";
+"map.exploreDescription" = "라운드 없이 코스 레이아웃 보기";
+"map.startExploring" = "탐색 시작";
+"map.pickCourse" = "탐색할 코스 선택";
+"map.pickAnotherCourse" = "다른 코스 선택";
+"map.discoverNearby" = "주변 코스 찾기";
+"map.locationPermission" = "최상의 정확도를 위해 위치를 \"앱 사용 중\"으로 설정하세요";
+"map.enableLocation" = "메시지가 표시되면 설정에서 위치를 활성화하세요";
+"map.findingLocation" = "위치 찾는 중...";
+"map.acquiringGps" = "GPS 수신 중...";
+"map.startRoundPrompt" = "코스 지도를 보려면 라운드를 시작하세요";
+"map.noSavedCourses" = "저장된 코스가 없습니다. 먼저 코스를 다운로드하세요.";
+
+// MARK: - Round
+"round.title" = "라운드";
+"round.strokes" = "타수";
+"round.tot" = "합계";
+"round.plusMinus" = "+/−";
+"round.noActiveRound" = "진행 중인 라운드 없음";
+"round.startRound" = "라운드 시작";
+"round.startRoundDescription" = "거리 측정과 샷 기록을 위해\n라운드를 시작하세요";
+"round.inProgress" = "라운드 진행 중";
+"round.hole" = "%d번 홀";
+"round.par" = "파 %d";
+"round.holeParYards" = "%d번 홀  파 %d  %d야드";
+"round.holePar" = "%d번 홀  파 %d";
+"round.startOnHole" = "%d번 홀에서 시작";
+"round.whichHole" = "몇 번 홀에서 시작하시나요?";
+"round.markShot" = "샷 기록";
+"round.strokes" = "타수";
+"round.putts" = "퍼트";
+"round.puttsCount" = "퍼트 %d개";
+"round.penalty" = "페널티";
+"round.scorecard" = "스코어카드";
+"round.total" = "합계";
+"round.pen" = "페널티";
+"round.savingRound" = "라운드 저장 중...";
+"round.saveAndFinish" = "이 라운드를 저장하고 종료하시겠습니까?";
+"round.idlePrompt" = "30분 동안 활동이 없습니다.";
+"round.teeDetected" = "%d번 홀 티박스 근처입니다.";
+"round.finish" = "종료";
+"round.next" = "다음";
+"round.selectClub" = "클럽 선택";
+"round.moveShotsTo" = "샷을 다른 홀로 이동...";
+"round.syncWatch" = "워치 동기화";
+"round.endRound" = "라운드 종료";
+"round.cancelRound" = "라운드 취소";
+"round.stillPlaying" = "아직 플레이 중인가요?";
+"round.yesStillPlaying" = "네, 계속 플레이 중";
+"round.moveToHole" = "%d번 홀로 이동";
+"round.stay" = "유지";
+"round.strokesCount" = "%d타";
+"round.moveShotsFrom" = "%d번 홀에서 %d개 샷 이동:";
+"round.moveShots" = "샷 이동";
+"round.holeStarted" = "%d번 홀  ·  %@ 시작";
+"round.resumeRound" = "라운드 재개";
+
+// MARK: - Distance
+"distance.front" = "프론트";
+"distance.flag" = "핀";
+"distance.back" = "백";
+
+// MARK: - Insights
+"insights.title" = "주요 인사이트";
+"insights.vsBaseline" = "%@ 대비";
+
+// MARK: - Scorecards
+"scorecards.title" = "스코어카드";
+"scorecards.rounds" = "라운드";
+"scorecards.tournaments" = "토너먼트";
+"scorecards.noScorecards" = "스코어카드 없음";
+"scorecards.noScorecardsDescription" = "완료된 라운드가 여기에 표시됩니다";
+"scorecards.noTournaments" = "토너먼트 없음";
+"scorecards.tapToCreate" = "+를 눌러 생성하세요";
+
+// MARK: - Shot Map
+"shotMap.dragToMove" = "핀을 드래그하여 이동";
+"shotMap.tapToAdd" = "지도를 탭하여 샷 추가";
+"shotMap.tapToSelect" = "핀을 탭하여 선택";
+"shotMap.selectClub" = "클럽을 선택하여 확인";
+"shotMap.deleteShot" = "샷 삭제";
+"shotMap.reorderShots" = "샷 순서 변경";
+"shotMap.shot" = "샷 %d";
+"shotMap.deleteConfirm" = "이 샷을 삭제하시겠습니까?";
+"shotMap.saveConfirm" = "변경 사항을 저장하시겠습니까?";
+
+// MARK: - Tournament
+"tournament.title" = "토너먼트";
+"tournament.titleOptional" = "제목 (선택 사항)";
+"tournament.new" = "새 토너먼트";
+"tournament.create" = "토너먼트 만들기";
+"tournament.createButton" = "만들기";
+"tournament.course" = "코스";
+"tournament.selectCourse" = "코스 선택";
+"tournament.dateFormat" = "날짜 (yyyy-MM-dd)";
+"tournament.edit" = "토너먼트 편집";
+"tournament.rename" = "이름 변경";
+"tournament.renameTournament" = "토너먼트 이름 변경";
+"tournament.renamePlayer" = "플레이어 이름 변경";
+"tournament.name" = "이름";
+"tournament.playerName" = "플레이어 이름";
+"tournament.shareScore" = "점수 공유";
+"tournament.scanScore" = "점수 스캠";
+"tournament.addPlayer" = "플레이어 추가";
+"tournament.noPlayers" = "플레이어가 없습니다. +를 누르거나 QR 코드를 스캔하세요.";
+"tournament.scanQr" = "GoBirdie QR 코드를 카메라로 스캔하세요";
+"tournament.hostScan" = "토너먼트 호스트가 이 코드를 스캔하도록 하세요";
+"tournament.autoAdd" = "최근 라운드(%@)가 자동으로 추가됩니다.";
+
+// MARK: - AI Coaching
+"ai.promptCopied" = "AI 코칭 프롬프트 복사됨!";
+"ai.promptInstructions" = "ChatGPT 또는 Gemini에 붙여넣어 맞춤형 코칭 피드백을 받으세요.";
+"ai.openChatGpt" = "ChatGPT 열기";
+"ai.openGemini" = "Gemini 열기";
+
+// MARK: - Common
+"common.done" = "완료";
+"common.cancel" = "취소";
+"common.confirm" = "확인";
+"common.edit" = "편집";
+"common.add" = "추가";
+"common.delete" = "삭제";
+"common.retry" = "재시도";
+"common.error" = "오류";
+"common.discard" = "삭제";
+"common.undo" = "실행 취소";
+"common.prev" = "이전";
+"common.ok" = "확인";
+"common.yes" = "예";
+"common.no" = "아니오";
+"common.fix" = "수정";
+"common.save" = "저장";
+"common.clear" = "지우기";
+"common.close" = "닫기";
+"common.yds" = "야드";

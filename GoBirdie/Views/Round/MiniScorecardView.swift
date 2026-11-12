@@ -15,7 +15,7 @@ struct MiniScorecardView: View {
             Divider()
 
             HStack {
-                Text("SCORECARD")
+                Text("round.scorecard".localized)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)

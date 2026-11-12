@@ -8,6 +8,7 @@ import GoBirdieCore
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject var localization = LocalizationManager.shared
 
     private var isPatron: Bool {
         UserDefaults.standard.bool(forKey: "isPatron")
@@ -16,23 +17,24 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Courses") {
+                Section("settings.courses".localized) {
                     NavigationLink {
                         CourseManagerView()
                     } label: {
-                        Label("Manage Courses", systemImage: "map")
+                        Label("settings.manageCourses".localized, systemImage: "map")
                     }
                 }
 
-                Section("Equipment") {
+                Section("settings.equipment".localized) {
                     NavigationLink {
                         MyClubsView()
                     } label: {
-                        Label("My Clubs", systemImage: "figure.golf")
+                        Label("settings.myClubs".localized, systemImage: "figure.golf")
                     }
                 }
 
                 InsightsSection()
+                LanguageSection()
                 SyncServerSection()
                 TeeSection()
                 if !isPatron {
@@ -40,13 +42,13 @@ struct SettingsView: View {
                 }
                 AboutSection()
             }
-            .navigationTitle("Settings")
+            .navigationTitle("settings.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if isPatron {
                     ToolbarItem(placement: .principal) {
                         HStack {
-                            Text("Settings")
+                            Text("settings.title".localized)
                             Image("patron-badge")
                                 .resizable()
                                 .scaledToFit()
@@ -55,6 +57,28 @@ struct SettingsView: View {
                     }
                 }
             }
+        }
+        .id(localization.currentLanguage) // Force refresh on language change
+    }
+}
+
+// MARK: - Language Section
+
+private struct LanguageSection: View {
+    @ObservedObject var localization = LocalizationManager.shared
+
+    var body: some View {
+        Section {
+            Picker("settings.language".localized, selection: $localization.currentLanguage) {
+                ForEach(AppLanguage.allCases, id: \.self) { language in
+                    Text(language.displayName).tag(language)
+                }
+            }
+        } header: {
+            Text("settings.language".localized)
+        } footer: {
+            Text("settings.languageFooter".localized)
+                .font(.caption)
         }
     }
 }
@@ -66,15 +90,15 @@ private struct InsightsSection: View {
 
     var body: some View {
         Section {
-            Picker("SG Baseline", selection: $appState.sgBaseline) {
+            Picker("settings.sgBaseline".localized, selection: $appState.sgBaseline) {
                 ForEach(SGBaseline.allCases, id: \.self) { baseline in
-                    Text(baseline.displayName).tag(baseline)
+                    Text(baseline.localizedName).tag(baseline)
                 }
             }
         } header: {
-            Text("Insights")
+            Text("settings.insights".localized)
         } footer: {
-            Text("Strokes gained insights compare your round against this benchmark. Choose the level that best matches your current game.")
+            Text("settings.sgBaselineFooter".localized)
                 .font(.caption)
         }
     }
@@ -88,16 +112,16 @@ private struct SyncServerSection: View {
     var body: some View {
         Section {
             Toggle(isOn: $appState.syncServerEnabled) {
-                Label("Desktop Sync", systemImage: "antenna.radiowaves.left.and.right")
+                Label("settings.desktopSync".localized, systemImage: "antenna.radiowaves.left.and.right")
             }
             if appState.syncServerEnabled {
-                LabeledContent("Status", value: appState.syncServerRunning ? "Discoverable" : "Starting…")
+                LabeledContent("settings.status".localized, value: appState.syncServerRunning ? "settings.discoverable".localized : "settings.starting".localized)
                     .foregroundStyle(appState.syncServerRunning ? .green : .secondary)
             }
         } header: {
-            Text("Sync")
+            Text("settings.sync".localized)
         } footer: {
-            Text("Makes this iPhone discoverable to the GoBirdie desktop app nearby — no shared WiFi needed.")
+            Text("settings.syncFooter".localized)
                 .font(.caption)
         }
     }
@@ -113,16 +137,27 @@ private struct TeeSection: View {
         "Black": .primary, "Blue": .blue, "White": .gray,
         "Yellow": .yellow, "Red": .red
     ]
+    
+    private func localizedTeeColor(_ color: String) -> String {
+        switch color {
+        case "Black": return "tee.black".localized
+        case "Blue": return "tee.blue".localized
+        case "White": return "tee.white".localized
+        case "Yellow": return "tee.yellow".localized
+        case "Red": return "tee.red".localized
+        default: return color
+        }
+    }
 
     var body: some View {
-        Section("Tee") {
-            Picker("Tee Color", selection: $appState.teeColor) {
+        Section("settings.tee".localized) {
+            Picker("settings.teeColor".localized, selection: $appState.teeColor) {
                 ForEach(teeColors, id: \.self) { color in
                     HStack {
                         Circle()
                             .fill(teeColorValues[color] ?? .gray)
                             .frame(width: 12, height: 12)
-                        Text(color)
+                        Text(localizedTeeColor(color))
                     }
                     .tag(color)
                 }
@@ -158,7 +193,7 @@ private struct TipJarSection: View {
                 }
                 .padding(.vertical, 4)
             } else if loadFailed {
-                Text("Could not load products. Make sure the StoreKit config is set in the scheme.")
+                Text("settings.loadProductsFailed".localized)
                     .font(.caption).foregroundStyle(.secondary)
             } else if products.isEmpty {
                 HStack {
@@ -184,9 +219,9 @@ private struct TipJarSection: View {
                 }
             }
         } header: {
-            Text("Support Development")
+            Text("settings.supportDevelopment".localized)
         } footer: {
-            Text("GoBirdie is free with no ads. Tips help cover the $99/year Apple Developer fee.")
+            Text("settings.tipJarFooter".localized)
                 .font(.caption)
         }
         .task {
@@ -213,7 +248,7 @@ private struct TipJarSection: View {
             switch result {
             case .success:
                 UserDefaults.standard.set(true, forKey: "isPatron")
-                thankYouMessage = "Thank you! ⛳️ You're now a Patron."
+                thankYouMessage = "settings.thankYou".localized
             case .userCancelled:
                 break
             case .pending:
@@ -228,9 +263,9 @@ private struct TipJarSection: View {
 
     private func localName(for product: Product) -> String {
         switch product.id {
-        case "io.github.nicechester.GoBirdie.tip.sleeve": return "⛳️ Sleeve of Balls"
-        case "io.github.nicechester.GoBirdie.tip.snack":  return "🌭 Mid-Round Snack"
-        case "io.github.nicechester.GoBirdie.tip.drink":  return "🍺 Post-Round Drink"
+        case "io.github.nicechester.GoBirdie.tip.sleeve": return "tip.sleeve".localized
+        case "io.github.nicechester.GoBirdie.tip.snack":  return "tip.snack".localized
+        case "io.github.nicechester.GoBirdie.tip.drink":  return "tip.drink".localized
         default: return product.displayName
         }
     }
@@ -240,12 +275,12 @@ private struct TipJarSection: View {
 
 private struct AboutSection: View {
     var body: some View {
-        Section("About") {
-            LabeledContent("Version", value: appVersion)
-            Link("Manual", destination: URL(string: "https://github.com/nicechester/GoBirdie/blob/main/MANUAL.md")!)
-            LabeledContent("Map Data", value: "© OpenStreetMap contributors")
-            LabeledContent("Maps", value: "© MapLibre")
-            LabeledContent("License", value: "© 2026 Chester Kim. All rights reserved.")
+        Section("settings.about".localized) {
+            LabeledContent("settings.version".localized, value: appVersion)
+            Link("settings.manual".localized, destination: URL(string: "https://github.com/nicechester/GoBirdie/blob/main/MANUAL.md")!)
+            LabeledContent("settings.mapData".localized, value: "© OpenStreetMap contributors")
+            LabeledContent("settings.maps".localized, value: "© MapLibre")
+            LabeledContent("settings.license".localized, value: "© 2026 Chester Kim. All rights reserved.")
         }
     }
 
@@ -253,5 +288,18 @@ private struct AboutSection: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
+    }
+}
+
+// MARK: - SGBaseline Localization Extension
+
+extension SGBaseline {
+    var localizedName: String {
+        switch self {
+        case .scratch: return "baseline.scratch".localized
+        case .single: return "baseline.single".localized
+        case .bogey: return "baseline.bogey".localized
+        case .highCap: return "baseline.highCap".localized
+        }
     }
 }

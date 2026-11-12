@@ -191,7 +191,7 @@ struct EditableShotMapView: UIViewRepresentable {
             if renderedHole.putts > 0, let green = courseHole?.greenCenter {
                 let puttPin = MLNPointAnnotation()
                 puttPin.coordinate = CLLocationCoordinate2D(latitude: green.lat, longitude: green.lon)
-                puttPin.title = "\(renderedHole.putts) Putts"
+                puttPin.title = String(format: "round.puttsCount".localized, renderedHole.putts)
                 puttPin.subtitle = "putt-label"
                 mapView.addAnnotation(puttPin)
             }

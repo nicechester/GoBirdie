@@ -15,7 +15,7 @@ struct DistanceDisplayView: View {
             VStack(spacing: 12) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text("Acquiring GPS...")
+                Text("map.acquiringGps".localized)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -27,21 +27,21 @@ struct DistanceDisplayView: View {
             HStack(spacing: 0) {
                 // Front
                 DistanceColumn(
-                    label: "Front",
+                    label: "distance.front".localized,
                     value: distances.frontYards.map { "\($0)" } ?? "—",
                     style: .secondary
                 )
 
                 // Flag — center, largest, green
                 DistanceColumn(
-                    label: "Flag",
+                    label: "distance.flag".localized,
                     value: distances.pinYards.map { "\($0)" } ?? "—",
                     style: .primary
                 )
 
                 // Back
                 DistanceColumn(
-                    label: "Back",
+                    label: "distance.back".localized,
                     value: distances.backYards.map { "\($0)" } ?? "—",
                     style: .secondary
                 )

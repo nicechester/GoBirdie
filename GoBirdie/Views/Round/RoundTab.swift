@@ -43,14 +43,14 @@ private struct ActiveRoundView: View {
         VStack(spacing: 0) {
             // Header row with menu button
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("Hole \(session.currentHoleNumber)")
+                Text(String(format: "round.hole".localized, session.currentHoleNumber))
                     .font(.title3).fontWeight(.bold)
                     .accessibilityIdentifier("holeLabel")
 
                 if let hole = session.currentHole,
                    let courseHole = viewModel.course.holes.first(where: { $0.number == session.currentHoleNumber }) {
                     let ydsText = courseHole.yardage.map { "\($0) yds" } ?? ""
-                    Text("Par \(hole.par)" + (ydsText.isEmpty ? "" : "  ·  \(ydsText)"))
+                    Text(String(format: "round.par".localized, hole.par) + (ydsText.isEmpty ? "" : "  ·  \(ydsText)"))
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -60,31 +60,31 @@ private struct ActiveRoundView: View {
                         Button {
                             showMoveShotsSheet = true
                         } label: {
-                            Label("Move Shots to Hole...", systemImage: "arrow.triangle.swap")
+                            Label("round.moveShotsTo".localized, systemImage: "arrow.triangle.swap")
                         }
                         Divider()
                     }
                     Button {
                         syncWatch()
                     } label: {
-                        Label("Sync Watch", systemImage: "applewatch")
+                        Label("round.syncWatch".localized, systemImage: "applewatch")
                     }
                     Button {
                         showTournamentSheet = true
                     } label: {
-                        Label("Create Tournament", systemImage: "trophy")
+                        Label("tournament.create".localized, systemImage: "trophy")
                     }
                     Divider()
                     Button(role: .destructive) {
                         showEndConfirm = true
                     } label: {
-                        Label("End Round", systemImage: "flag.checkered")
+                        Label("round.endRound".localized, systemImage: "flag.checkered")
                     }
                     .accessibilityIdentifier("endRoundMenu")
                     Button(role: .destructive) {
                         appState.cancelActiveRound()
                     } label: {
-                        Label("Cancel Round", systemImage: "xmark.circle")
+                        Label("round.cancelRound".localized, systemImage: "xmark.circle")
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal")
@@ -115,38 +115,38 @@ private struct ActiveRoundView: View {
             MiniScorecardView(session: session)
                 .padding(.top, 4)
         }
-        .alert("End Round?", isPresented: $showEndConfirm) {
-            Button("End", role: .destructive) {
+        .alert("round.saveAndFinish".localized, isPresented: $showEndConfirm) {
+            Button("round.endRound".localized, role: .destructive) {
                 session.endRound()
                 appState.endActiveRound()
             }
             .accessibilityIdentifier("confirmEndRound")
-            Button("Cancel", role: .cancel) { }
+            Button("common.cancel".localized, role: .cancel) { }
         } message: {
-            Text("Save and finish this round?")
+            Text("round.saveAndFinish".localized)
         }
-        .alert("Are you still playing?", isPresented: $appState.showIdlePrompt) {
-            Button("Yes, still playing") {
+        .alert("round.stillPlaying".localized, isPresented: $appState.showIdlePrompt) {
+            Button("round.yesStillPlaying".localized) {
                 appState.resetIdleTimer()
             }
-            Button("End Round", role: .destructive) {
+            Button("round.endRound".localized, role: .destructive) {
                 session.endRound()
                 appState.endActiveRound()
             }
         } message: {
-            Text("No activity for 30 minutes.")
+            Text("round.idlePrompt".localized)
         }
-        .alert("Move to Hole \(appState.teeDetectionHole ?? 0)?", isPresented: Binding(
+        .alert("round.teeDetected".localized(with: appState.teeDetectionHole ?? 0), isPresented: Binding(
             get: { appState.teeDetectionHole != nil },
             set: { if !$0 { appState.teeDetectionHole = nil } }
         )) {
             if let hole = appState.teeDetectionHole {
-                Button("Move to Hole \(hole)") { appState.confirmTeeDetection(holeNumber: hole) }
-                Button("Stay", role: .cancel) { appState.dismissTeeDetection(holeNumber: hole) }
+                Button(String(format: "round.moveToHole".localized, hole)) { appState.confirmTeeDetection(holeNumber: hole) }
+                Button("round.stay".localized, role: .cancel) { appState.dismissTeeDetection(holeNumber: hole) }
             }
         } message: {
             if let hole = appState.teeDetectionHole {
-                Text("You're near the Hole \(hole) tee box.")
+                Text("round.teeDetected".localized(with: hole))
             }
         }
         .sheet(isPresented: $showMoveShotsSheet) {
@@ -169,7 +169,7 @@ private struct ActiveRoundView: View {
                             .progressViewStyle(.circular)
                             .scaleEffect(1.5)
                             .tint(.white)
-                        Text("Saving round...")
+                        Text("round.savingRound".localized)
                             .font(.subheadline)
                             .foregroundStyle(.white)
                     }
@@ -225,13 +225,13 @@ private struct EmptyRoundStateView: View {
             Spacer()
             Image(systemName: "flag.fill")
                 .font(.system(size: 56)).foregroundStyle(.green)
-            Text("No Active Round").font(.title2).fontWeight(.bold)
-            Text("Start a round to track distances\nand mark your shots")
+            Text("round.noActiveRound".localized).font(.title2).fontWeight(.bold)
+            Text("round.startRoundDescription".localized)
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Spacer()
             Button(action: onStartRound) {
-                Label("Start Round", systemImage: "plus.circle.fill")
+                Label("round.startRound".localized, systemImage: "plus.circle.fill")
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -266,25 +266,25 @@ private struct MoveShotsSheet: View {
                                 dismiss()
                             } label: {
                                 HStack {
-                                    Text("Hole \(hole.number)")
-                                    Text("Par \(hole.par)").foregroundStyle(.secondary)
+                                    Text(String(format: "round.hole".localized, hole.number))
+                                    Text(String(format: "round.par".localized, hole.par)).foregroundStyle(.secondary)
                                     Spacer()
                                     if hole.strokes > 0 {
-                                        Text("\(hole.strokes) strokes").foregroundStyle(.secondary).font(.caption)
+                                        Text(String(format: "round.strokesCount".localized, hole.strokes)).foregroundStyle(.secondary).font(.caption)
                                     }
                                 }
                             }
                         }
                     }
                 } header: {
-                    Text("Move \(shotCount) shot\(shotCount == 1 ? "" : "s") from Hole \(currentNum) to:")
+                    Text(String(format: "round.moveShotsFrom".localized, shotCount, currentNum))
                 }
             }
-            .navigationTitle("Move Shots")
+            .navigationTitle("round.moveShots".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel".localized) { dismiss() }
                 }
             }
         }
@@ -308,15 +308,15 @@ private struct ResumeRoundView: View {
             Image(systemName: "arrow.counterclockwise.circle.fill")
                 .font(.system(size: 56)).foregroundStyle(.orange)
 
-            Text("Round In Progress").font(.title2).fontWeight(.bold)
+            Text("round.inProgress".localized).font(.title2).fontWeight(.bold)
 
             VStack(spacing: 6) {
                 Text(snapshot.round.courseName)
                     .font(.headline)
-                Text("Hole \(snapshot.currentHoleIndex + 1)  ·  Started \(elapsed)")
+                Text(String(format: "round.holeStarted".localized, snapshot.currentHoleIndex + 1, elapsed))
                     .font(.subheadline).foregroundStyle(.secondary)
                 if snapshot.round.totalStrokes > 0 {
-                    Text("\(snapshot.round.totalStrokes) strokes")
+                    Text(String(format: "round.strokesCount".localized, snapshot.round.totalStrokes))
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
             }
@@ -326,7 +326,7 @@ private struct ResumeRoundView: View {
             Button {
                 appState.resumeRound(snapshot: snapshot)
             } label: {
-                Label("Resume Round", systemImage: "play.fill")
+                Label("round.resumeRound".localized, systemImage: "play.fill")
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -339,7 +339,7 @@ private struct ResumeRoundView: View {
             Button {
                 appState.discardInProgressRound()
             } label: {
-                Text("Discard")
+                Text("common.discard".localized)
                     .foregroundStyle(.red)
             }
             .padding(.bottom, 32)
@@ -361,26 +361,26 @@ private struct CreateTournamentFromRoundSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Tournament") {
-                    TextField("Title (optional)", text: $title)
+                Section("tournament.title".localized) {
+                    TextField("tournament.titleOptional".localized, text: $title)
                 }
 
-                Section("Round") {
+                Section("round.title".localized) {
                     Text(round.courseName).foregroundStyle(.secondary)
                     Text(round.startedAt.formatted(date: .abbreviated, time: .shortened))
                         .font(.caption).foregroundStyle(.secondary)
-                    Text("\(round.totalStrokes) strokes")
+                    Text(String(format: "round.strokesCount".localized, round.totalStrokes))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("New Tournament")
+            .navigationTitle("tournament.new".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel".localized) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") { createTournament() }
+                    Button("tournament.createButton".localized) { createTournament() }
                         .fontWeight(.bold)
                 }
             }

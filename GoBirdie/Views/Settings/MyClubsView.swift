@@ -16,7 +16,7 @@ struct MyClubsView: View {
                         bag.toggle(club)
                     } label: {
                         HStack {
-                            Text(club.displayName)
+                            Text(club.localizedName)
                                 .foregroundStyle(.primary)
                             Spacer()
                             if bag.isEnabled(club) {
@@ -27,16 +27,16 @@ struct MyClubsView: View {
                     }
                 }
             } footer: {
-                Text("Selected clubs appear in the Mark Shot picker during a round.")
+                Text("clubs.footer".localized)
             }
 
             Section {
-                Button("Reset to Default") {
+                Button("clubs.resetToDefault".localized) {
                     bag.resetToDefault()
                 }
             }
         }
-        .navigationTitle("My Clubs")
+        .navigationTitle("settings.myClubs".localized)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

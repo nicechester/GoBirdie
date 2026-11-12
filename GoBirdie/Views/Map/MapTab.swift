@@ -58,18 +58,18 @@ private struct ExploreEntryView: View {
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 8) {
-                Text("Explore Courses")
+                Text("map.exploreCourses".localized)
                     .font(.headline)
                     .foregroundStyle(.primary)
 
-                Text("View course layouts without tracking a round")
+                Text("map.exploreDescription".localized)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
 
             Button(action: onExplore) {
-                Text("Start Exploring")
+                Text("map.startExploring".localized)
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
@@ -99,10 +99,10 @@ private struct ExploreCoursePicker: View {
                         Image(systemName: "map.circle.fill")
                             .font(.system(size: 40))
                             .foregroundStyle(.green)
-                        Text("Explore Courses")
+                        Text("map.exploreCourses".localized)
                             .font(.title2)
                             .fontWeight(.bold)
-                        Text("Pick a course to explore")
+                        Text("map.pickCourse".localized)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -147,7 +147,7 @@ private struct ExploreCoursePicker: View {
                     Spacer()
 
                     Button(action: { exploreState = .inactive }) {
-                        Text("Cancel")
+                        Text("common.cancel".localized)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .foregroundStyle(.green)
@@ -175,11 +175,11 @@ private struct ExploreCoursePicker: View {
                 HStack(spacing: 8) {
                     Image(systemName: "location.slash.fill")
                         .foregroundStyle(.orange)
-                    Text("Set Location to \"While Using\" for best accuracy")
+                    Text("map.locationPermission".localized)
                         .font(.caption)
                         .foregroundStyle(.primary)
                     Spacer()
-                    Button("Fix") {
+                    Button("common.fix".localized) {
                         appState.getLocationService().openSettings()
                     }
                     .font(.caption)
@@ -266,7 +266,7 @@ private struct ExploreMapBannerCTA: View {
             HStack(spacing: 8) {
                 Image(systemName: "xmark.circle.fill")
                     .font(.headline)
-                Text("Pick Another Course")
+                Text("map.pickAnotherCourse".localized)
                     .fontWeight(.semibold)
             }
             .foregroundStyle(.white)
@@ -422,12 +422,12 @@ private struct HoleInfoBar: View {
 
             if let hole {
                 VStack(spacing: 2) {
-                    Text("Hole \(hole.number)")
+                    Text("round.hole".localized(with: hole.number))
                         .font(.headline)
                     HStack(spacing: 8) {
-                        Text("Par \(hole.par)")
+                        Text("round.par".localized(with: hole.par))
                         if let yds = hole.yardage {
-                            Text("\(yds) yd")
+                            Text("\(yds) \("common.yds".localized)")
                         }
                         if let hcp = hole.handicap {
                             Text("HCP \(hcp)")
@@ -465,7 +465,7 @@ private struct EmptyMapStateView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
 
-            Text("Start a round to view the course map")
+            Text("map.startRoundPrompt".localized)
                 .font(.headline)
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
