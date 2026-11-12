@@ -59,6 +59,7 @@
 // MARK: - Languages
 "language.en" = "English";
 "language.ko" = "한국어";
+"language.es" = "Español";
 "language.system" = "시스템 기본값";
 
 // MARK: - Course Manager

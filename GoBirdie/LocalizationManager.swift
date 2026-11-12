@@ -11,12 +11,14 @@ enum AppLanguage: String, CaseIterable {
     case system = "system"
     case english = "en"
     case korean = "ko"
+    case spanish = "es"
     
     var displayName: String {
         switch self {
         case .system: return String(localized: "language.system")
         case .english: return String(localized: "language.en")
         case .korean: return String(localized: "language.ko")
+        case .spanish: return String(localized: "language.es")
         }
     }
     
@@ -25,6 +27,7 @@ enum AppLanguage: String, CaseIterable {
         case .system: return .current
         case .english: return Locale(identifier: "en")
         case .korean: return Locale(identifier: "ko")
+        case .spanish: return Locale(identifier: "es")
         }
     }
 }
@@ -56,6 +59,8 @@ final class LocalizationManager: ObservableObject {
             return "en"
         case .korean:
             return "ko"
+        case .spanish:
+            return "es"
         }
     }
     
@@ -72,6 +77,8 @@ final class LocalizationManager: ObservableObject {
             langCode = "en"
         case .korean:
             langCode = "ko"
+        case .spanish:
+            langCode = "es"
         }
         
         if let path = Bundle.main.path(forResource: langCode, ofType: "lproj"),

@@ -9,6 +9,7 @@ public struct AIPromptBuilder {
     public enum Language: String {
         case english = "en"
         case korean = "ko"
+        case spanish = "es"
     }
     
     public static func build(
@@ -38,38 +39,77 @@ public struct AIPromptBuilder {
         let avgHr = hrSamples.isEmpty ? 0 : hrSamples.reduce(0) { $0 + $1.bpm } / hrSamples.count
         let maxHr = hrSamples.map(\.bpm).max() ?? 0
         
-        // Build summary
-        let isKorean = language == .korean
-        var summary = isKorean ? "## 라운드 요약\n" : "## Round Summary\n"
-        summary += isKorean ? "날짜: \(dateStr)\n" : "Date: \(dateStr)\n"
-        summary += isKorean ? "코스: \(round.courseName)" : "Course: \(round.courseName)"
-        if let rating = courseRating, let sl = slope {
-            summary += isKorean ? " (레이팅 \(String(format: "%.1f", rating)), 슬로프 \(sl))" : " (Rating \(String(format: "%.1f", rating)), Slope \(sl))"
+        // Build summary based on language
+        var summary: String
+        switch language {
+        case .korean:
+            summary = "## 라운드 요약\n"
+            summary += "날짜: \(dateStr)\n"
+            summary += "코스: \(round.courseName)"
+            if let rating = courseRating, let sl = slope {
+                summary += " (레이팅 \(String(format: "%.1f", rating)), 슬로프 \(sl))"
+            }
+            summary += "\n핸디캡: \(handicap)\n"
+            summary += "스코어: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) 파 \(totalPar) 대비\n"
+            if played.count >= 16 {
+                summary += "전반: \(frontScore) | 후반: \(backScore)\n"
+            }
+            summary += "홀: \(played.count), 소요시간: \(durationMin)분\n"
+            if avgHr > 0 {
+                summary += "평균 심박수: \(avgHr) bpm, 최대 심박수: \(maxHr) bpm\n"
+            }
+            summary += "\n## 홀별 스코어카드\n"
+            summary += "홀 | 파 | 스코어 | +/- | 스코어 타입 | 퍼팅\n"
+        case .spanish:
+            summary = "## Resumen de la Ronda\n"
+            summary += "Fecha: \(dateStr)\n"
+            summary += "Campo: \(round.courseName)"
+            if let rating = courseRating, let sl = slope {
+                summary += " (Rating \(String(format: "%.1f", rating)), Slope \(sl))"
+            }
+            summary += "\nTu Hándicap: \(handicap)\n"
+            summary += "Puntuación: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) sobre par \(totalPar)\n"
+            if played.count >= 16 {
+                summary += "Ida: \(frontScore) | Vuelta: \(backScore)\n"
+            }
+            summary += "Hoyos: \(played.count), Duración: \(durationMin) min\n"
+            if avgHr > 0 {
+                summary += "FC Promedio: \(avgHr) bpm, FC Máx: \(maxHr) bpm\n"
+            }
+            summary += "\n## Tarjeta Hoyo por Hoyo\n"
+            summary += "Hoyo | Par | Golpes | +/- | Tipo | Putts\n"
+        case .english:
+            summary = "## Round Summary\n"
+            summary += "Date: \(dateStr)\n"
+            summary += "Course: \(round.courseName)"
+            if let rating = courseRating, let sl = slope {
+                summary += " (Rating \(String(format: "%.1f", rating)), Slope \(sl))"
+            }
+            summary += "\nYour Handicap: \(handicap)\n"
+            summary += "Score: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) over par \(totalPar)\n"
+            if played.count >= 16 {
+                summary += "Front: \(frontScore) | Back: \(backScore)\n"
+            }
+            summary += "Holes: \(played.count), Duration: \(durationMin) min\n"
+            if avgHr > 0 {
+                summary += "Avg HR: \(avgHr) bpm, Max HR: \(maxHr) bpm\n"
+            }
+            summary += "\n## Hole-by-Hole Scorecard\n"
+            summary += "Hole | Par | Score | +/- | Score Type | Putts\n"
         }
-        summary += "\n"
-        summary += isKorean ? "핸디캡: \(handicap)\n" : "Your Handicap: \(handicap)\n"
-        summary += isKorean ? "스코어: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) 파 \(totalPar) 대비\n" : "Score: \(round.totalStrokes) (\(overPar >= 0 ? "+" : "")\(overPar)) over par \(totalPar)\n"
-        
-        if played.count >= 16 {
-            summary += isKorean ? "전반: \(frontScore) | 후반: \(backScore)\n" : "Front: \(frontScore) | Back: \(backScore)\n"
-        }
-        
-        summary += isKorean ? "홀: \(played.count), 소요시간: \(durationMin)분\n" : "Holes: \(played.count), Duration: \(durationMin) min\n"
-        if avgHr > 0 {
-            summary += isKorean ? "평균 심박수: \(avgHr) bpm, 최대 심박수: \(maxHr) bpm\n" : "Avg HR: \(avgHr) bpm, Max HR: \(maxHr) bpm\n"
-        }
-        
-        // Scorecard table
-        summary += isKorean ? "\n## 홀별 스코어카드\n" : "\n## Hole-by-Hole Scorecard\n"
-        summary += isKorean ? "홀 | 파 | 스코어 | +/- | 스코어 타입 | 퍼팅\n" : "Hole | Par | Score | +/- | Score Type | Putts\n"
         summary += "-----|-----|-------|-----|------------|------\n"
         
         for hole in played.sorted(by: { $0.number < $1.number }) {
             let diff = hole.strokes - hole.par
-            summary += "H\(String(format: "%02d", hole.number)) | \(hole.par) | \(hole.strokes) | \(diff >= 0 ? "+" : "")\(diff) | \(scoreType(diff, korean: isKorean)) | \(hole.putts)\n"
+            summary += "H\(String(format: "%02d", hole.number)) | \(hole.par) | \(hole.strokes) | \(diff >= 0 ? "+" : "")\(diff) | \(scoreType(diff, language: language)) | \(hole.putts)\n"
         }
         
-        let instruction = language == .korean ? koreanInstruction : englishInstruction
+        let instruction: String
+        switch language {
+        case .korean: instruction = koreanInstruction
+        case .spanish: instruction = spanishInstruction
+        case .english: instruction = englishInstruction
+        }
         
         return """
         \(instruction)
@@ -78,16 +118,31 @@ public struct AIPromptBuilder {
         """
     }
     
-    private static func scoreType(_ diff: Int, korean: Bool) -> String {
-        switch diff {
-        case ...(-3): return korean ? "알바트로스" : "Albatross"
-        case -2: return korean ? "이글" : "Eagle"
-        case -1: return korean ? "버디" : "Birdie"
-        case 0: return korean ? "파" : "Par"
-        case 1: return korean ? "보기" : "Bogey"
-        case 2: return korean ? "더블보기" : "Double Bogey"
-        case 3: return korean ? "트리플보기" : "Triple Bogey"
-        default: return korean ? "+4 오버파" : "+4 Over Par"
+    private static func scoreType(_ diff: Int, language: Language) -> String {
+        switch language {
+        case .korean:
+            switch diff {
+            case ...(-3): return "알바트로스"
+            case -2: return "이글"
+            case -1: return "버디"
+            case 0: return "파"
+            case 1: return "보기"
+            case 2: return "더블보기"
+            case 3: return "트리플보기"
+            default: return "+4 오버파"
+            }
+        case .spanish, .english:
+            // Golf terms stay in English for Spanish
+            switch diff {
+            case ...(-3): return "Albatross"
+            case -2: return "Eagle"
+            case -1: return "Birdie"
+            case 0: return "Par"
+            case 1: return "Bogey"
+            case 2: return "Double Bogey"
+            case 3: return "Triple Bogey"
+            default: return "+4 Over Par"
+            }
         }
     }
     
@@ -111,5 +166,16 @@ public struct AIPromptBuilder {
     4. 한 가지 실천 포커스
 
     구체적으로 수치를 인용해주세요. 일반적인 조언은 피하세요.
+    """
+    
+    private static let spanishInstruction = """
+    Eres un entrenador de golf. Analiza la ronda y proporciona feedback de 150-200 palabras.
+
+    1. Rendimiento general vs hándicap (Considera Dificultad del Campo/Slope)
+    2. Fortalezas clave y áreas a mejorar (cita hoyos/métricas específicas)
+    3. Patrones de frecuencia cardíaca y correlación con el score
+    4. Un enfoque de práctica accionable
+
+    Sé directo. Cita números. Sin consejos genéricos.
     """
 }

@@ -1,0 +1,236 @@
+/* 
+  Localizable.strings (Spanish)
+  GoBirdie
+*/
+
+// MARK: - Tabs
+"tab.map" = "Mapa del Campo";
+"tab.scorecards" = "Tarjetas";
+"tab.settings" = "Ajustes";
+
+// MARK: - Settings
+"settings.title" = "Ajustes";
+"settings.courses" = "Campos";
+"settings.manageCourses" = "Gestionar Campos";
+"settings.equipment" = "Equipamiento";
+"settings.myClubs" = "Mis Palos";
+"settings.insights" = "Estadísticas";
+"settings.sgBaseline" = "Referencia SG";
+"settings.sgBaselineFooter" = "Las estadísticas de strokes gained comparan tu ronda con este nivel de referencia. Elige el nivel que mejor se ajuste a tu juego actual.";
+"settings.sync" = "Sincronización";
+"settings.desktopSync" = "Sincronizar con Escritorio";
+"settings.status" = "Estado";
+"settings.discoverable" = "Visible";
+"settings.starting" = "Iniciando…";
+"settings.syncFooter" = "Hace que este iPhone sea visible para la app de escritorio GoBirdie cercana — no se necesita WiFi compartido.";
+"settings.tee" = "Tee";
+"settings.teeColor" = "Color de Tee";
+"settings.supportDevelopment" = "Apoyar el Desarrollo";
+"settings.tipJarFooter" = "GoBirdie es gratis y sin anuncios. Las propinas ayudan a cubrir la tarifa anual de $99 de Apple Developer.";
+"settings.thankYou" = "¡Gracias! ⛳️ Ahora eres un Patrocinador.";
+"settings.loadProductsFailed" = "No se pudieron cargar los productos. Asegúrate de que la configuración de StoreKit esté establecida.";
+"settings.about" = "Acerca de";
+"settings.version" = "Versión";
+"settings.manual" = "Manual";
+"settings.mapData" = "Datos del Mapa";
+"settings.maps" = "Mapas";
+"settings.license" = "Licencia";
+"settings.language" = "Idioma";
+"settings.languageFooter" = "Elige tu idioma preferido para la app.";
+
+// MARK: - Tee Colors
+"tee.black" = "Negro";
+"tee.blue" = "Azul";
+"tee.white" = "Blanco";
+"tee.yellow" = "Amarillo";
+"tee.red" = "Rojo";
+
+// MARK: - Tip Jar Products
+"tip.sleeve" = "⛳️ Manga de Pelotas";
+"tip.snack" = "🌭 Snack de Media Ronda";
+"tip.drink" = "🍺 Bebida Post-Ronda";
+
+// MARK: - SG Baselines
+"baseline.scratch" = "Scratch";
+"baseline.single" = "Hándicap de Un Dígito";
+"baseline.bogey" = "Jugador Bogey";
+"baseline.highCap" = "Hándicap Alto";
+
+// MARK: - Languages
+"language.en" = "English";
+"language.ko" = "한국어";
+"language.es" = "Español";
+"language.system" = "Predeterminado del Sistema";
+
+// MARK: - Course Manager
+"courses.noCourses" = "No hay campos descargados";
+"courses.noCoursesFound" = "No se encontraron campos";
+"courses.searching" = "Buscando...";
+"courses.searchingMore" = "Buscando más campos...";
+"courses.holesDownloaded" = "%d hoyos · Descargado %@";
+"courses.downloading" = "Descargando %@...";
+"courses.gettingGeometry" = "Obteniendo geometría del campo";
+
+// MARK: - My Clubs
+"clubs.footer" = "Los palos seleccionados aparecen en el selector de Marcar Golpe durante una ronda.";
+"clubs.resetToDefault" = "Restablecer a Predeterminado";
+
+// MARK: - Club Names
+"club.unknown" = "Desconocido";
+"club.driver" = "Driver";
+"club.md" = "Mini Driver";
+"club.3w" = "Madera 3";
+"club.5w" = "Madera 5";
+"club.7w" = "Madera 7";
+"club.9w" = "Madera 9";
+"club.3h" = "Híbrido 3";
+"club.4h" = "Híbrido 4";
+"club.5h" = "Híbrido 5";
+"club.4i" = "Hierro 4";
+"club.5i" = "Hierro 5";
+"club.6i" = "Hierro 6";
+"club.7i" = "Hierro 7";
+"club.8i" = "Hierro 8";
+"club.9i" = "Hierro 9";
+"club.pw" = "Pitching Wedge";
+"club.gw" = "Gap Wedge";
+"club.sw" = "Sand Wedge";
+"club.lw" = "Lob Wedge";
+"club.putter" = "Putter";
+
+// MARK: - Map Tab
+"map.exploreCourses" = "Explorar Campos";
+"map.exploreDescription" = "Ver diseños de campos sin registrar una ronda";
+"map.startExploring" = "Comenzar a Explorar";
+"map.pickCourse" = "Elige un campo para explorar";
+"map.pickAnotherCourse" = "Elegir Otro Campo";
+"map.discoverNearby" = "Descubrir campos cercanos";
+"map.locationPermission" = "Configura la Ubicación en \"Mientras se usa\" para mejor precisión";
+"map.enableLocation" = "Habilita la ubicación en Ajustes si se solicita";
+"map.findingLocation" = "Buscando tu ubicación...";
+"map.acquiringGps" = "Adquiriendo GPS...";
+"map.startRoundPrompt" = "Inicia una ronda para ver el mapa del campo";
+"map.noSavedCourses" = "No hay campos guardados. Descarga un campo primero.";
+
+// MARK: - Round
+"round.title" = "Ronda";
+"round.strokes" = "Golpes";
+"round.tot" = "Tot";
+"round.plusMinus" = "+/−";
+"round.noActiveRound" = "Sin Ronda Activa";
+"round.startRound" = "Iniciar una Ronda";
+"round.startRoundDescription" = "Inicia una ronda para medir distancias\ny marcar tus golpes";
+"round.inProgress" = "Ronda en Progreso";
+"round.hole" = "Hoyo %d";
+"round.par" = "Par %d";
+"round.holeParYards" = "Hoyo %d  Par %d  %d yds";
+"round.holePar" = "Hoyo %d  Par %d";
+"round.startOnHole" = "Comenzar en Hoyo %d";
+"round.whichHole" = "¿En qué hoyo empiezas?";
+"round.markShot" = "Marcar Golpe";
+"round.strokes" = "Golpes";
+"round.putts" = "Putts";
+"round.puttsCount" = "%d Putts";
+"round.penalty" = "Penalización";
+"round.scorecard" = "TARJETA";
+"round.total" = "Total";
+"round.pen" = "Pen";
+"round.savingRound" = "Guardando ronda...";
+"round.saveAndFinish" = "¿Guardar y terminar esta ronda?";
+"round.idlePrompt" = "Sin actividad durante 30 minutos.";
+"round.teeDetected" = "Estás cerca del tee del Hoyo %d.";
+"round.finish" = "Terminar";
+"round.next" = "Siguiente";
+"round.selectClub" = "Seleccionar Palo";
+"round.moveShotsTo" = "Mover Golpes al Hoyo...";
+"round.syncWatch" = "Sincronizar Reloj";
+"round.endRound" = "Terminar Ronda";
+"round.cancelRound" = "Cancelar Ronda";
+"round.stillPlaying" = "¿Sigues jugando?";
+"round.yesStillPlaying" = "Sí, sigo jugando";
+"round.moveToHole" = "Ir al Hoyo %d";
+"round.stay" = "Quedarme";
+"round.strokesCount" = "%d golpes";
+"round.moveShotsFrom" = "Mover %d golpe(s) del Hoyo %d a:";
+"round.moveShots" = "Mover Golpes";
+"round.holeStarted" = "Hoyo %d  ·  Iniciado %@";
+"round.resumeRound" = "Reanudar Ronda";
+
+// MARK: - Distance
+"distance.front" = "Frente";
+"distance.flag" = "Bandera";
+"distance.back" = "Fondo";
+
+// MARK: - Insights
+"insights.title" = "Estadísticas Clave";
+"insights.vsBaseline" = "vs %@";
+
+// MARK: - Scorecards
+"scorecards.title" = "Tarjetas";
+"scorecards.rounds" = "Rondas";
+"scorecards.tournaments" = "Torneos";
+"scorecards.noScorecards" = "Sin Tarjetas";
+"scorecards.noScorecardsDescription" = "Las rondas completadas aparecerán aquí";
+"scorecards.noTournaments" = "Sin Torneos";
+"scorecards.tapToCreate" = "Toca + para crear uno";
+
+// MARK: - Shot Map
+"shotMap.dragToMove" = "Arrastra el pin para mover";
+"shotMap.tapToAdd" = "Toca el mapa para añadir golpe";
+"shotMap.tapToSelect" = "Toca el pin para seleccionar";
+"shotMap.selectClub" = "Selecciona palo para confirmar";
+"shotMap.deleteShot" = "Eliminar Golpe";
+"shotMap.reorderShots" = "Reordenar Golpes";
+"shotMap.shot" = "Golpe %d";
+"shotMap.deleteConfirm" = "¿Eliminar este golpe?";
+"shotMap.saveConfirm" = "¿Quieres guardar los cambios?";
+
+// MARK: - Tournament
+"tournament.title" = "Torneo";
+"tournament.titleOptional" = "Título (opcional)";
+"tournament.new" = "Nuevo Torneo";
+"tournament.create" = "Crear Torneo";
+"tournament.createButton" = "Crear";
+"tournament.course" = "Campo";
+"tournament.selectCourse" = "Seleccionar Campo";
+"tournament.dateFormat" = "Fecha (aaaa-MM-dd)";
+"tournament.edit" = "Editar Torneo";
+"tournament.rename" = "Renombrar";
+"tournament.renameTournament" = "Renombrar Torneo";
+"tournament.renamePlayer" = "Renombrar Jugador";
+"tournament.name" = "Nombre";
+"tournament.playerName" = "Nombre del jugador";
+"tournament.shareScore" = "Compartir Puntuación";
+"tournament.scanScore" = "Escanear Puntuación";
+"tournament.addPlayer" = "Añadir Jugador";
+"tournament.noPlayers" = "Sin jugadores aún. Toca + o escanea un código QR.";
+"tournament.scanQr" = "Apunta la cámara a un código QR de GoBirdie";
+"tournament.hostScan" = "Haz que el anfitrión del torneo escanee este código";
+"tournament.autoAdd" = "Tu última ronda (%@) se añadirá automáticamente.";
+
+// MARK: - AI Coaching
+"ai.promptCopied" = "¡Prompt de Coaching IA Copiado!";
+"ai.promptInstructions" = "Pega el prompt en ChatGPT o Gemini para recibir feedback de coaching personalizado.";
+"ai.openChatGpt" = "Abrir ChatGPT";
+"ai.openGemini" = "Abrir Gemini";
+
+// MARK: - Common
+"common.done" = "Listo";
+"common.cancel" = "Cancelar";
+"common.confirm" = "Confirmar";
+"common.edit" = "Editar";
+"common.add" = "Añadir";
+"common.delete" = "Eliminar";
+"common.retry" = "Reintentar";
+"common.error" = "Error";
+"common.discard" = "Descartar";
+"common.undo" = "Deshacer";
+"common.prev" = "Anterior";
+"common.ok" = "OK";
+"common.yes" = "Sí";
+"common.no" = "No";
+"common.fix" = "Arreglar";
+"common.save" = "Guardar";
+"common.clear" = "Borrar";
+"common.close" = "Cerrar";
+"common.yds" = "yds";
