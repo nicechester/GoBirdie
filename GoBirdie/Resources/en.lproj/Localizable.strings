@@ -235,6 +235,10 @@
 "common.close" = "Close";
 "common.yds" = "yds";
 
+// MARK: - Stats
+"stats.holesPlayed" = "Holes Played";
+"stats.longestDrive" = "Longest Drive";
+
 // MARK: - Insights Messages
 "insight.SG_PUTTING_CRITICAL" = "Putting was the biggest hole in your scorecard — you lost %@ strokes on the greens. Speed control on long putts is the quickest fix.";
 "insight.SG_APPROACH_CRITICAL" = "Approach play was your Achilles heel — %@ strokes lost into the green. Distance control and iron accuracy need work.";

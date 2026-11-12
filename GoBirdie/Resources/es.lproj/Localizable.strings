@@ -235,6 +235,10 @@
 "common.close" = "Cerrar";
 "common.yds" = "yds";
 
+// MARK: - Stats
+"stats.holesPlayed" = "Hoyos Jugados";
+"stats.longestDrive" = "Drive Más Largo";
+
 // MARK: - Insights Messages
 "insight.SG_PUTTING_CRITICAL" = "El putting fue el mayor problema — perdiste %@ golpes en los greens. El control de velocidad en putts largos es la solución más rápida.";
 "insight.SG_APPROACH_CRITICAL" = "Los approach fueron tu talón de Aquiles — %@ golpes perdidos hacia el green. El control de distancia y precisión con hierros necesita trabajo.";

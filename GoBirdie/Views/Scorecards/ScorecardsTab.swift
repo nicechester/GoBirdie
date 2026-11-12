@@ -756,10 +756,10 @@ private struct StatsSection: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            statRow("Holes Played", value: "\(holesPlayed)")
+            statRow("stats.holesPlayed".localized, value: "\(holesPlayed)")
             statRow("GIR", value: "\(girCount)/\(girTotal)")
             if let ld = longestDrive {
-                statRow("Longest Drive", value: "\(ld.yards) yds (H\(ld.hole))")
+                statRow("stats.longestDrive".localized, value: "\(ld.yards) \("common.yds".localized) (H\(ld.hole))")
             }
         }
         .padding(.horizontal, 16)

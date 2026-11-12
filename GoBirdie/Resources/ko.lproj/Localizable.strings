@@ -235,6 +235,10 @@
 "common.close" = "닫기";
 "common.yds" = "야드";
 
+// MARK: - Stats
+"stats.holesPlayed" = "플레이한 홀";
+"stats.longestDrive" = "최장 드라이브";
+
 // MARK: - Insights Messages
 "insight.SG_PUTTING_CRITICAL" = "퍼팅이 가장 큰 문제였습니다 — 그린에서 %@ 타를 잃었습니다. 롱 퍼팅 스피드 컨트롤이 가장 빠른 개선책입니다.";
 "insight.SG_APPROACH_CRITICAL" = "어프로치 샷이 약점이었습니다 — 그린 공략에서 %@ 타 손실. 거리 컨트롤과 아이언 정확도 향상이 필요합니다.";
