@@ -146,6 +146,7 @@ private struct ScorecardDetailView: View {
     @State private var currentRound: Round
     @State private var showQrShare = false
     @State private var tournamentToOpen: Tournament?
+    @State private var showAIPromptCopied = false
 
     init(round: Round) {
         self.round = round
@@ -264,6 +265,9 @@ private struct ScorecardDetailView: View {
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     HStack {
+                        Button { copyAIPrompt() } label: {
+                            Image(systemName: "sparkles")
+                        }
                         Button { createTournament() } label: {
                             Image(systemName: "trophy")
                         }
@@ -286,7 +290,31 @@ private struct ScorecardDetailView: View {
             .sheet(item: $tournamentToOpen) { t in
                 TournamentDetailView(tournament: t, onDismiss: { tournamentToOpen = nil })
             }
+            .alert("AI Coaching Prompt Copied!", isPresented: $showAIPromptCopied) {
+                Button("Open ChatGPT") {
+                    if let url = URL(string: "https://chat.openai.com") {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("Open Gemini") {
+                    if let url = URL(string: "https://gemini.google.com") {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Paste the prompt into ChatGPT or Gemini for personalized coaching feedback.")
+            }
         }
+    }
+
+    private func copyAIPrompt() {
+        let prompt = AIPromptBuilder.build(
+            round: currentRound,
+            handicap: appState.sgBaseline.displayName
+        )
+        UIPasteboard.general.string = prompt
+        showAIPromptCopied = true
     }
 
     private func createTournament() {
