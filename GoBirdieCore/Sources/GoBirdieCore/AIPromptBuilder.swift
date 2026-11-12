@@ -6,11 +6,17 @@ import Foundation
 
 public struct AIPromptBuilder {
     
+    public enum Language: String {
+        case english = "en"
+        case korean = "ko"
+    }
+    
     public static func build(
         round: Round,
         handicap: String = "Bogey Golfer",
         courseRating: Double? = nil,
-        slope: Int? = nil
+        slope: Int? = nil,
+        language: Language = .english
     ) -> String {
         let played = round.holes.filter { $0.strokes > 0 }
         guard !played.isEmpty else { return "No scorecard data available." }
@@ -62,8 +68,10 @@ public struct AIPromptBuilder {
             summary += "H\(String(format: "%02d", hole.number)) | \(hole.par) | \(hole.strokes) | \(diff >= 0 ? "+" : "")\(diff) | \(scoreType(diff)) | \(hole.putts)\n"
         }
         
+        let instruction = language == .korean ? koreanInstruction : englishInstruction
+        
         return """
-        \(englishInstruction)
+        \(instruction)
         
         \(summary)
         """
@@ -91,5 +99,16 @@ public struct AIPromptBuilder {
     4. One actionable practice focus
 
     Be direct. Cite numbers. No generic advice.
+    """
+    
+    private static let koreanInstruction = """
+    당신은 골프 코치입니다. 라운드를 분석해서 400~600자 내외의 피드백을 제공해주세요.
+
+    1. 전체 성과 vs 핸디캡 (코스 난이도/슬로프 고려 필수)
+    2. 잘한 점과 개선 필요 부분 (구체적 홀/수치 인용)
+    3. 심박수 패턴과 스코어 연관성
+    4. 한 가지 실천 포커스
+
+    구체적으로 수치를 인용해주세요. 일반적인 조언은 피하세요.
     """
 }

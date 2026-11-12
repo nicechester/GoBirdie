@@ -1,0 +1,157 @@
+/* 
+  Localizable.strings (English)
+  GoBirdie
+*/
+
+// MARK: - Tabs
+"tab.map" = "Course Map";
+"tab.scorecards" = "Scorecards";
+"tab.settings" = "Settings";
+
+// MARK: - Settings
+"settings.title" = "Settings";
+"settings.courses" = "Courses";
+"settings.manageCourses" = "Manage Courses";
+"settings.equipment" = "Equipment";
+"settings.myClubs" = "My Clubs";
+"settings.insights" = "Insights";
+"settings.sgBaseline" = "SG Baseline";
+"settings.sgBaselineFooter" = "Strokes gained insights compare your round against this benchmark. Choose the level that best matches your current game.";
+"settings.sync" = "Sync";
+"settings.desktopSync" = "Desktop Sync";
+"settings.status" = "Status";
+"settings.discoverable" = "Discoverable";
+"settings.starting" = "Starting…";
+"settings.syncFooter" = "Makes this iPhone discoverable to the GoBirdie desktop app nearby — no shared WiFi needed.";
+"settings.tee" = "Tee";
+"settings.teeColor" = "Tee Color";
+"settings.supportDevelopment" = "Support Development";
+"settings.tipJarFooter" = "GoBirdie is free with no ads. Tips help cover the $99/year Apple Developer fee.";
+"settings.thankYou" = "Thank you! ⛳️ You're now a Patron.";
+"settings.loadProductsFailed" = "Could not load products. Make sure the StoreKit config is set in the scheme.";
+"settings.about" = "About";
+"settings.version" = "Version";
+"settings.manual" = "Manual";
+"settings.mapData" = "Map Data";
+"settings.maps" = "Maps";
+"settings.license" = "License";
+"settings.language" = "Language";
+"settings.languageFooter" = "Choose your preferred language for the app.";
+
+// MARK: - Tee Colors
+"tee.black" = "Black";
+"tee.blue" = "Blue";
+"tee.white" = "White";
+"tee.yellow" = "Yellow";
+"tee.red" = "Red";
+
+// MARK: - Tip Jar Products
+"tip.sleeve" = "⛳️ Sleeve of Balls";
+"tip.snack" = "🌭 Mid-Round Snack";
+"tip.drink" = "🍺 Post-Round Drink";
+
+// MARK: - SG Baselines
+"baseline.scratch" = "Scratch";
+"baseline.single" = "Single Digit";
+"baseline.bogey" = "Bogey Golfer";
+"baseline.highCap" = "High Handicap";
+
+// MARK: - Languages
+"language.en" = "English";
+"language.ko" = "한국어";
+"language.system" = "System Default";
+
+// MARK: - Course Manager
+"courses.noCourses" = "No courses downloaded yet";
+"courses.noCoursesFound" = "No courses found";
+"courses.searching" = "Searching...";
+"courses.searchingMore" = "Searching for more courses...";
+"courses.holesDownloaded" = "%d holes · Downloaded %@";
+"courses.downloading" = "Downloading %@...";
+"courses.gettingGeometry" = "Getting course geometry";
+
+// MARK: - My Clubs
+"clubs.footer" = "Selected clubs appear in the Mark Shot picker during a round.";
+
+// MARK: - Map Tab
+"map.exploreCourses" = "Explore Courses";
+"map.exploreDescription" = "View course layouts without tracking a round";
+"map.startExploring" = "Start Exploring";
+"map.pickCourse" = "Pick a course to explore";
+"map.pickAnotherCourse" = "Pick Another Course";
+"map.discoverNearby" = "Discover nearby courses";
+"map.locationPermission" = "Set Location to \"While Using\" for best accuracy";
+"map.enableLocation" = "Enable location in Settings if prompted";
+"map.findingLocation" = "Finding your location...";
+"map.acquiringGps" = "Acquiring GPS...";
+"map.startRoundPrompt" = "Start a round to view the course map";
+"map.noSavedCourses" = "No saved courses. Download a course first.";
+
+// MARK: - Round
+"round.title" = "Round";
+"round.noActiveRound" = "No Active Round";
+"round.startRound" = "Start a Round";
+"round.startRoundDescription" = "Start a round to track distances\nand mark your shots";
+"round.inProgress" = "Round In Progress";
+"round.hole" = "Hole %d";
+"round.par" = "Par %d";
+"round.startOnHole" = "Start on Hole %d";
+"round.whichHole" = "Which hole are you starting on?";
+"round.markShot" = "Mark Shot";
+"round.strokes" = "Strokes";
+"round.putts" = "Putts";
+"round.penalty" = "Penalty";
+"round.scorecard" = "SCORECARD";
+"round.total" = "Total";
+"round.savingRound" = "Saving round...";
+"round.saveAndFinish" = "Save and finish this round?";
+"round.idlePrompt" = "No activity for 30 minutes.";
+"round.teeDetected" = "You're near the Hole %d tee box.";
+
+// MARK: - Scorecards
+"scorecards.title" = "Scorecards";
+"scorecards.rounds" = "Rounds";
+"scorecards.tournaments" = "Tournaments";
+"scorecards.noScorecards" = "No Scorecards";
+"scorecards.noScorecardsDescription" = "Completed rounds will appear here";
+"scorecards.noTournaments" = "No Tournaments";
+"scorecards.tapToCreate" = "Tap + to create one";
+
+// MARK: - Shot Map
+"shotMap.dragToMove" = "Drag pin to move";
+"shotMap.tapToAdd" = "Tap map to add shot";
+"shotMap.tapToSelect" = "Tap pin to select";
+"shotMap.selectClub" = "Select club to confirm";
+"shotMap.deleteShot" = "Delete Shot";
+"shotMap.reorderShots" = "Reorder Shots";
+"shotMap.shot" = "Shot %d";
+
+// MARK: - Tournament
+"tournament.addPlayer" = "Add Player";
+"tournament.noPlayers" = "No players yet. Tap + or scan a QR code.";
+"tournament.scanQr" = "Point camera at a GoBirdie QR code";
+"tournament.hostScan" = "Have the tournament host scan this code";
+"tournament.autoAdd" = "Your latest round (%@) will be added automatically.";
+
+// MARK: - AI Coaching
+"ai.promptCopied" = "AI Coaching Prompt Copied!";
+"ai.promptInstructions" = "Paste the prompt into ChatGPT or Gemini for personalized coaching feedback.";
+"ai.openChatGpt" = "Open ChatGPT";
+"ai.openGemini" = "Open Gemini";
+
+// MARK: - Common
+"common.done" = "Done";
+"common.cancel" = "Cancel";
+"common.confirm" = "Confirm";
+"common.edit" = "Edit";
+"common.add" = "Add";
+"common.delete" = "Delete";
+"common.retry" = "Retry";
+"common.error" = "Error";
+"common.discard" = "Discard";
+"common.undo" = "Undo";
+"common.prev" = "Prev";
+"common.ok" = "OK";
+"common.yes" = "Yes";
+"common.no" = "No";
+"common.close" = "Close";

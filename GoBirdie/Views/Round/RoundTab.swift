@@ -115,7 +115,7 @@ private struct ActiveRoundView: View {
             MiniScorecardView(session: session)
                 .padding(.top, 4)
         }
-        .alert("End Round?", isPresented: $showEndConfirm) {
+        .alert("round.saveAndFinish".localized, isPresented: $showEndConfirm) {
             Button("End", role: .destructive) {
                 session.endRound()
                 appState.endActiveRound()
@@ -123,7 +123,7 @@ private struct ActiveRoundView: View {
             .accessibilityIdentifier("confirmEndRound")
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Save and finish this round?")
+            Text("round.saveAndFinish".localized)
         }
         .alert("Are you still playing?", isPresented: $appState.showIdlePrompt) {
             Button("Yes, still playing") {
@@ -134,9 +134,9 @@ private struct ActiveRoundView: View {
                 appState.endActiveRound()
             }
         } message: {
-            Text("No activity for 30 minutes.")
+            Text("round.idlePrompt".localized)
         }
-        .alert("Move to Hole \(appState.teeDetectionHole ?? 0)?", isPresented: Binding(
+        .alert("round.teeDetected".localized(with: appState.teeDetectionHole ?? 0), isPresented: Binding(
             get: { appState.teeDetectionHole != nil },
             set: { if !$0 { appState.teeDetectionHole = nil } }
         )) {
@@ -146,7 +146,7 @@ private struct ActiveRoundView: View {
             }
         } message: {
             if let hole = appState.teeDetectionHole {
-                Text("You're near the Hole \(hole) tee box.")
+                Text("round.teeDetected".localized(with: hole))
             }
         }
         .sheet(isPresented: $showMoveShotsSheet) {
@@ -169,7 +169,7 @@ private struct ActiveRoundView: View {
                             .progressViewStyle(.circular)
                             .scaleEffect(1.5)
                             .tint(.white)
-                        Text("Saving round...")
+                        Text("round.savingRound".localized)
                             .font(.subheadline)
                             .foregroundStyle(.white)
                     }
@@ -225,13 +225,13 @@ private struct EmptyRoundStateView: View {
             Spacer()
             Image(systemName: "flag.fill")
                 .font(.system(size: 56)).foregroundStyle(.green)
-            Text("No Active Round").font(.title2).fontWeight(.bold)
-            Text("Start a round to track distances\nand mark your shots")
+            Text("round.noActiveRound".localized).font(.title2).fontWeight(.bold)
+            Text("round.startRoundDescription".localized)
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Spacer()
             Button(action: onStartRound) {
-                Label("Start Round", systemImage: "plus.circle.fill")
+                Label("round.startRound".localized, systemImage: "plus.circle.fill")
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -308,7 +308,7 @@ private struct ResumeRoundView: View {
             Image(systemName: "arrow.counterclockwise.circle.fill")
                 .font(.system(size: 56)).foregroundStyle(.orange)
 
-            Text("Round In Progress").font(.title2).fontWeight(.bold)
+            Text("round.inProgress".localized).font(.title2).fontWeight(.bold)
 
             VStack(spacing: 6) {
                 Text(snapshot.round.courseName)

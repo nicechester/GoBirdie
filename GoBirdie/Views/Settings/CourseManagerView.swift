@@ -41,7 +41,7 @@ struct CourseManagerView: View {
                     HStack {
                         Spacer()
                         ProgressView().tint(.green)
-                        Text("Searching...").font(.caption).foregroundStyle(.secondary)
+                        Text("courses.searching".localized).font(.caption).foregroundStyle(.secondary)
                         Spacer()
                     }
                 }
@@ -87,13 +87,13 @@ struct CourseManagerView: View {
 
             Section("Saved Courses (\(savedCourses.count))") {
                 if savedCourses.isEmpty {
-                    Text("No courses downloaded yet")
+                    Text("courses.noCourses".localized)
                         .font(.caption).foregroundStyle(.secondary)
                 } else {
                     ForEach(savedCourses) { course in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(course.name).font(.subheadline)
-                            Text("\(course.holes.count) holes · Downloaded \(course.downloadedAt.formatted(.relative(presentation: .named)))")
+                            Text("courses.holesDownloaded".localized(with: course.holes.count, course.downloadedAt.formatted(.relative(presentation: .named))))
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                     }
@@ -101,7 +101,7 @@ struct CourseManagerView: View {
                 }
             }
         }
-        .navigationTitle("Courses")
+        .navigationTitle("settings.manageCourses".localized)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { loadSaved() }
     }
@@ -138,7 +138,7 @@ struct CourseManagerView: View {
                 await MainActor.run {
                     searchResults = results
                     isSearching = false
-                    if results.isEmpty { errorMessage = "No courses found for \"\(query)\"" }
+                    if results.isEmpty { errorMessage = "courses.noCoursesFound".localized }
                 }
             } catch {
                 await MainActor.run {

@@ -26,10 +26,10 @@ struct StartRoundView: View {
                         Image(systemName: "flag.fill")
                             .font(.system(size: 40))
                             .foregroundStyle(.green)
-                        Text("Start a Round")
+                        Text("round.startRound".localized)
                             .font(.title2)
                             .fontWeight(.bold)
-                        Text("Discover nearby courses")
+                        Text("map.discoverNearby".localized)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -72,7 +72,7 @@ struct StartRoundView: View {
 
                     // Cancel button
                     Button(action: { dismiss() }) {
-                        Text("Cancel")
+                        Text("common.cancel".localized)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .foregroundStyle(.green)
@@ -106,7 +106,7 @@ struct StartRoundView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "location.slash.fill")
                         .foregroundStyle(.orange)
-                    Text("Set Location to \"While Using\" for best accuracy")
+                    Text("map.locationPermission".localized)
                         .font(.caption)
                         .foregroundStyle(.primary)
                     Spacer()
@@ -134,9 +134,9 @@ struct LocationRequestingView: View {
                 .tint(.green)
 
             VStack(spacing: 8) {
-                Text("Finding your location...")
+                Text("map.findingLocation".localized)
                     .font(.headline)
-                Text("Enable location in Settings if prompted")
+                Text("map.enableLocation".localized)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -185,7 +185,7 @@ struct CourseListView: View {
             if isSearchingOnline {
                 HStack(spacing: 8) {
                     ProgressView().tint(.green)
-                    Text("Searching for more courses...")
+                    Text("courses.searchingMore".localized)
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 8)
@@ -200,10 +200,10 @@ struct CourseListView: View {
                     Image(systemName: "mappin.slash")
                         .font(.system(size: 32))
                         .foregroundStyle(.secondary)
-                    Text("No courses found")
+                    Text("courses.noCoursesFound".localized)
                         .font(.headline)
                     Button(action: onRetry) {
-                        Text("Retry")
+                        Text("common.retry".localized)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(Color.green)
@@ -280,9 +280,9 @@ struct DownloadingView: View {
                 .tint(.green)
 
             VStack(spacing: 8) {
-                Text("Downloading \(courseName)...")
+                Text("courses.downloading".localized(with: courseName))
                     .font(.headline)
-                Text("Getting course geometry")
+                Text("courses.gettingGeometry".localized)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -303,7 +303,7 @@ struct ErrorView: View {
                 .foregroundStyle(.red)
 
             VStack(spacing: 8) {
-                Text("Error")
+                Text("common.error".localized)
                     .font(.headline)
                 Text(message)
                     .font(.caption)
@@ -312,7 +312,7 @@ struct ErrorView: View {
             }
 
             Button(action: onRetry) {
-                Text("Retry")
+                Text("common.retry".localized)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(Color.green)
@@ -331,7 +331,7 @@ private struct StartingHoleView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Which hole are you starting on?")
+            Text("round.whichHole".localized)
                 .font(.headline)
                 .multilineTextAlignment(.center)
 
@@ -346,7 +346,7 @@ private struct StartingHoleView: View {
             Button {
                 onStart(selectedHole)
             } label: {
-                Text("Start on Hole \(selectedHole)")
+                Text("round.startOnHole".localized(with: selectedHole))
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)

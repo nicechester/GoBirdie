@@ -9,25 +9,27 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject var localization = LocalizationManager.shared
 
     var body: some View {
         TabView(selection: $appState.selectedTab) {
             ScorecardsTab()
-                .tabItem { Label("Scorecards", systemImage: "list.bullet.clipboard") }
+                .tabItem { Label("tab.scorecards".localized, systemImage: "list.bullet.clipboard") }
                 .tag(0)
 
             RoundTab()
-                .tabItem { Label("Round", systemImage: "figure.golf") }
+                .tabItem { Label("round.title".localized, systemImage: "figure.golf") }
                 .tag(1)
 
             MapTab()
-                .tabItem { Label("Map", systemImage: "map") }
+                .tabItem { Label("tab.map".localized, systemImage: "map") }
                 .tag(2)
 
             SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape") }
+                .tabItem { Label("tab.settings".localized, systemImage: "gearshape") }
                 .tag(3)
         }
+        .id(localization.currentLanguage) // Force refresh on language change
         .accessibilityIdentifier("mainTabView")
     }
 }
@@ -40,7 +42,7 @@ struct ScorecardsPlaceholder: View {
             Image(systemName: "list.bullet.clipboard")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
-            Text("Scorecards")
+            Text("tab.scorecards".localized)
                 .font(.headline)
             Text("Coming soon")
                 .font(.caption)
@@ -55,7 +57,7 @@ struct MapPlaceholder: View {
             Image(systemName: "map")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
-            Text("Course Map")
+            Text("tab.map".localized)
                 .font(.headline)
             Text("Coming soon")
                 .font(.caption)
@@ -77,8 +79,8 @@ struct SettingsPlaceholder: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Tee") {
-                    Picker("Tee Color", selection: $appState.teeColor) {
+                Section("settings.tee".localized) {
+                    Picker("settings.teeColor".localized, selection: $appState.teeColor) {
                         ForEach(teeColors, id: \.self) { color in
                             HStack {
                                 Circle()
@@ -91,11 +93,11 @@ struct SettingsPlaceholder: View {
                     }
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle("tab.settings".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done".localized) { dismiss() }
                 }
             }
         }

@@ -38,13 +38,13 @@ struct ScorecardsTab: View {
                     .listStyle(.plain)
                 }
             }
-            .navigationTitle("Scorecards")
+            .navigationTitle("scorecards.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Picker("", selection: $selectedTab) {
-                        Text("Rounds").tag(0)
-                        Text("Tournaments").tag(1)
+                        Text("scorecards.rounds".localized).tag(0)
+                        Text("scorecards.tournaments".localized).tag(1)
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 220)
@@ -290,28 +290,30 @@ private struct ScorecardDetailView: View {
             .sheet(item: $tournamentToOpen) { t in
                 TournamentDetailView(tournament: t, onDismiss: { tournamentToOpen = nil })
             }
-            .alert("AI Coaching Prompt Copied!", isPresented: $showAIPromptCopied) {
-                Button("Open ChatGPT") {
+            .alert("ai.promptCopied".localized, isPresented: $showAIPromptCopied) {
+                Button("ai.openChatGpt".localized) {
                     if let url = URL(string: "https://chat.openai.com") {
                         UIApplication.shared.open(url)
                     }
                 }
-                Button("Open Gemini") {
+                Button("ai.openGemini".localized) {
                     if let url = URL(string: "https://gemini.google.com") {
                         UIApplication.shared.open(url)
                     }
                 }
-                Button("OK", role: .cancel) { }
+                Button("common.ok".localized, role: .cancel) { }
             } message: {
-                Text("Paste the prompt into ChatGPT or Gemini for personalized coaching feedback.")
+                Text("ai.promptInstructions".localized)
             }
         }
     }
 
     private func copyAIPrompt() {
+        let lang: AIPromptBuilder.Language = LocalizationManager.shared.isKorean ? .korean : .english
         let prompt = AIPromptBuilder.build(
             round: currentRound,
-            handicap: appState.sgBaseline.displayName
+            handicap: appState.sgBaseline.displayName,
+            language: lang
         )
         UIPasteboard.general.string = prompt
         showAIPromptCopied = true
@@ -884,9 +886,9 @@ private struct EmptyScorecardsView: View {
             Spacer()
             Image(systemName: "list.bullet.clipboard")
                 .font(.system(size: 48)).foregroundStyle(.secondary)
-            Text("No Scorecards")
+            Text("scorecards.noScorecards".localized)
                 .font(.title3).fontWeight(.bold)
-            Text("Completed rounds will appear here")
+            Text("scorecards.noScorecardsDescription".localized)
                 .font(.subheadline).foregroundStyle(.secondary)
             Spacer()
         }

@@ -68,8 +68,8 @@ struct TournamentsTab: View {
                     VStack(spacing: 16) {
                         Spacer()
                         Image(systemName: "trophy").font(.system(size: 48)).foregroundStyle(.secondary)
-                        Text("No Tournaments").font(.title3).fontWeight(.bold)
-                        Text("Tap + to create one").font(.subheadline).foregroundStyle(.secondary)
+                        Text("scorecards.noTournaments".localized).font(.title3).fontWeight(.bold)
+                        Text("scorecards.tapToCreate".localized).font(.subheadline).foregroundStyle(.secondary)
                         Spacer()
                     }
                 } else {
@@ -234,7 +234,7 @@ private struct CoursePickerSheet: View {
         NavigationStack {
             Group {
                 if courses.isEmpty {
-                    Text("No saved courses. Download a course first.")
+                    Text("map.noSavedCourses".localized)
                         .foregroundStyle(.secondary).padding()
                 } else {
                     List(courses) { course in
@@ -362,7 +362,7 @@ struct TournamentDetailView: View {
         VStack(spacing: 0) {
             if tournament.players.isEmpty {
                 Spacer()
-                Text("No players yet. Tap + or scan a QR code.")
+                Text("tournament.noPlayers".localized)
                     .foregroundStyle(.secondary).multilineTextAlignment(.center).padding()
                 Spacer()
             } else {
@@ -696,7 +696,7 @@ private struct AddPlayerSheet: View {
             )
         } else {
             VStack(spacing: 20) {
-                Text("Add Player")
+                Text("tournament.addPlayer".localized)
                     .font(.headline)
                     .padding(.top, 20)
                 TextField("Player name", text: $name)
@@ -767,7 +767,7 @@ struct QrShareView: View {
                     Text("\(round.totalStrokes) strokes")
                         .font(.subheadline).fontWeight(.semibold).foregroundStyle(.green)
                 }
-                Text("Have the tournament host scan this code")
+                Text("tournament.hostScan".localized)
                     .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 Spacer()
             }
@@ -817,7 +817,7 @@ private struct QrScanView: View {
                 .ignoresSafeArea()
                 VStack {
                     Spacer()
-                    Text("Point camera at a GoBirdie QR code")
+                    Text("tournament.scanQr".localized)
                         .font(.caption).foregroundStyle(.white)
                         .padding(.bottom, 32)
                 }

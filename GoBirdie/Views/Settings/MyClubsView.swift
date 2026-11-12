@@ -27,7 +27,7 @@ struct MyClubsView: View {
                     }
                 }
             } footer: {
-                Text("Selected clubs appear in the Mark Shot picker during a round.")
+                Text("clubs.footer".localized)
             }
 
             Section {
@@ -36,7 +36,7 @@ struct MyClubsView: View {
                 }
             }
         }
-        .navigationTitle("My Clubs")
+        .navigationTitle("settings.myClubs".localized)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
