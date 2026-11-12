@@ -16,7 +16,7 @@ struct MyClubsView: View {
                         bag.toggle(club)
                     } label: {
                         HStack {
-                            Text(club.displayName)
+                            Text(club.localizedName)
                                 .foregroundStyle(.primary)
                             Spacer()
                             if bag.isEnabled(club) {

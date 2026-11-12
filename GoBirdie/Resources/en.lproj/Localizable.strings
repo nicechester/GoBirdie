@@ -74,6 +74,29 @@
 "clubs.footer" = "Selected clubs appear in the Mark Shot picker during a round.";
 "clubs.resetToDefault" = "Reset to Default";
 
+// MARK: - Club Names
+"club.unknown" = "Unknown";
+"club.driver" = "Driver";
+"club.md" = "Mini Driver";
+"club.3w" = "3 Wood";
+"club.5w" = "5 Wood";
+"club.7w" = "7 Wood";
+"club.9w" = "9 Wood";
+"club.3h" = "3 Hybrid";
+"club.4h" = "4 Hybrid";
+"club.5h" = "5 Hybrid";
+"club.4i" = "4 Iron";
+"club.5i" = "5 Iron";
+"club.6i" = "6 Iron";
+"club.7i" = "7 Iron";
+"club.8i" = "8 Iron";
+"club.9i" = "9 Iron";
+"club.pw" = "Pitching Wedge";
+"club.gw" = "Gap Wedge";
+"club.sw" = "Sand Wedge";
+"club.lw" = "Lob Wedge";
+"club.putter" = "Putter";
+
 // MARK: - Map Tab
 "map.exploreCourses" = "Explore Courses";
 "map.exploreDescription" = "View course layouts without tracking a round";

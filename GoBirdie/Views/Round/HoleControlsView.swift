@@ -215,7 +215,7 @@ struct MarkShotSheet: View {
             VStack(spacing: 0) {
                 Picker("Club", selection: $selectedClub) {
                     ForEach(bag.enabledClubs, id: \.self) { club in
-                        Text(club.displayName).tag(club)
+                        Text(club.localizedName).tag(club)
                     }
                 }
                 .pickerStyle(.wheel)

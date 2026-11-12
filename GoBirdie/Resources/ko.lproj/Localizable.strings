@@ -74,6 +74,29 @@
 "clubs.footer" = "선택한 클럽은 라운드 중 샷 기록 시 표시됩니다.";
 "clubs.resetToDefault" = "기본값으로 재설정";
 
+// MARK: - Club Names
+"club.unknown" = "미지정";
+"club.driver" = "드라이버";
+"club.md" = "미니 드라이버";
+"club.3w" = "3번 우드";
+"club.5w" = "5번 우드";
+"club.7w" = "7번 우드";
+"club.9w" = "9번 우드";
+"club.3h" = "3번 하이브리드";
+"club.4h" = "4번 하이브리드";
+"club.5h" = "5번 하이브리드";
+"club.4i" = "4번 아이언";
+"club.5i" = "5번 아이언";
+"club.6i" = "6번 아이언";
+"club.7i" = "7번 아이언";
+"club.8i" = "8번 아이언";
+"club.9i" = "9번 아이언";
+"club.pw" = "피칭 웨지";
+"club.gw" = "갭 웨지";
+"club.sw" = "샌드 웨지";
+"club.lw" = "로브 웨지";
+"club.putter" = "퍼터";
+
 // MARK: - Map Tab
 "map.exploreCourses" = "코스 탐색";
 "map.exploreDescription" = "라운드 없이 코스 레이아웃 보기";

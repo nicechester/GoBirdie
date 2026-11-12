@@ -140,7 +140,7 @@ private struct ShotDot: View {
 
     private var label: String {
         var parts: [String] = []
-        if item.shot.club != .unknown { parts.append(item.shot.club.displayName) }
+        if item.shot.club != .unknown { parts.append(item.shot.club.localizedName) }
         if let dist = item.shot.distanceToPinYards { parts.append("\(dist)y") }
         return parts.joined(separator: " · ")
     }
