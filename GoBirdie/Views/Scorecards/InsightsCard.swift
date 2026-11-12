@@ -26,11 +26,11 @@ struct InsightsCard: View {
         return AnyView(
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Label("Key Insights", systemImage: "lightbulb.fill")
+                    Label("insights.title".localized, systemImage: "lightbulb.fill")
                         .font(.caption).fontWeight(.semibold)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("vs \(baseline.displayName)")
+                    Text(String(format: "insights.vsBaseline".localized, baseline.displayName))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }

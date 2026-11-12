@@ -89,6 +89,9 @@
 
 // MARK: - Round
 "round.title" = "Round";
+"round.strokes" = "Strokes";
+"round.tot" = "Tot";
+"round.plusMinus" = "+/−";
 "round.noActiveRound" = "No Active Round";
 "round.startRound" = "Start a Round";
 "round.startRoundDescription" = "Start a round to track distances\nand mark your shots";
@@ -100,13 +103,40 @@
 "round.markShot" = "Mark Shot";
 "round.strokes" = "Strokes";
 "round.putts" = "Putts";
+"round.puttsCount" = "%d Putts";
 "round.penalty" = "Penalty";
 "round.scorecard" = "SCORECARD";
 "round.total" = "Total";
+"round.pen" = "Pen";
 "round.savingRound" = "Saving round...";
 "round.saveAndFinish" = "Save and finish this round?";
 "round.idlePrompt" = "No activity for 30 minutes.";
 "round.teeDetected" = "You're near the Hole %d tee box.";
+"round.finish" = "Finish";
+"round.next" = "Next";
+"round.selectClub" = "Select Club";
+"round.moveShotsTo" = "Move Shots to Hole...";
+"round.syncWatch" = "Sync Watch";
+"round.endRound" = "End Round";
+"round.cancelRound" = "Cancel Round";
+"round.stillPlaying" = "Are you still playing?";
+"round.yesStillPlaying" = "Yes, still playing";
+"round.moveToHole" = "Move to Hole %d";
+"round.stay" = "Stay";
+"round.strokesCount" = "%d strokes";
+"round.moveShotsFrom" = "Move %d shot(s) from Hole %d to:";
+"round.moveShots" = "Move Shots";
+"round.holeStarted" = "Hole %d  ·  Started %@";
+"round.resumeRound" = "Resume Round";
+
+// MARK: - Distance
+"distance.front" = "Front";
+"distance.flag" = "Flag";
+"distance.back" = "Back";
+
+// MARK: - Insights
+"insights.title" = "Key Insights";
+"insights.vsBaseline" = "vs %@";
 
 // MARK: - Scorecards
 "scorecards.title" = "Scorecards";
@@ -125,8 +155,26 @@
 "shotMap.deleteShot" = "Delete Shot";
 "shotMap.reorderShots" = "Reorder Shots";
 "shotMap.shot" = "Shot %d";
+"shotMap.deleteConfirm" = "Delete this shot?";
+"shotMap.saveConfirm" = "Do you want to save the changes?";
 
 // MARK: - Tournament
+"tournament.title" = "Tournament";
+"tournament.titleOptional" = "Title (optional)";
+"tournament.new" = "New Tournament";
+"tournament.create" = "Create Tournament";
+"tournament.createButton" = "Create";
+"tournament.course" = "Course";
+"tournament.selectCourse" = "Select Course";
+"tournament.dateFormat" = "Date (yyyy-MM-dd)";
+"tournament.edit" = "Edit Tournament";
+"tournament.rename" = "Rename";
+"tournament.renameTournament" = "Rename Tournament";
+"tournament.renamePlayer" = "Rename Player";
+"tournament.name" = "Name";
+"tournament.playerName" = "Player name";
+"tournament.shareScore" = "Share Score";
+"tournament.scanScore" = "Scan Score";
 "tournament.addPlayer" = "Add Player";
 "tournament.noPlayers" = "No players yet. Tap + or scan a QR code.";
 "tournament.scanQr" = "Point camera at a GoBirdie QR code";
@@ -154,4 +202,6 @@
 "common.ok" = "OK";
 "common.yes" = "Yes";
 "common.no" = "No";
+"common.save" = "Save";
+"common.clear" = "Clear";
 "common.close" = "Close";

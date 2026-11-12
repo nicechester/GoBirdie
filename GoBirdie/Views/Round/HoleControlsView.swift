@@ -33,7 +33,7 @@ struct HoleControlsView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "location.fill")
-                        Text("Mark Shot")
+                        Text("round.markShot".localized)
                     }
                     .font(.subheadline).fontWeight(.semibold)
                     .frame(maxWidth: .infinity).padding(10)
@@ -48,7 +48,7 @@ struct HoleControlsView: View {
                 } label: {
                     VStack(spacing: 2) {
                         Image(systemName: "exclamationmark.triangle.fill").font(.caption)
-                        Text("Penalty").font(.system(size: 9, weight: .semibold))
+                        Text("round.penalty".localized).font(.system(size: 9, weight: .semibold))
                     }
                     .frame(width: 52, height: 42)
                     .background(Color.orange).foregroundStyle(.white)
@@ -61,7 +61,7 @@ struct HoleControlsView: View {
                 } label: {
                     VStack(spacing: 2) {
                         Image(systemName: "arrow.uturn.backward").font(.caption)
-                        Text("Undo").font(.system(size: 9, weight: .semibold))
+                        Text("common.undo".localized).font(.system(size: 9, weight: .semibold))
                     }
                     .frame(width: 52, height: 42)
                     .background(Color(.systemGray6)).foregroundStyle(.primary)
@@ -81,7 +81,7 @@ struct HoleControlsView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text("Prev")
+                        Text("common.prev".localized)
                     }
                     .font(.subheadline).fontWeight(.semibold)
                     .frame(maxWidth: .infinity).padding(10)
@@ -100,7 +100,7 @@ struct HoleControlsView: View {
                 } label: {
                     let isLast = session.currentHoleNumber == session.round.holes.count
                     HStack(spacing: 4) {
-                        Text(isLast ? "Finish" : "Next")
+                        Text(isLast ? "round.finish".localized : "round.next".localized)
                         Image(systemName: isLast ? "flag.checkered" : "chevron.right")
                     }
                     .font(.subheadline).fontWeight(.semibold)
@@ -160,7 +160,7 @@ private struct PuttStepper: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Text("Putts")
+            Text("round.putts".localized)
                 .font(.subheadline).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -225,7 +225,7 @@ struct MarkShotSheet: View {
                     onConfirm(selectedClub)
                     dismiss()
                 } label: {
-                    Text("Confirm")
+                    Text("common.confirm".localized)
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
@@ -236,11 +236,11 @@ struct MarkShotSheet: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 8)
             }
-            .navigationTitle("Select Club")
+            .navigationTitle("round.selectClub".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         onCancel?()
                         dismiss()
                     }

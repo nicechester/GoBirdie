@@ -80,26 +80,26 @@ struct TournamentsTab: View {
                             }
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) { delete(tournament) } label: {
-                                    Label("Delete", systemImage: "trash")
+                                    Label("common.delete".localized, systemImage: "trash")
                                 }
                             }
                             .contextMenu {
                                 Button { renamingTournament = tournament; renameText = tournament.title ?? tournament.courseName } label: {
-                                    Label("Rename", systemImage: "pencil")
+                                    Label("tournament.rename".localized, systemImage: "pencil")
                                 }
                                 Button(role: .destructive) { delete(tournament) } label: {
-                                    Label("Delete", systemImage: "trash")
+                                    Label("common.delete".localized, systemImage: "trash")
                                 }
                             }
                         }
                     }
                     .listStyle(.plain)
-                    .alert("Rename Tournament", isPresented: Binding(
+                    .alert("tournament.renameTournament".localized, isPresented: Binding(
                         get: { renamingTournament != nil },
                         set: { if !$0 { renamingTournament = nil } }
                     )) {
-                        TextField("Name", text: $renameText)
-                        Button("Save") {
+                        TextField("tournament.name".localized, text: $renameText)
+                        Button("common.save".localized) {
                             guard let t = renamingTournament, !renameText.isEmpty else { return }
                             var updated = t
                             updated.title = renameText
@@ -107,11 +107,11 @@ struct TournamentsTab: View {
                             load()
                             renamingTournament = nil
                         }
-                        Button("Cancel", role: .cancel) { renamingTournament = nil }
+                        Button("common.cancel".localized, role: .cancel) { renamingTournament = nil }
                     }
                 }
             }
-            .navigationTitle("Tournaments")
+            .navigationTitle("scorecards.tournaments".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -166,10 +166,10 @@ private struct CreateTournamentView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Course") {
+                Section("tournament.course".localized) {
                     Button { showCoursePicker = true } label: {
                         HStack {
-                            Text(selectedCourse?.name ?? "Select a course…")
+                            Text(selectedCourse?.name ?? "tournament.selectCourse".localized)
                                 .foregroundStyle(selectedCourse != nil ? .primary : .secondary)
                             Spacer()
                             Image(systemName: "chevron.right").foregroundStyle(.secondary).font(.caption)
@@ -179,25 +179,25 @@ private struct CreateTournamentView: View {
                 }
 
                 Section {
-                    TextField("Date (yyyy-MM-dd)", text: $date)
-                    TextField("Title (optional)", text: $title)
+                    TextField("tournament.dateFormat".localized, text: $date)
+                    TextField("tournament.titleOptional".localized, text: $title)
                 }
 
                 if let r = latestRound {
                     Section {
-                        Text("Your latest round (\(r.courseName)) will be added automatically.")
+                        Text("tournament.autoAdd".localized(with: r.courseName))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
-            .navigationTitle("New Tournament")
+            .navigationTitle("tournament.new".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onDismiss() }
+                    Button("common.cancel".localized) { onDismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") { create() }
+                    Button("tournament.createButton".localized) { create() }
                         .disabled(selectedCourse == nil || date.isEmpty)
                         .fontWeight(.bold)
                 }
@@ -247,11 +247,11 @@ private struct CoursePickerSheet: View {
                     }
                 }
             }
-            .navigationTitle("Select Course")
+            .navigationTitle("tournament.selectCourse".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel".localized) { dismiss() }
                 }
             }
         }
@@ -397,7 +397,7 @@ struct TournamentDetailView: View {
             }
         }
         ToolbarItem(placement: .confirmationAction) {
-            Button("Done") { onDismiss() }
+            Button("common.done".localized) { onDismiss() }
         }
     }
 
@@ -428,7 +428,7 @@ private struct StrokePickerSheet: View {
     var body: some View {
         let cur = Int(current)
         VStack(spacing: 16) {
-            Text("Strokes")
+            Text("round.strokes".localized)
                 .font(.headline)
                 .padding(.top, 20)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
@@ -448,7 +448,7 @@ private struct StrokePickerSheet: View {
                 }
             }
             .padding(.horizontal, 24)
-            Button("Clear") {
+            Button("common.clear".localized) {
                 onSelect(0)
                 dismiss()
             }
@@ -499,14 +499,14 @@ private struct PlayerEditDialogs: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .alert("Rename Player", isPresented: $showRenameAlert) {
-                TextField("Name", text: $renameText)
-                Button("Save") {
+            .alert("tournament.renamePlayer".localized, isPresented: $showRenameAlert) {
+                TextField("tournament.name".localized, text: $renameText)
+                Button("common.save".localized) {
                     guard let p = longPressPlayer, !renameText.isEmpty else { return }
                     onRename(p, renameText)
                     longPressPlayer = nil
                 }
-                Button("Cancel", role: .cancel) { longPressPlayer = nil }
+                Button("common.cancel".localized, role: .cancel) { longPressPlayer = nil }
             }
     }
 }
@@ -564,7 +564,7 @@ private struct ScoreGrid: View {
 
                 // Total row
                 HStack(spacing: 0) {
-                    Text("Tot")
+                    Text("round.tot".localized)
                         .font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
                         .frame(width: labelW)
                     ForEach(players) { player in
@@ -579,7 +579,7 @@ private struct ScoreGrid: View {
 
                 // +/− row
                 HStack(spacing: 0) {
-                    Text("+/−")
+                    Text("round.plusMinus".localized)
                         .font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
                         .frame(width: labelW)
                     ForEach(players) { player in
@@ -647,20 +647,20 @@ private struct EditTournamentSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Course") {
+                Section("tournament.course".localized) {
                     Text(tournament.courseName).foregroundStyle(.secondary)
                 }
                 Section {
-                    TextField("Date (yyyy-MM-dd)", text: $date)
-                    TextField("Title (optional)", text: $title)
+                    TextField("tournament.dateFormat".localized, text: $date)
+                    TextField("tournament.titleOptional".localized, text: $title)
                 }
             }
-            .navigationTitle("Edit Tournament")
+            .navigationTitle("tournament.edit".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("common.cancel".localized) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("common.save".localized) {
                         var updated = tournament
                         updated.title = title.isEmpty ? nil : title
                         updated.date = date
@@ -699,7 +699,7 @@ private struct AddPlayerSheet: View {
                 Text("tournament.addPlayer".localized)
                     .font(.headline)
                     .padding(.top, 20)
-                TextField("Player name", text: $name)
+                TextField("tournament.playerName".localized, text: $name)
                     .textFieldStyle(.roundedBorder)
                     .padding(.horizontal, 24)
                 HStack(spacing: 12) {
@@ -708,7 +708,7 @@ private struct AddPlayerSheet: View {
                         onAdd(name.trimmingCharacters(in: .whitespaces))
                         dismiss()
                     } label: {
-                        Text("Add")
+                        Text("common.add".localized)
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
@@ -764,7 +764,7 @@ struct QrShareView: View {
                     Text(round.courseName).font(.subheadline).foregroundStyle(.secondary)
                     Text(round.startedAt.formatted(.iso8601.year().month().day()))
                         .font(.caption).foregroundStyle(.secondary)
-                    Text("\(round.totalStrokes) strokes")
+                    Text(String(format: "round.strokesCount".localized, round.totalStrokes))
                         .font(.subheadline).fontWeight(.semibold).foregroundStyle(.green)
                 }
                 Text("tournament.hostScan".localized)
@@ -772,10 +772,10 @@ struct QrShareView: View {
                 Spacer()
             }
             .padding(.horizontal, 32)
-            .navigationTitle("Share Score")
+            .navigationTitle("tournament.shareScore".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("common.done".localized) { dismiss() } }
             }
         }
     }
@@ -822,11 +822,11 @@ private struct QrScanView: View {
                         .padding(.bottom, 32)
                 }
             }
-            .navigationTitle("Scan Score")
+            .navigationTitle("tournament.scanScore".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onDismiss() }
+                    Button("common.cancel".localized) { onDismiss() }
                 }
             }
         }

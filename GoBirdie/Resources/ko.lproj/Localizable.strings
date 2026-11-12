@@ -89,6 +89,9 @@
 
 // MARK: - Round
 "round.title" = "라운드";
+"round.strokes" = "타수";
+"round.tot" = "합계";
+"round.plusMinus" = "+/−";
 "round.noActiveRound" = "진행 중인 라운드 없음";
 "round.startRound" = "라운드 시작";
 "round.startRoundDescription" = "거리 측정과 샷 기록을 위해\n라운드를 시작하세요";
@@ -100,13 +103,40 @@
 "round.markShot" = "샷 기록";
 "round.strokes" = "타수";
 "round.putts" = "퍼트";
+"round.puttsCount" = "퍼트 %d개";
 "round.penalty" = "페널티";
 "round.scorecard" = "스코어카드";
 "round.total" = "합계";
+"round.pen" = "페널티";
 "round.savingRound" = "라운드 저장 중...";
 "round.saveAndFinish" = "이 라운드를 저장하고 종료하시겠습니까?";
 "round.idlePrompt" = "30분 동안 활동이 없습니다.";
 "round.teeDetected" = "%d번 홀 티박스 근처입니다.";
+"round.finish" = "종료";
+"round.next" = "다음";
+"round.selectClub" = "클럽 선택";
+"round.moveShotsTo" = "샷을 다른 홀로 이동...";
+"round.syncWatch" = "워치 동기화";
+"round.endRound" = "라운드 종료";
+"round.cancelRound" = "라운드 취소";
+"round.stillPlaying" = "아직 플레이 중인가요?";
+"round.yesStillPlaying" = "네, 계속 플레이 중";
+"round.moveToHole" = "%d번 홀로 이동";
+"round.stay" = "유지";
+"round.strokesCount" = "%d타";
+"round.moveShotsFrom" = "%d번 홀에서 %d개 샷 이동:";
+"round.moveShots" = "샷 이동";
+"round.holeStarted" = "%d번 홀  ·  %@ 시작";
+"round.resumeRound" = "라운드 재개";
+
+// MARK: - Distance
+"distance.front" = "프론트";
+"distance.flag" = "핀";
+"distance.back" = "백";
+
+// MARK: - Insights
+"insights.title" = "주요 인사이트";
+"insights.vsBaseline" = "%@ 대비";
 
 // MARK: - Scorecards
 "scorecards.title" = "스코어카드";
@@ -125,8 +155,26 @@
 "shotMap.deleteShot" = "샷 삭제";
 "shotMap.reorderShots" = "샷 순서 변경";
 "shotMap.shot" = "샷 %d";
+"shotMap.deleteConfirm" = "이 샷을 삭제하시겠습니까?";
+"shotMap.saveConfirm" = "변경 사항을 저장하시겠습니까?";
 
 // MARK: - Tournament
+"tournament.title" = "토너먼트";
+"tournament.titleOptional" = "제목 (선택 사항)";
+"tournament.new" = "새 토너먼트";
+"tournament.create" = "토너먼트 만들기";
+"tournament.createButton" = "만들기";
+"tournament.course" = "코스";
+"tournament.selectCourse" = "코스 선택";
+"tournament.dateFormat" = "날짜 (yyyy-MM-dd)";
+"tournament.edit" = "토너먼트 편집";
+"tournament.rename" = "이름 변경";
+"tournament.renameTournament" = "토너먼트 이름 변경";
+"tournament.renamePlayer" = "플레이어 이름 변경";
+"tournament.name" = "이름";
+"tournament.playerName" = "플레이어 이름";
+"tournament.shareScore" = "점수 공유";
+"tournament.scanScore" = "점수 스캠";
 "tournament.addPlayer" = "플레이어 추가";
 "tournament.noPlayers" = "플레이어가 없습니다. +를 누르거나 QR 코드를 스캔하세요.";
 "tournament.scanQr" = "GoBirdie QR 코드를 카메라로 스캔하세요";
@@ -154,4 +202,6 @@
 "common.ok" = "확인";
 "common.yes" = "예";
 "common.no" = "아니오";
+"common.save" = "저장";
+"common.clear" = "지우기";
 "common.close" = "닫기";
