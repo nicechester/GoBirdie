@@ -234,3 +234,42 @@
 "common.clear" = "Borrar";
 "common.close" = "Cerrar";
 "common.yds" = "yds";
+
+// MARK: - Stats
+"stats.holesPlayed" = "Hoyos Jugados";
+"stats.longestDrive" = "Drive Más Largo";
+
+// MARK: - Insights Messages
+"insight.SG_PUTTING_CRITICAL" = "El putting fue el mayor problema — perdiste %@ golpes en los greens. El control de velocidad en putts largos es la solución más rápida.";
+"insight.SG_APPROACH_CRITICAL" = "Los approach fueron tu talón de Aquiles — %@ golpes perdidos hacia el green. El control de distancia y precisión con hierros necesita trabajo.";
+"insight.SG_OFF_TEE_CRITICAL" = "Los tiros de salida fueron un gran problema — %@ golpes perdidos desde el tee. Considera cambiar distancia por precisión en hoyos estrechos.";
+"insight.SG_SHORT_GAME_CRITICAL" = "Tu juego corto te costó %@ golpes. Mejorar el up-and-down es la forma más rápida de bajar tu score.";
+"insight.SG_PUTTING_STRONG" = "El putter estuvo en llamas — %@ golpes ganados en los greens. Tu control de ritmo y lectura de greens fueron excelentes.";
+"insight.SG_APPROACH_STRONG" = "El golpeo fue excelente — %@ golpes ganados en approach. Ese tipo de juego con hierros crea oportunidades de birdie.";
+"insight.SG_SHORT_GAME_STRONG" = "Tu juego corto fue un arma — %@ golpes ganados alrededor de los greens. Gran tacto y creatividad cuando fallaste.";
+"insight.SG_OFF_TEE_STRONG" = "Los tiros de salida estuvieron precisos — %@ golpes ganados desde el tee. Te posicionaste bien todo el día.";
+"insight.SG_TOTAL_POSITIVE" = "En general ganaste %@ golpes vs tu referencia hoy — un rendimiento sólido en todos los aspectos.";
+"insight.HIGH_FIR_LOW_GIR" = "Acertaste %@%% de fairways pero solo %@%% de greens — tu driving crea buenas posiciones pero los hierros no convierten.";
+"insight.LOW_FIR_HIGH_GIR" = "Solo %@%% de fairways pero %@%% GIR — impresionante juego de recuperación con hierros. Mejorar los tiros de salida te haría aún más peligroso.";
+"insight.THREE_PUTTS_CRITICAL" = "%@ tres putts — cada uno es un golpe desperdiciado. Dejar el primer putt a menos de 1 metro elimina el daño.";
+"insight.THREE_PUTTS_WARNING" = "%@ tres putts hoy. El control de distancia en lag putting desde larga distancia necesita atención.";
+"insight.GOOD_SCRAMBLING" = "Solo %@%% GIR pero scrambling de %@%% — tu juego corto salvó varios golpes y mantuvo el score respetable.";
+"insight.POOR_SCRAMBLING" = "Fallaste %@%% de greens y solo scrambling de %@%% — el juego corto necesita trabajo.";
+"insight.FRONT_BACK_WORSE" = "Ida %@, vuelta %@ — una caída de %@ golpes. La fatiga o concentración puede estar disminuyendo en los últimos hoyos.";
+"insight.FRONT_BACK_BETTER" = "Fuerte final — mejoraste %@ golpes de ida (%@) a vuelta (%@). Juegas mejor cuando estás caliente.";
+"insight.PAR3_STRUGGLES" = "Los par 3 promediaron +%@ sobre par — la precisión con hierros desde el tee necesita atención en hoyos cortos.";
+"insight.PAR5_SCORING" = "Los par 5 promediaron +%@ — no capitalizas en hoyos de scoring. Mejor manejo del campo podría desbloquear birdies.";
+"insight.PAR5_BIRDIE_MACHINE" = "Los par 5 son tus hoyos de scoring — promedio de %@ hoy. Tu longitud y manejo del campo ahí es una verdadera fortaleza.";
+"insight.CONSECUTIVE_BOGEYS" = "%@ bogeys seguidos — las malas rachas a menudo crecen desde un mal golpe. Una rutina de reset entre hoyos es clave.";
+"insight.HIGH_HR_LATE_ROUND" = "La FC subió %@ bpm de ida a vuelta — la fatiga o presión pudo haber sido un factor en los últimos hoyos.";
+"insight.WORST_CLUB_SG" = "Tu %@ fue tu palo más débil — SG promedio %@ en %@ golpes. Práctica enfocada con este palo daría dividendos.";
+"insight.BEST_CLUB_SG" = "Tu %@ estuvo preciso — %@ SG promedio en %@ golpes. Es un palo en el que puedes confiar bajo presión.";
+"insight.DRIVER_INCONSISTENT" = "La distancia del driver fue muy variable (±%@ yds) — enfócate en el contacto central sobre la distancia máxima para más consistencia.";
+"insight.ONE_PUTTS_HIGH" = "%@ one-putts hoy — embocaste consistentemente desde corta distancia. Es un verdadero activo de scoring.";
+"insight.ZERO_THREE_PUTTS" = "Cero tres putts — el control de distancia en lag putting fue excelente. Gran lectura de green y juicio de ritmo.";
+"insight.LONGEST_DRIVE" = "Drive más largo: %@ yardas — gran potencia desde el tee.";
+"insight.DRIVER_DOWN_VS_HISTORY" = "La distancia promedio del driver fue ~%@ yardas más corta que tu promedio reciente. Verifica si la fatiga o cambios de swing afectan tu potencia.";
+"insight.DRIVER_UP_VS_HISTORY" = "La distancia promedio del driver fue ~%@ yardas más larga que tu promedio reciente — estuviste swingueando bien hoy.";
+"insight.APPROACH_WORSE_VS_HISTORY" = "Los approach promediaron ~%@ yardas más lejos del pin que tu promedio reciente — los hierros no estuvieron tan afilados hoy.";
+"insight.APPROACH_BETTER_VS_HISTORY" = "Los approach promediaron ~%@ yardas más cerca del pin que tu promedio reciente — los hierros estuvieron precisos hoy.";
+"insight.ROUND_DURATION_LONG" = "La ronda tomó %@ minutos — la fatiga mental después de 4+ horas puede afectar la toma de decisiones en los últimos nueve.";

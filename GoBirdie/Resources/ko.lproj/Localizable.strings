@@ -234,3 +234,42 @@
 "common.clear" = "지우기";
 "common.close" = "닫기";
 "common.yds" = "야드";
+
+// MARK: - Stats
+"stats.holesPlayed" = "플레이한 홀";
+"stats.longestDrive" = "최장 드라이브";
+
+// MARK: - Insights Messages
+"insight.SG_PUTTING_CRITICAL" = "퍼팅이 가장 큰 문제였습니다 — 그린에서 %@ 타를 잃었습니다. 롱 퍼팅 스피드 컨트롤이 가장 빠른 개선책입니다.";
+"insight.SG_APPROACH_CRITICAL" = "어프로치 샷이 약점이었습니다 — 그린 공략에서 %@ 타 손실. 거리 컨트롤과 아이언 정확도 향상이 필요합니다.";
+"insight.SG_OFF_TEE_CRITICAL" = "티샷이 큰 문제였습니다 — 티에서 %@ 타 손실. 좋은 홀에서는 거리보다 정확도를 우선하세요.";
+"insight.SG_SHORT_GAME_CRITICAL" = "숟 게임에서 %@ 타를 잃었습니다. 업앤다운 성공률을 높이는 것이 스코어를 줄이는 가장 빠른 방법입니다.";
+"insight.SG_PUTTING_STRONG" = "퍼터가 화력했습니다 — 그린에서 %@ 타 획득. 페이스 컨트롤과 그린 리딩이 훌륭했습니다.";
+"insight.SG_APPROACH_STRONG" = "볼 스트라이킹이 훌륭했습니다 — 어프로치 샷에서 %@ 타 획득. 이런 아이언 플레이가 버디 기회를 만듭니다.";
+"insight.SG_SHORT_GAME_STRONG" = "숟 게임이 무기였습니다 — 그린 주변에서 %@ 타 획득. 미스 했을 때 훌륭한 터치와 창의성을 보여줬습니다.";
+"insight.SG_OFF_TEE_STRONG" = "티샷이 정확했습니다 — 티에서 %@ 타 획득. 하루 종일 좋은 포지션을 잡았습니다.";
+"insight.SG_TOTAL_POSITIVE" = "오늘 기준 대비 총 %@ 타를 획득했습니다 — 전반적으로 강한 퍼포먼스였습니다.";
+"insight.HIGH_FIR_LOW_GIR" = "페어웨이 %@%% 안착했지만 그린 적중률은 %@%%만 — 드라이빙은 좋은 포지션을 만들지만 아이언이 연결되지 않습니다.";
+"insight.LOW_FIR_HIGH_GIR" = "페어웨이 %@%%지만 GIR %@%% — 인상적인 리커버리 아이언 플레이. 티샷을 개선하면 더 위험한 선수가 될 수 있습니다.";
+"insight.THREE_PUTTS_CRITICAL" = "쓰리퍼팅 %@번 — 각각이 낭비된 타수입니다. 첫 퍼팅을 3피트 이내로 보내면 피해를 줄일 수 있습니다.";
+"insight.THREE_PUTTS_WARNING" = "오늘 쓰리퍼팅 %@번. 롱 레인지 래그 퍼팅 거리 컨트롤에 주의가 필요합니다.";
+"insight.GOOD_SCRAMBLING" = "GIR %@%%지만 스크램블링 %@%% — 숟 게임이 여러 타를 살렸고 스코어를 유지했습니다.";
+"insight.POOR_SCRAMBLING" = "그린 %@%% 미스하고 스크램블링 %@%%만 — 숟 게임 연습이 필요합니다.";
+"insight.FRONT_BACK_WORSE" = "전반 %@, 후반 %@ — %@타 하락. 피로나 집중력이 후반에 떨어질 수 있습니다.";
+"insight.FRONT_BACK_BETTER" = "강한 피니시 — 전반(%@)에서 후반(%@)으로 %@타 향상. 워밍업 후 더 잘 플레이합니다.";
+"insight.PAR3_STRUGGLES" = "파3 평균 +%@ 오버파 — 짧은 홀에서 티샷 아이언 정확도에 주의가 필요합니다.";
+"insight.PAR5_SCORING" = "파5 평균 +%@ — 스코어링 홀을 활용하지 못했습니다. 더 나은 코스 매니지먼트가 버디를 만들 수 있습니다.";
+"insight.PAR5_BIRDIE_MACHINE" = "파5가 스코어링 홀입니다 — 오늘 평균 %@. 길이와 코스 매니지먼트가 진정한 강점입니다.";
+"insight.CONSECUTIVE_BOGEYS" = "연속 %@번 보기 — 나쁜 스트릭은 한 번의 잘못된 샷에서 눈덩이처럼 불어납니다. 홀 사이 리셋 루틴이 중요합니다.";
+"insight.HIGH_HR_LATE_ROUND" = "심박수가 전반에서 후반으로 %@ bpm 상승 — 피로나 압박감이 후반 홀에 영향을 미쳤을 수 있습니다.";
+"insight.WORST_CLUB_SG" = "%@이(가) 가장 약한 클럽이었습니다 — %@개 샷에서 평균 SG %@. 이 클럽으로 집중 연습하면 효과가 있을 것입니다.";
+"insight.BEST_CLUB_SG" = "%@이(가) 정확했습니다 — %@개 샷에서 평균 SG %@. 압박 상황에서 믿을 수 있는 클럽입니다.";
+"insight.DRIVER_INCONSISTENT" = "드라이버 거리가 들쫓날쫓했습니다 (±%@야드) — 일관성을 위해 최대 거리보다 정타에 집중하세요.";
+"insight.ONE_PUTTS_HIGH" = "오늘 원퍼팅 %@번 — 가까운 거리에서 꾸준히 홀아웃했습니다. 진정한 스코어링 자산입니다.";
+"insight.ZERO_THREE_PUTTS" = "쓰리퍼팅 제로 — 래그 퍼팅 거리 컨트롤이 훌륭했습니다. 훌륭한 그린 리딩과 페이스 판단.";
+"insight.LONGEST_DRIVE" = "최장 드라이브: %@야드 — 티에서 훌륭한 파워.";
+"insight.DRIVER_DOWN_VS_HISTORY" = "평균 드라이버 거리가 최근 평균보다 ~%@야드 짧았습니다. 피로나 스윙 변화가 파워에 영향을 미치는지 확인하세요.";
+"insight.DRIVER_UP_VS_HISTORY" = "평균 드라이버 거리가 최근 평균보다 ~%@야드 길었습니다 — 오늘 스윙이 좋았습니다.";
+"insight.APPROACH_WORSE_VS_HISTORY" = "어프로치가 최근 평균보다 ~%@야드 더 멀었습니다 — 오늘 아이언이 덜 예리했습니다.";
+"insight.APPROACH_BETTER_VS_HISTORY" = "어프로치가 최근 평균보다 ~%@야드 더 가까웠습니다 — 오늘 아이언이 정확했습니다.";
+"insight.ROUND_DURATION_LONG" = "라운드가 %@분 걸렸습니다 — 4시간 이상의 정신적 피로가 후반 홀 의사결정에 영향을 미칠 수 있습니다.";
