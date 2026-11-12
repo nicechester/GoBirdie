@@ -40,7 +40,7 @@ struct InsightsCard: View {
                     HStack(alignment: .top, spacing: 8) {
                         Text(icon(for: insight.severity))
                             .font(.caption)
-                        Text(insight.message)
+                        Text(insight.localizedMessage)
                             .font(.caption)
                             .foregroundStyle(.primary)
                             .fixedSize(horizontal: false, vertical: true)

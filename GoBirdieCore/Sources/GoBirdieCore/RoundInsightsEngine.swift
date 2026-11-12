@@ -9,7 +9,10 @@ public struct RoundInsight: Sendable {
     public let code: String
     public let severity: Severity
     public let tier: Int
-    public let message: String
+    public let params: [String: String]
+    
+    /// Localization key for this insight (e.g., "insight.SG_PUTTING_CRITICAL")
+    public var localizationKey: String { "insight.\(code)" }
 }
 
 // MARK: - Analytics Context
@@ -269,8 +272,8 @@ public struct RoundInsightsEngine {
     private static func evaluate(ctx: InsightContext) -> [RoundInsight] {
         var fired: [RoundInsight] = []
 
-        func add(_ code: String, _ severity: RoundInsight.Severity, _ tier: Int, _ msg: String) {
-            fired.append(RoundInsight(code: code, severity: severity, tier: tier, message: msg))
+        func add(_ code: String, _ severity: RoundInsight.Severity, _ tier: Int, _ params: [String: String] = [:]) {
+            fired.append(RoundInsight(code: code, severity: severity, tier: tier, params: params))
         }
 
         let sg = (offTee: ctx.sgOffTee, approach: ctx.sgApproach, shortGame: ctx.sgShortGame, putting: ctx.sgPutting, total: ctx.sgTotal)
@@ -278,152 +281,116 @@ public struct RoundInsightsEngine {
         // ── TIER 1: Critical SG ──────────────────────────────────────────────
 
         if sg.putting < -1.5 {
-            add("SG_PUTTING_CRITICAL", .critical, 1,
-                "Putting was the biggest hole in your scorecard — you lost \(sgFmt(sg.putting)) strokes on the greens. Speed control on long putts is the quickest fix.")
+            add("SG_PUTTING_CRITICAL", .critical, 1, ["sg": sgFmt(sg.putting)])
         }
         if sg.approach < -1.5 {
-            add("SG_APPROACH_CRITICAL", .critical, 1,
-                "Approach play was your Achilles heel — \(sgFmt(sg.approach)) strokes lost into the green. Distance control and iron accuracy need work.")
+            add("SG_APPROACH_CRITICAL", .critical, 1, ["sg": sgFmt(sg.approach)])
         }
         if sg.offTee < -1.5 {
-            add("SG_OFF_TEE_CRITICAL", .critical, 1,
-                "Tee shots were a major problem — \(sgFmt(sg.offTee)) strokes lost off the tee. Consider trading distance for accuracy on tight holes.")
+            add("SG_OFF_TEE_CRITICAL", .critical, 1, ["sg": sgFmt(sg.offTee)])
         }
         if sg.shortGame < -1.0 {
-            add("SG_SHORT_GAME_CRITICAL", .critical, 1,
-                "Your short game lost you \(sgFmt(sg.shortGame)) strokes. Getting up-and-down more consistently is the fastest way to lower your score.")
+            add("SG_SHORT_GAME_CRITICAL", .critical, 1, ["sg": sgFmt(sg.shortGame)])
         }
 
         // ── TIER 1: Strong positives ──────────────────────────────────────────
 
         if sg.putting > 1.0 {
-            add("SG_PUTTING_STRONG", .positive, 1,
-                "The putter was on fire — \(sgFmt(sg.putting)) strokes gained on the greens. Your pace control and green reading were excellent.")
+            add("SG_PUTTING_STRONG", .positive, 1, ["sg": sgFmt(sg.putting)])
         }
         if sg.approach > 1.0 {
-            add("SG_APPROACH_STRONG", .positive, 1,
-                "Ball striking was excellent — \(sgFmt(sg.approach)) strokes gained on approach shots. That kind of iron play creates birdie looks.")
+            add("SG_APPROACH_STRONG", .positive, 1, ["sg": sgFmt(sg.approach)])
         }
-        // Issue #38: Add missing SG_SHORT_GAME_STRONG and SG_OFF_TEE_STRONG positives
         if sg.shortGame > 0.8 {
-            add("SG_SHORT_GAME_STRONG", .positive, 1,
-                "Your short game was a weapon — \(sgFmt(sg.shortGame)) strokes gained around the greens. Great touch and creativity when you missed.")
+            add("SG_SHORT_GAME_STRONG", .positive, 1, ["sg": sgFmt(sg.shortGame)])
         }
         if sg.offTee > 1.0 {
-            add("SG_OFF_TEE_STRONG", .positive, 1,
-                "Tee shots were dialed in — \(sgFmt(sg.offTee)) strokes gained off the tee. You set yourself up well all day.")
+            add("SG_OFF_TEE_STRONG", .positive, 1, ["sg": sgFmt(sg.offTee)])
         }
         if sg.total > 2.0 {
-            add("SG_TOTAL_POSITIVE", .positive, 1,
-                "Overall you gained \(sgFmt(sg.total)) strokes vs your baseline today — a genuinely strong all-around performance.")
+            add("SG_TOTAL_POSITIVE", .positive, 1, ["sg": sgFmt(sg.total)])
         }
 
         // ── TIER 2: Correlations & patterns ──────────────────────────────────
 
         if ctx.fir >= 55 && ctx.girPct < 35 {
-            add("HIGH_FIR_LOW_GIR", .critical, 2,
-                "Hit \(ctx.fir)% of fairways but only \(ctx.girPct)% of greens — your driving is setting up good positions but the irons aren't converting. Distance control on approach is the gap.")
+            add("HIGH_FIR_LOW_GIR", .critical, 2, ["fir": "\(ctx.fir)", "gir": "\(ctx.girPct)"])
         }
         if ctx.fir < 35 && ctx.girPct >= 50 {
-            add("LOW_FIR_HIGH_GIR", .info, 2,
-                "Only \(ctx.fir)% fairways but \(ctx.girPct)% GIR — impressive recovery iron play. Cleaning up the tee shots would make you even more dangerous.")
+            add("LOW_FIR_HIGH_GIR", .info, 2, ["fir": "\(ctx.fir)", "gir": "\(ctx.girPct)"])
         }
         if ctx.threePutts >= 3 {
-            add("THREE_PUTTS", .critical, 2,
-                "\(ctx.threePutts) three-putts — each one is a stroke wasted. Getting the first putt within 3 feet eliminates the damage.")
+            add("THREE_PUTTS_CRITICAL", .critical, 2, ["count": "\(ctx.threePutts)"])
         } else if ctx.threePutts == 2 {
-            add("THREE_PUTTS", .warning, 2,
-                "\(ctx.threePutts) three-putts today. Lag putting distance control from long range needs attention.")
+            add("THREE_PUTTS_WARNING", .warning, 2, ["count": "\(ctx.threePutts)"])
         }
         if ctx.scramblingPct >= 50 && ctx.girPct < 45 {
-            add("GOOD_SCRAMBLING", .positive, 2,
-                "Only \(ctx.girPct)% GIR but scrambled \(ctx.scramblingPct)% — your short game saved several strokes and kept the score respectable.")
+            add("GOOD_SCRAMBLING", .positive, 2, ["gir": "\(ctx.girPct)", "scramble": "\(ctx.scramblingPct)"])
         }
-        // Issue #38 Finding 1: Gate POOR_SCRAMBLING on baseline-adjusted sgShortGame.
-        // Suppress when SG >= 0 (not losing strokes vs chosen baseline). Removed hardcoded "4-5 strokes" claim.
         if ctx.scramblingPct < 25 && ctx.girPct < 45 && sg.shortGame < 0 {
-            add("POOR_SCRAMBLING", .critical, 2,
-                "Missed \(100 - ctx.girPct)% of greens and only scrambled \(ctx.scramblingPct)% — short game needs work.")
+            add("POOR_SCRAMBLING", .critical, 2, ["missedGir": "\(100 - ctx.girPct)", "scramble": "\(ctx.scramblingPct)"])
         }
         if let f = ctx.frontScore, let b = ctx.backScore {
             if b > f + 4 {
-                add("FRONT_BACK_WORSE", .warning, 2,
-                    "Front \(f), back \(b) — a \(b - f) shot drop-off. Fatigue or concentration may be fading late in rounds.")
+                add("FRONT_BACK_WORSE", .warning, 2, ["front": "\(f)", "back": "\(b)", "diff": "\(b - f)"])
             } else if f > b + 3 {
-                add("FRONT_BACK_BETTER", .positive, 2,
-                    "Strong finish — improved \(f - b) shots from front (\(f)) to back (\(b)). You play better when warmed up.")
+                add("FRONT_BACK_BETTER", .positive, 2, ["front": "\(f)", "back": "\(b)", "diff": "\(f - b)"])
             }
         }
         if ctx.par3AvgOverPar > 0.8 {
-            add("PAR3_STRUGGLES", .warning, 2,
-                "Par 3s averaged +\(String(format: "%.1f", ctx.par3AvgOverPar)) over par — iron accuracy from the tee needs attention on short holes.")
+            add("PAR3_STRUGGLES", .warning, 2, ["avg": String(format: "%.1f", ctx.par3AvgOverPar)])
         }
         if ctx.par5AvgOverPar > 0.5 {
-            add("PAR5_SCORING", .warning, 2,
-                "Par 5s averaged +\(String(format: "%.1f", ctx.par5AvgOverPar)) — not capitalizing on scoring holes. Better course management could unlock birdies.")
+            add("PAR5_SCORING", .warning, 2, ["avg": String(format: "%.1f", ctx.par5AvgOverPar)])
         } else if ctx.par5AvgOverPar < -0.3 {
-            add("PAR5_BIRDIE_MACHINE", .positive, 2,
-                "Par 5s are your scoring holes — averaging \(String(format: "%.1f", ctx.par5AvgOverPar)) today. Your length and course management there is a real strength.")
+            add("PAR5_BIRDIE_MACHINE", .positive, 2, ["avg": String(format: "%.1f", ctx.par5AvgOverPar)])
         }
         if ctx.maxConsecBogeys >= 3 {
-            add("CONSECUTIVE_BOGEYS", .warning, 2,
-                "\(ctx.maxConsecBogeys) bogeys in a row — bad streaks often snowball from one poor shot. A reset routine between holes is key.")
+            add("CONSECUTIVE_BOGEYS", .warning, 2, ["count": "\(ctx.maxConsecBogeys)"])
         }
         if let early = ctx.earlyRoundHr, let late = ctx.lateRoundHr, late > early + 8 {
-            add("HIGH_HR_LATE_ROUND", .info, 2,
-                "HR climbed \(Int(late - early)) bpm from front to back nine — fatigue or pressure may have been a factor in the later holes.")
+            add("HIGH_HR_LATE_ROUND", .info, 2, ["diff": "\(Int(late - early))"])
         }
 
         // ── TIER 3: Club-specific ─────────────────────────────────────────────
 
         if let worst = ctx.worstClub {
-            add("WORST_CLUB_SG", .warning, 3,
-                "Your \(worst.name) was your weakest club — avg SG \(sgFmt(worst.avgSg)) over \(worst.shots) shots. Targeted practice with this club would pay dividends.")
+            add("WORST_CLUB_SG", .warning, 3, ["club": worst.name, "sg": sgFmt(worst.avgSg), "shots": "\(worst.shots)"])
         }
         if let best = ctx.bestClub {
-            add("BEST_CLUB_SG", .positive, 3,
-                "Your \(best.name) was dialed in — \(sgFmt(best.avgSg)) avg SG over \(best.shots) shots. That's a club you can trust under pressure.")
+            add("BEST_CLUB_SG", .positive, 3, ["club": best.name, "sg": sgFmt(best.avgSg), "shots": "\(best.shots)"])
         }
         if let std = ctx.driverDistStd, std > 30 {
-            add("DRIVER_INCONSISTENT", .warning, 3,
-                "Driver distance was all over the place (±\(Int(std)) yds) — focus on center contact over maximum distance for more consistency.")
+            add("DRIVER_INCONSISTENT", .warning, 3, ["std": "\(Int(std))"])
         }
 
         // ── TIER 4: Minor observations & positives ────────────────────────────
 
         if ctx.onePutts >= 4 {
-            add("ONE_PUTTS_HIGH", .positive, 4,
-                "\(ctx.onePutts) one-putts today — you were holing out from close range consistently. That's a real scoring asset.")
+            add("ONE_PUTTS_HIGH", .positive, 4, ["count": "\(ctx.onePutts)"])
         }
         if ctx.threePutts == 0 && ctx.totalPutts <= Int(Double(ctx.holesPlayed) * 1.8) {
-            add("ZERO_THREE_PUTTS", .positive, 4,
-                "Zero three-putts — lag putting distance control was excellent. Great green reading and pace judgment.")
+            add("ZERO_THREE_PUTTS", .positive, 4, [:])
         }
         if let ld = ctx.longestDriveYards, ld >= 270 {
-            add("LONGEST_DRIVE", .positive, 4,
-                "Longest drive: \(ld) yards — great power off the tee.")
+            add("LONGEST_DRIVE", .positive, 4, ["yards": "\(ld)"])
         }
         if let diff = ctx.histDriverAvgDiff {
             if diff <= -15 {
-                add("DRIVER_DOWN_VS_HISTORY", .warning, 4,
-                    "Avg driver distance was ~\(Int(-diff)) yards shorter than your recent average. Check if fatigue or swing changes are affecting your power.")
+                add("DRIVER_DOWN_VS_HISTORY", .warning, 4, ["diff": "\(Int(-diff))"])
             } else if diff >= 10 {
-                add("DRIVER_UP_VS_HISTORY", .positive, 4,
-                    "Avg driver distance was ~\(Int(diff)) yards longer than your recent average — you were swinging well today.")
+                add("DRIVER_UP_VS_HISTORY", .positive, 4, ["diff": "\(Int(diff))"])
             }
         }
         if let diff = ctx.histApproachAvgDiff {
             if diff >= 8 {
-                add("APPROACH_WORSE_VS_HISTORY", .warning, 4,
-                    "Approaches averaged ~\(Int(diff)) yards farther from the pin than your recent average — irons weren't as sharp today.")
+                add("APPROACH_WORSE_VS_HISTORY", .warning, 4, ["diff": "\(Int(diff))"])
             } else if diff <= -6 {
-                add("APPROACH_BETTER_VS_HISTORY", .positive, 4,
-                    "Approaches averaged ~\(Int(-diff)) yards closer to the pin than your recent average — irons were dialed in today.")
+                add("APPROACH_BETTER_VS_HISTORY", .positive, 4, ["diff": "\(Int(-diff))"])
             }
         }
         if let mins = ctx.durationMin, mins > 270 {
-            add("ROUND_DURATION_LONG", .info, 4,
-                "The round took \(Int(mins)) minutes — mental fatigue over 4+ hours can affect decision-making on the back nine.")
+            add("ROUND_DURATION_LONG", .info, 4, ["mins": "\(Int(mins))"])
         }
 
         // ── Rank: tier → severity, cap positives ────────────────────────────
