@@ -48,6 +48,7 @@ struct StartRoundView: View {
                             courses: courses,
                             playerLocation: viewModel.currentLocation,
                             isSearchingOnline: viewModel.isSearchingOnline,
+                            searchFailed: viewModel.searchFailed,
                             isSaved: { viewModel.isSaved($0) },
                             onSelect: { course in viewModel.downloadCourse(course) },
                             onRetry: { viewModel.searchNearby() }
@@ -175,6 +176,7 @@ struct CourseListView: View {
     let courses: [GolfCourseResult]
     let playerLocation: GpsPoint?
     let isSearchingOnline: Bool
+    let searchFailed: Bool
     let isSaved: (GolfCourseResult) -> Bool
     let onSelect: (GolfCourseResult) -> Void
     let onRetry: () -> Void
@@ -192,6 +194,18 @@ struct CourseListView: View {
                 .padding(.horizontal, 12)
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
+            }
+
+            // Saved courses are listed, but the nearby search failed
+            if searchFailed && !isSearchingOnline && !courses.isEmpty {
+                HStack {
+                    Text("courses.searchFailed".localized)
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("common.retry".localized, action: onRetry)
+                        .font(.caption)
+                }
+                .padding(.horizontal, 12)
             }
 
             // Course list
@@ -371,6 +385,8 @@ class StartRoundViewModel: ObservableObject {
     @Published var isStartingRound = false
     @Published var startedRound = false
     @Published var isSearchingOnline = false
+    /// The nearby (Overpass) search failed. Saved courses stay listed; the list offers a retry.
+    @Published var searchFailed = false
     @Published var searchText = ""
 
     var appState: AppState?
@@ -382,8 +398,7 @@ class StartRoundViewModel: ObservableObject {
     var currentLocation: GpsPoint?
     private var lastFailedCourse: GolfCourseResult?
     private var displayedCourses: [GolfCourseResult] = []
-    private var savedCourseIds: Set<Int> = []
-    private var cacheIdMap: [Int: String] = [:]  // GolfCourseResult.id -> CourseStore ID
+    private var savedCourseIds: Set<String> = []
 
     enum ViewState {
         case requestingLocation
@@ -408,9 +423,7 @@ class StartRoundViewModel: ObservableObject {
             let savedResults = saved
                 .prefix(20)
                 .map { c -> GolfCourseResult in
-                    let intId = stableId(from: c.id)
-                    cacheIdMap[intId] = c.id
-                    return GolfCourseResult(id: intId, name: c.name, location: c.location, city: "")
+                    GolfCourseResult(id: c.id, name: c.name, location: c.location, city: "")
                 }
 
             savedCourseIds = Set(savedResults.map { $0.id })
@@ -449,9 +462,7 @@ class StartRoundViewModel: ObservableObject {
             .sorted { $0.location.distanceMeters(to: location) < $1.location.distanceMeters(to: location) }
             .prefix(20)
             .map { c -> GolfCourseResult in
-                let intId = stableId(from: c.id)
-                cacheIdMap[intId] = c.id
-                return GolfCourseResult(id: intId, name: c.name, location: c.location, city: "")
+                GolfCourseResult(id: c.id, name: c.name, location: c.location, city: "")
             }
 
         savedCourseIds = Set(savedResults.map { $0.id })
@@ -464,6 +475,7 @@ class StartRoundViewModel: ObservableObject {
 
     private func searchOnlineForLocation(_ location: GpsPoint) {
         isSearchingOnline = true
+        searchFailed = false
         Task {
             defer { Task { @MainActor in self.isSearchingOnline = false } }
             do {
@@ -475,9 +487,7 @@ class StartRoundViewModel: ObservableObject {
 
                 let newResults = osmResults
                     .map { r -> GolfCourseResult in
-                        let intId = -Int(r.osmId)
-                        self.cacheIdMap[intId] = "osm-\(r.osmId)"
-                        return GolfCourseResult(id: intId, name: r.name, location: r.location, city: "")
+                        GolfCourseResult(id: "osm-\(r.osmId)", name: r.name, location: r.location, city: "")
                     }
                     .filter { !self.savedCourseIds.contains($0.id) }
 
@@ -492,6 +502,7 @@ class StartRoundViewModel: ObservableObject {
                 print("[Search] Online search failed: \(error)")
                 // Saved courses are already showing, so don't overwrite with error
                 await MainActor.run {
+                    self.searchFailed = true
                     if self.displayedCourses.isEmpty {
                         self.state = .error("No courses found. \(error.localizedDescription)")
                     }
@@ -530,7 +541,7 @@ class StartRoundViewModel: ObservableObject {
                 let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: searchCenter)
                 let loc = self.currentLocation
                 let filtered = apiResults
-                    .map { GolfCourseResult(id: $0.id, name: $0.name, location: $0.location, city: $0.city) }
+                    .map { GolfCourseResult(id: $0.id, apiId: $0.apiId, name: $0.name, location: $0.location, city: $0.city) }
                     .sorted { a, b in
                         guard let loc else { return false }
                         return a.location.distanceMeters(to: loc) < b.location.distanceMeters(to: loc)
@@ -571,7 +582,7 @@ class StartRoundViewModel: ObservableObject {
 
     func downloadCourse(_ course: GolfCourseResult) {
         let store = CourseStore()
-        let cacheId = cacheIdMap[course.id] ?? (course.id > 0 ? "gcapi-\(course.id)" : "osm-\(abs(course.id))")
+        let cacheId = course.id
 
         // Check cache first
         if let cached = try? store.load(id: cacheId) {
@@ -587,10 +598,9 @@ class StartRoundViewModel: ObservableObject {
         Task {
             do {
                 let teeColor = appState?.teeColor ?? "Blue"
-                let courseId = course.id > 0 ? "api-\(course.id)" : "osm-\(abs(course.id))"
 
                 let result = try await courseDownloadService.downloadCourse(
-                    id: courseId,
+                    id: course.id,
                     name: course.name,
                     location: course.location,
                     teeColor: teeColor
@@ -610,16 +620,6 @@ class StartRoundViewModel: ObservableObject {
                 }
             }
         }
-    }
-
-    /// Stable negative Int ID from a course store string ID.
-    private func stableId(from courseId: String) -> Int {
-        // "osm-16307627" -> -16307627, "osm-16307627-1" -> hash-based
-        let stripped = courseId
-            .replacingOccurrences(of: "osm-", with: "")
-            .replacingOccurrences(of: "gcapi-", with: "")
-        if let num = Int(stripped) { return -num }
-        return -abs(courseId.hashValue)
     }
 
     private func levenshtein(_ a: String, _ b: String) -> Int {

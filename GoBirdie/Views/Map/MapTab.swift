@@ -120,6 +120,7 @@ private struct ExploreCoursePicker: View {
                             courses: courses,
                             playerLocation: viewModel.currentLocation,
                             isSearchingOnline: viewModel.isSearchingOnline,
+                            searchFailed: viewModel.searchFailed,
                             isSaved: { viewModel.isSaved($0) },
                             onSelect: { course in viewModel.downloadCourse(course) },
                             onRetry: { viewModel.searchNearby() }

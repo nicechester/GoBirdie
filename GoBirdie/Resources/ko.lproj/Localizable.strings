@@ -68,6 +68,7 @@
 "courses.noCoursesFound" = "코스를 찾을 수 없습니다";
 "courses.searching" = "검색 중...";
 "courses.searchingMore" = "더 많은 코스 검색 중...";
+"courses.searchFailed" = "더 많은 코스를 검색하지 못했습니다.";
 "courses.holesDownloaded" = "%d홀 · %@ 다운로드됨";
 "courses.downloading" = "%@ 다운로드 중...";
 "courses.gettingGeometry" = "코스 정보 가져오는 중";

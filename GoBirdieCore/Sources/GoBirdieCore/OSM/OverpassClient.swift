@@ -249,7 +249,13 @@ out geom tags;
 
     // MARK: - Private
 
-    private func post(query: String, retries: Int = 3) async throws -> Data {
+    /// Servers tried in order. Each gets one attempt; a busy or unreachable server falls through to the next.
+    private static let endpoints = [
+        URL(string: "https://overpass-api.de/api/interpreter")!,
+        URL(string: "https://overpass.kumi.systems/api/interpreter")!,
+    ]
+
+    private func post(query: String) async throws -> Data {
         // Check disk cache first
         if let cached = await OverpassCache.shared.get(query: query) {
             return cached
@@ -258,53 +264,55 @@ out geom tags;
         try await OverpassRateLimiter.shared.waitIfNeeded()
         print("[Overpass] POST query:\n\(query)")
 
-        var request = URLRequest(url: baseURL)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 30
-
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             throw OverpassError.invalidQuery
         }
-        request.httpBody = "data=\(encodedQuery)".data(using: .utf8)
+        let body = "data=\(encodedQuery)".data(using: .utf8)
+
+        var lastError: Error = OverpassError.serverError
+        for url in Self.endpoints {
+            do {
+                let data = try await send(body: body, to: url)
+                await OverpassCache.shared.set(query: query, data: data)
+                return data
+            } catch OverpassError.invalidQuery {
+                // The query itself is rejected; another server won't accept it either.
+                throw OverpassError.invalidQuery
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                print("[Overpass] \(url.host ?? "server") failed: \(error)")
+                lastError = error
+            }
+        }
+        throw lastError
+    }
+
+    private func send(body: Data?, to url: URL) async throws -> Data {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        // Overpass can take 30s+ under load but still succeed; keep this generous.
+        request.timeoutInterval = 120
+        request.httpBody = body
 
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw OverpassError.invalidResponse
         }
-
-        print("[Overpass] HTTP \(httpResponse.statusCode)")
+        print("[Overpass] \(url.host ?? "server") HTTP \(httpResponse.statusCode)")
 
         switch httpResponse.statusCode {
         case 200:
-            await OverpassCache.shared.set(query: query, data: data)
             return data
-        case 429, 504, 502, 503:
-            let body = String(data: data, encoding: .utf8)?.prefix(100) ?? ""
-            print("[Overpass] HTTP \(httpResponse.statusCode) — retries left: \(retries). Body: \(body)")
-            guard retries > 0 else {
-                throw httpResponse.statusCode == 429 ? OverpassError.rateLimited : OverpassError.serverError
-            }
-            // Exponential backoff: 3s, 6s, 12s
-            let backoff = 3.0 * pow(2.0, Double(3 - retries))
-            print("[Overpass] Backing off \(backoff)s before retry")
-            try await Task.sleep(nanoseconds: UInt64(backoff * 1_000_000_000))
-            return try await post(query: query, retries: retries - 1)
-        case 406:
-            // Transient server error disguised as 4xx — retry like a 503
-            let body = String(data: data, encoding: .utf8)?.prefix(100) ?? ""
-            print("[Overpass] HTTP 406 — retries left: \(retries). Body: \(body)")
-            guard retries > 0 else { throw OverpassError.serverError }
-            let backoff = 3.0 * pow(2.0, Double(3 - retries))
-            try await Task.sleep(nanoseconds: UInt64(backoff * 1_000_000_000))
-            return try await post(query: query, retries: retries - 1)
+        case 429:
+            throw OverpassError.rateLimited
+        case 406, 502, 503, 504:
+            throw OverpassError.serverError
         case 400...499:
-            let body = String(data: data, encoding: .utf8)?.prefix(200) ?? ""
-            print("[Overpass] HTTP \(httpResponse.statusCode) invalid query. Body: \(body)")
             throw OverpassError.invalidQuery
         default:
-            print("[Overpass] HTTP \(httpResponse.statusCode) unexpected")
             throw OverpassError.httpError(httpResponse.statusCode)
         }
     }
@@ -413,10 +421,12 @@ public struct CourseSearchResult: Sendable, Identifiable {
     public var osmType: String
     public var osmId: Int64
     public var city: String
+    /// GolfCourseAPI course ID, for results from that API (nil for OSM results).
+    public var apiId: String?
 
-    public init(id: String, name: String, location: GpsPoint, osmType: String, osmId: Int64, city: String = "") {
+    public init(id: String, name: String, location: GpsPoint, osmType: String, osmId: Int64, city: String = "", apiId: String? = nil) {
         self.id = id; self.name = name; self.location = location
-        self.osmType = osmType; self.osmId = osmId; self.city = city
+        self.osmType = osmType; self.osmId = osmId; self.city = city; self.apiId = apiId
     }
 }
 

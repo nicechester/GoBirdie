@@ -68,6 +68,7 @@
 "courses.noCoursesFound" = "コースが見つかりません";
 "courses.searching" = "検索中...";
 "courses.searchingMore" = "さらにコースを検索中...";
+"courses.searchFailed" = "追加のコースを検索できませんでした。";
 "courses.holesDownloaded" = "%d ホール · %@ にダウンロード済み";
 "courses.downloading" = "%@ をダウンロード中...";
 "courses.gettingGeometry" = "コースの形状を取得中";

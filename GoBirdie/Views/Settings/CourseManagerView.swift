@@ -50,8 +50,9 @@ struct CourseManagerView: View {
             if !searchResults.isEmpty {
                 Section("Search Results") {
                     ForEach(searchResults, id: \.id) { result in
-                        let apiId = Int(result.osmId)
-                        let alreadySaved = savedCourses.contains { $0.golfCourseApiId == apiId }
+                        let alreadySaved = result.apiId.map { apiId in
+                            savedCourses.contains { $0.golfCourseApiId == apiId }
+                        } ?? false
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(result.name).font(.subheadline)
@@ -132,7 +133,7 @@ struct CourseManagerView: View {
                 let location = appState.getLocationService().currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
                 let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: location)
                 let results = apiResults.map { r in
-                    CourseSearchResult(id: "api-\(r.id)", name: r.name, location: r.location, osmType: "api", osmId: Int64(r.id), city: r.city)
+                    CourseSearchResult(id: r.id, name: r.name, location: r.location, osmType: "api", osmId: 0, city: r.city, apiId: r.apiId)
                 }
 
                 await MainActor.run {
