@@ -16,6 +16,7 @@ public actor GolfCourseAPIClient {
     // MARK: - Search
 
     /// Search courses by name, sorted by distance from playerLocation.
+    /// Search responses carry course IDs and locations only; hole data comes from `fetchHoles`.
     public func searchCourses(query: String, playerLocation: GpsPoint) async throws -> [GolfCourseResult] {
         guard var components = URLComponents(string: "\(baseURL)/search") else {
             throw GolfCourseAPIError.invalidURL
@@ -45,9 +46,9 @@ public actor GolfCourseAPIClient {
             .sorted { $0.location.distanceMeters(to: playerLocation) < $1.location.distanceMeters(to: playerLocation) }
     }
 
-    /// Fetch hole data (par, yardage, handicap) for a course by ID.
+    /// Fetch hole data (par, yardage, handicap) for a course by its string ID.
     /// - Parameter teeColor: Preferred tee name e.g. "Blue", "White". Falls back to first available.
-    public func fetchHoles(courseId: Int, teeColor: String = "Blue") async throws -> [GolfCourseHole] {
+    public func fetchHoles(courseId: String, teeColor: String = "Blue") async throws -> [GolfCourseHole] {
         guard let url = URL(string: "\(baseURL)/courses/\(courseId)") else {
             throw GolfCourseAPIError.invalidURL
         }
@@ -86,17 +87,25 @@ public actor GolfCourseAPIClient {
 // MARK: - Public result types
 
 public struct GolfCourseResult: Sendable, Identifiable {
-    public let id: Int
+    /// Course store key: "api-<apiId>" for GolfCourseAPI results, "osm-<id>" for OSM, or a saved course ID.
+    public let id: String
+    /// GolfCourseAPI course ID, set only for results from the GolfCourseAPI.
+    public let apiId: String?
     public let name: String
     public let location: GpsPoint
     public let city: String
 
-    public init(id: Int, name: String, location: GpsPoint, city: String) {
-        self.id = id; self.name = name; self.location = location; self.city = city
+    public init(id: String, apiId: String? = nil, name: String, location: GpsPoint, city: String) {
+        self.id = id
+        self.apiId = apiId
+        self.name = name
+        self.location = location
+        self.city = city
     }
 
-    fileprivate init(from api: APICourse) {
-        self.id       = api.id
+    fileprivate init(from api: APICourseSummary) {
+        self.id       = "api-\(api.id)"
+        self.apiId    = api.id
         self.name     = api.course_name
         self.location = GpsPoint(lat: api.location.latitude ?? 0, lon: api.location.longitude ?? 0)
         self.city     = [api.location.city, api.location.state].compactMap { $0 }.joined(separator: ", ")
@@ -112,11 +121,19 @@ public struct GolfCourseHole: Sendable {
 
 // MARK: - Private decodable types
 
-private struct SearchResponse: Decodable { let courses: [APICourse] }
-private struct CourseDetailResponse: Decodable { let course: APICourse }
+private struct SearchResponse: Decodable { let courses: [APICourseSummary] }
+private struct CourseDetailResponse: Decodable { let course: APICourseDetail }
 
-private struct APICourse: Decodable {
-    let id: Int
+/// Search result entry. `tees` is intentionally absent: search returns it as a count object, not a list.
+private struct APICourseSummary: Decodable {
+    let id: String
+    let course_name: String
+    let location: APILocation
+}
+
+/// Course detail. `tees` is a map of tee lists with hole data.
+private struct APICourseDetail: Decodable {
+    let id: String
     let course_name: String
     let location: APILocation
     let tees: APITees

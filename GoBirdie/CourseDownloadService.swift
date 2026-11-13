@@ -55,11 +55,12 @@ class CourseDownloadService {
             playerLocation: location
         ))?.filter { $0.location.distanceMeters(to: location) < 5_000 } ?? []
 
-        var apiCourseHoles: [(name: String, id: Int, holes: [GolfCourseHole])] = []
+        var apiCourseHoles: [(name: String, id: String, holes: [GolfCourseHole])] = []
         for api in apiResults {
-            if let holes = try? await golfCourseAPI.fetchHoles(courseId: api.id, teeColor: teeColor),
+            guard let apiId = api.apiId else { continue }
+            if let holes = try? await golfCourseAPI.fetchHoles(courseId: apiId, teeColor: teeColor),
                !holes.isEmpty {
-                apiCourseHoles.append((name: api.name, id: api.id, holes: holes))
+                apiCourseHoles.append((name: api.name, id: apiId, holes: holes))
             }
         }
 
@@ -115,7 +116,7 @@ class CourseDownloadService {
         location: GpsPoint,
         apiHoles: [GolfCourseHole],
         osmCourse: Course,
-        golfCourseApiId: Int?
+        golfCourseApiId: String?
     ) -> Course {
         let osmHoleMap = Dictionary(uniqueKeysWithValues: osmCourse.holes.map { ($0.number, $0) })
 
@@ -191,8 +192,8 @@ class CourseDownloadService {
     /// Match an OSM course to the best GolfCourseAPI course by comparing yardages.
     private func matchOsmToApiByYardage(
         osmCourse: Course,
-        apiCourses: [(name: String, id: Int, holes: [GolfCourseHole])]
-    ) -> (name: String, id: Int, holes: [GolfCourseHole])? {
+        apiCourses: [(name: String, id: String, holes: [GolfCourseHole])]
+    ) -> (name: String, id: String, holes: [GolfCourseHole])? {
         guard !apiCourses.isEmpty else { return nil }
 
         let osmYards: [Int: Double] = Dictionary(uniqueKeysWithValues:

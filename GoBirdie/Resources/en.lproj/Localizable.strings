@@ -68,6 +68,7 @@
 "courses.noCoursesFound" = "No courses found";
 "courses.searching" = "Searching...";
 "courses.searchingMore" = "Searching for more courses...";
+"courses.searchFailed" = "Couldn't search for more courses.";
 "courses.holesDownloaded" = "%d holes · Downloaded %@";
 "courses.downloading" = "Downloading %@...";
 "courses.gettingGeometry" = "Getting course geometry";

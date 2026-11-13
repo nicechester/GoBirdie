@@ -68,6 +68,7 @@
 "courses.noCoursesFound" = "No se encontraron campos";
 "courses.searching" = "Buscando...";
 "courses.searchingMore" = "Buscando más campos...";
+"courses.searchFailed" = "No se pudieron buscar más campos.";
 "courses.holesDownloaded" = "%d hoyos · Descargado %@";
 "courses.downloading" = "Descargando %@...";
 "courses.gettingGeometry" = "Obteniendo geometría del campo";
