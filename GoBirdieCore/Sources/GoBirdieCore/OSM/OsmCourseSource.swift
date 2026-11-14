@@ -37,9 +37,10 @@ public actor OsmCourseSource {
             .map { $0 }
     }
 
-    /// Geometry for one course. The region comes from the user's location (the index entry nearest the user),
-    /// with the course's own region as a fallback. Returns nil when neither region has the course.
-    public func loadCourse(osmId: String, name: String, userLocation: GpsPoint) async throws -> Course? {
+    /// Geometry for one course, one `Course` per layout (a multi-course complex gives several). The region comes
+    /// from the user's location (the index entry nearest the user), with the course's own region as a fallback.
+    /// Returns an empty list when neither region has the course.
+    public func loadCourse(osmId: String, name: String, userLocation: GpsPoint) async throws -> [Course] {
         let nearbyFile = try await index.regionNear(userLocation)
         let ownFile = try await index.find(osmId: osmId)?.file
 
@@ -49,11 +50,10 @@ public actor OsmCourseSource {
 
         for file in candidates {
             let plain = try await regions.ensure(file)
-            if let course = try OsmCourseExtractor.extract(from: plain, osmId: osmId, name: name, anchor: userLocation) {
-                return course
-            }
+            let courses = try OsmCourseExtractor.extract(from: plain, osmId: osmId, name: name, anchor: userLocation)
+            if !courses.isEmpty { return courses }
         }
-        return nil
+        return []
     }
 
     /// The course named `name` near `location`. Used for GolfCourseAPI courses, whose names may differ slightly
@@ -62,7 +62,7 @@ public actor OsmCourseSource {
     public func loadNamedNear(name: String, location: GpsPoint, radiusMeters: Double = 5_000) async throws -> Course? {
         let hits = try await index.nearby(location, radiusMeters: radiusMeters, limit: 50)
         guard let match = Self.namedMatch(name, in: hits) else { return nil }
-        return try await loadCourse(osmId: match.osmId, name: name, userLocation: location)
+        return try await loadCourse(osmId: match.osmId, name: name, userLocation: location).first
     }
 
     /// Bytes used by the cached region (0 when nothing is cached).

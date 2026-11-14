@@ -17,6 +17,8 @@ class CourseDownloadService {
     struct DownloadResult {
         let course: Course
         let isSingleCourse: Bool  // true if only one course was saved, false if part of multi-complex
+        /// Other layouts of a multi-course complex, to be saved alongside `course`. Empty otherwise.
+        var additionalCourses: [Course] = []
     }
 
     /// Download and merge course data for a single selected course.
@@ -35,9 +37,15 @@ class CourseDownloadService {
         // 1. Static OSM data first: a course picked from the static index needs no live query.
         if let key = Self.staticOsmKey(courseId) {
             do {
-                if let course = try await OsmCourseSource.shared.loadCourse(osmId: key, name: courseName, userLocation: location) {
-                    print("[OSM] downloaded '\(courseName)' from static data: \(course.holes.count) holes")
-                    return DownloadResult(course: course, isSingleCourse: true)
+                // One course per layout (a multi-course complex gives several). The first is the selection;
+                // the others are saved alongside it.
+                let layouts = try await OsmCourseSource.shared.loadCourse(osmId: key, name: courseName, userLocation: location)
+                if let first = layouts.first {
+                    for layout in layouts {
+                        print("[OSM] downloaded '\(layout.name)' from static data: \(layout.holes.count) holes")
+                    }
+                    return DownloadResult(course: first, isSingleCourse: layouts.count == 1,
+                                          additionalCourses: Array(layouts.dropFirst()))
                 }
                 print("[OSM] '\(courseName)' (\(key)) not in static region data")
             } catch {

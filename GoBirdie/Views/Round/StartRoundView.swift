@@ -616,8 +616,10 @@ class StartRoundViewModel: ObservableObject {
         let store = CourseStore()
         let cacheId = course.id
 
-        // Check cache first
-        if let cached = try? store.load(id: cacheId) {
+        // Check cache first. Layouts of a complex are saved as "<id>-1", "<id>-2", so match the prefix too.
+        let cachedCourse = (try? store.load(id: cacheId))
+            ?? (try? store.loadAll())?.first { $0.id.hasPrefix(cacheId + "-") }
+        if let cached = cachedCourse {
             print("[CourseStore] Loaded \(course.name) from cache")
             state = .selectStartingHole(cached)
             return
@@ -640,6 +642,8 @@ class StartRoundViewModel: ObservableObject {
 
                 print("[CourseStore] Saving course (isSingleCourse: \(result.isSingleCourse))")
                 try? store.save(result.course)
+                // Other layouts of a multi-course complex are saved too, so each shows in the saved list.
+                for layout in result.additionalCourses { try? store.save(layout) }
 
                 await MainActor.run {
                     self.lastFailedCourse = nil
