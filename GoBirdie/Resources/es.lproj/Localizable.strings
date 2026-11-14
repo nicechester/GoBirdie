@@ -12,6 +12,9 @@
 "settings.title" = "Ajustes";
 "settings.courses" = "Campos";
 "settings.manageCourses" = "Gestionar Campos";
+"settings.clearTempFiles" = "Borrar archivos temporales";
+"settings.clearTempFilesFooter" = "Elimina los datos de mapa en caché de tu región. Los campos descargados se conservan.";
+"settings.clearedMessage" = "Se han borrado %@ de datos de mapa en caché.";
 "settings.equipment" = "Equipamiento";
 "settings.myClubs" = "Mis Palos";
 "settings.insights" = "Estadísticas";

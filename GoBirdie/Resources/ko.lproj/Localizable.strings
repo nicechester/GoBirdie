@@ -12,6 +12,9 @@
 "settings.title" = "설정";
 "settings.courses" = "코스";
 "settings.manageCourses" = "코스 관리";
+"settings.clearTempFiles" = "임시 파일 삭제";
+"settings.clearTempFilesFooter" = "현재 지역의 캐시된 지도 데이터를 삭제합니다. 다운로드한 코스는 유지됩니다.";
+"settings.clearedMessage" = "캐시된 지도 데이터 %@를 삭제했습니다.";
 "settings.equipment" = "장비";
 "settings.myClubs" = "내 클럽";
 "settings.insights" = "인사이트";
