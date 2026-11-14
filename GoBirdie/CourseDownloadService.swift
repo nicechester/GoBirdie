@@ -32,17 +32,32 @@ class CourseDownloadService {
         location: GpsPoint,
         teeColor: String
     ) async throws -> DownloadResult {
-        // 1. Resolve OSM id — use the known id directly if available, else find by proximity
-        let osmId: Int64?
-        if courseId.hasPrefix("osm-"), let raw = courseId.dropFirst(4).split(separator: "-").first, let id = Int64(raw) {
-            osmId = id
-        } else {
-            osmId = try await overpassClient.searchCourses(location: location, radius: 2_000).first?.osmId
+        // 1. Static OSM data first: a course picked from the static index needs no live query.
+        if let key = Self.staticOsmKey(courseId) {
+            do {
+                if let course = try await OsmCourseSource.shared.loadCourse(osmId: key, name: courseName, userLocation: location) {
+                    print("[OSM] downloaded '\(courseName)' from static data: \(course.holes.count) holes")
+                    return DownloadResult(course: course, isSingleCourse: true)
+                }
+                print("[OSM] '\(courseName)' (\(key)) not in static region data")
+            } catch {
+                print("[OSM] '\(courseName)' (\(key)) static load failed: \(error)")
+            }
         }
 
-        // 2. Download OSM geometry
+        // 2. OSM geometry: Overpass for numeric IDs; static data by name for GolfCourseAPI courses.
         var osmCourses: [Course] = []
-        if let id = osmId {
+        if Self.staticOsmKey(courseId) != nil {
+            // Not in the static data: exact name match on Overpass within 5 km, never just the nearest course.
+            osmCourses = try await overpassCourses(matchingName: courseName, near: location)
+        } else if let id = Self.numericOsmId(courseId) {
+            osmCourses = (try? await overpassClient.downloadCourse(
+                osmRelationId: id,
+                name: courseName
+            )) ?? []
+        } else if let course = try? await OsmCourseSource.shared.loadNamedNear(name: courseName, location: location) {
+            osmCourses = [course]
+        } else if let id = try await overpassClient.searchCourses(location: location, radius: 2_000).first?.osmId {
             osmCourses = (try? await overpassClient.downloadCourse(
                 osmRelationId: id,
                 name: courseName
@@ -108,6 +123,29 @@ class CourseDownloadService {
     }
 
     // MARK: - Private Helpers
+
+    /// OSM key of a course from the static index (e.g. "osm-a2372626008"). Nil for numeric Overpass IDs and API IDs.
+    static func staticOsmKey(_ courseId: String) -> String? {
+        guard courseId.hasPrefix("osm-") else { return nil }
+        let key = String(courseId.dropFirst(4))
+        guard let first = key.first, first.isLetter, key.dropFirst().allSatisfy(\.isNumber) else { return nil }
+        return key
+    }
+
+    /// Numeric Overpass relation/way ID (e.g. "osm-16307627"). Nil otherwise.
+    static func numericOsmId(_ courseId: String) -> Int64? {
+        guard courseId.hasPrefix("osm-") else { return nil }
+        return courseId.dropFirst(4).split(separator: "-").first.flatMap { Int64($0) }
+    }
+
+    /// Overpass course with exactly this name within 5 km. Returns no courses when none matches.
+    private func overpassCourses(matchingName name: String, near location: GpsPoint) async throws -> [Course] {
+        let nearby = try await overpassClient.searchCourses(location: location, radius: 5_000)
+        guard let match = nearby.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
+            return []
+        }
+        return (try? await overpassClient.downloadCourse(osmRelationId: match.osmId, name: name)) ?? []
+    }
 
     /// Merge OSM and GolfCourseAPI data into a single Course.
     private func mergeCourse(

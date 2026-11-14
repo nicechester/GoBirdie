@@ -12,6 +12,9 @@
 "settings.title" = "設定";
 "settings.courses" = "コース";
 "settings.manageCourses" = "コースを管理";
+"settings.clearTempFiles" = "一時ファイルを削除";
+"settings.clearTempFilesFooter" = "現在の地域のキャッシュされた地図データを削除します。ダウンロード済みのコースは残ります。";
+"settings.clearedMessage" = "キャッシュされた地図データを %@ 削除しました。";
 "settings.equipment" = "用具";
 "settings.myClubs" = "マイクラブ";
 "settings.insights" = "インサイト";

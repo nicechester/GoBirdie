@@ -12,6 +12,9 @@
 "settings.title" = "Settings";
 "settings.courses" = "Courses";
 "settings.manageCourses" = "Manage Courses";
+"settings.clearTempFiles" = "Clear temporary files";
+"settings.clearTempFilesFooter" = "Removes cached map data for your region. Downloaded courses are kept.";
+"settings.clearedMessage" = "Cleared %@ of cached map data.";
 "settings.equipment" = "Equipment";
 "settings.myClubs" = "My Clubs";
 "settings.insights" = "Insights";

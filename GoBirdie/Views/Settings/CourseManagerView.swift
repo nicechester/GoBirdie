@@ -13,6 +13,8 @@ struct CourseManagerView: View {
     @State private var isSearching = false
     @State private var downloadingId: String?
     @State private var errorMessage: String?
+    @State private var cachedRegionBytes = 0
+    @State private var clearedMessage: String?
 
     private let courseDownloadService = CourseDownloadService()
     private let golfCourseAPI = GolfCourseAPIClient(apiKey: Config.golfCourseAPIKey)
@@ -50,9 +52,8 @@ struct CourseManagerView: View {
             if !searchResults.isEmpty {
                 Section("Search Results") {
                     ForEach(searchResults, id: \.id) { result in
-                        let alreadySaved = result.apiId.map { apiId in
-                            savedCourses.contains { $0.golfCourseApiId == apiId }
-                        } ?? false
+                        let alreadySaved = savedCourses.contains { $0.id == result.id }
+                            || (result.apiId.map { apiId in savedCourses.contains { $0.golfCourseApiId == apiId } } ?? false)
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(result.name).font(.subheadline)
@@ -101,14 +102,47 @@ struct CourseManagerView: View {
                     .onDelete(perform: deleteCourses)
                 }
             }
+
+            Section {
+                Button(role: .destructive) {
+                    Task {
+                        // Region cache only: downloaded courses are kept.
+                        let freed = await OsmCourseSource.shared.clearRegionCache()
+                        cachedRegionBytes = await OsmCourseSource.shared.cachedRegionBytes()
+                        clearedMessage = ByteCountFormatter.string(fromByteCount: Int64(freed), countStyle: .file)
+                    }
+                } label: {
+                    Label("settings.clearTempFiles".localized, systemImage: "trash")
+                        .foregroundStyle(cachedRegionBytes == 0 ? Color.gray.opacity(0.4) : Color.red)
+                }
+                .disabled(cachedRegionBytes == 0)
+            } footer: {
+                Text("settings.clearTempFilesFooter".localized)
+            }
         }
         .navigationTitle("settings.manageCourses".localized)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { loadSaved() }
+        .onAppear {
+            loadSaved()
+            Task { cachedRegionBytes = await OsmCourseSource.shared.cachedRegionBytes() }
+        }
+        .alert(
+            "settings.clearTempFiles".localized,
+            isPresented: Binding(
+                get: { clearedMessage != nil },
+                set: { if !$0 { clearedMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(String(format: "settings.clearedMessage".localized, clearedMessage ?? ""))
+        }
     }
 
     private func loadSaved() {
         savedCourses = (try? CourseStore().loadAll()) ?? []
+        // Downloads create the region cache, so refresh its size whenever the list reloads.
+        Task { cachedRegionBytes = await OsmCourseSource.shared.cachedRegionBytes() }
     }
 
     private func deleteCourses(at offsets: IndexSet) {
@@ -131,9 +165,27 @@ struct CourseManagerView: View {
         Task {
             do {
                 let location = appState.getLocationService().currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
-                let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: location)
-                let results = apiResults.map { r in
-                    CourseSearchResult(id: r.id, name: r.name, location: r.location, osmType: "api", osmId: 0, city: r.city, apiId: r.apiId)
+
+                // Static index first: covers every course in the data. GolfCourseAPI only when it has no match.
+                let staticHits: [OsmIndexEntry]
+                do {
+                    staticHits = try await OsmCourseSource.shared.search(name: query, near: location)
+                } catch {
+                    print("[OSM] manage courses name search '\(query)' failed: \(error)")
+                    staticHits = []
+                }
+                print("[OSM] manage courses name search '\(query)': \(staticHits.count) index hits")
+
+                let results: [CourseSearchResult]
+                if !staticHits.isEmpty {
+                    results = staticHits.map { e in
+                        CourseSearchResult(id: "osm-\(e.osmId)", name: e.name, location: e.point, osmType: "static", osmId: 0, city: e.city)
+                    }
+                } else {
+                    let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: location)
+                    results = apiResults.map { r in
+                        CourseSearchResult(id: r.id, name: r.name, location: r.location, osmType: "api", osmId: 0, city: r.city, apiId: r.apiId)
+                    }
                 }
 
                 await MainActor.run {

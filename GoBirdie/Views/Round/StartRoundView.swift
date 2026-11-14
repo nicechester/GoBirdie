@@ -479,17 +479,28 @@ class StartRoundViewModel: ObservableObject {
         Task {
             defer { Task { @MainActor in self.isSearchingOnline = false } }
             do {
-                var osmResults = try await overpassClient.searchCourses(location: location, radius: 15_000)
-                if osmResults.isEmpty {
-                    osmResults = try await overpassClient.searchCourses(location: location, radius: 30_000)
-                }
-                print("[Overpass] Found \(osmResults.count) nearby courses")
-
-                let newResults = osmResults
-                    .map { r -> GolfCourseResult in
-                        GolfCourseResult(id: "osm-\(r.osmId)", name: r.name, location: r.location, city: "")
+                // Static OSM index first (no live query); Overpass only when the index has nothing nearby.
+                let staticHits = (try? await OsmCourseSource.shared.nearby(location, radiusMeters: 15_000)) ?? []
+                let newResults: [GolfCourseResult]
+                if !staticHits.isEmpty {
+                    newResults = staticHits
+                        .map { e in
+                            GolfCourseResult(id: "osm-\(e.osmId)", name: e.name, location: e.point, city: e.city)
+                        }
+                        .filter { !self.savedCourseIds.contains($0.id) }
+                } else {
+                    var osmResults = try await overpassClient.searchCourses(location: location, radius: 15_000)
+                    if osmResults.isEmpty {
+                        osmResults = try await overpassClient.searchCourses(location: location, radius: 30_000)
                     }
-                    .filter { !self.savedCourseIds.contains($0.id) }
+                    print("[Overpass] Found \(osmResults.count) nearby courses")
+
+                    newResults = osmResults
+                        .map { r -> GolfCourseResult in
+                            GolfCourseResult(id: "osm-\(r.osmId)", name: r.name, location: r.location, city: "")
+                        }
+                        .filter { !self.savedCourseIds.contains($0.id) }
+                }
 
                 await MainActor.run {
                     self.displayedCourses.append(contentsOf: newResults)
@@ -538,6 +549,27 @@ class StartRoundViewModel: ObservableObject {
             defer { Task { @MainActor in self.isSearchingOnline = false } }
             do {
                 let searchCenter = currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
+
+                // Static index first: it covers every course in the data. GolfCourseAPI only when it has no match.
+                let staticHits: [OsmIndexEntry]
+                do {
+                    staticHits = try await OsmCourseSource.shared.search(name: query, near: searchCenter)
+                } catch {
+                    print("[OSM] name search '\(query)' failed: \(error)")
+                    staticHits = []
+                }
+                print("[OSM] name search '\(query)': \(staticHits.count) index hits")
+                if !staticHits.isEmpty {
+                    let results = staticHits.map { e in
+                        GolfCourseResult(id: "osm-\(e.osmId)", name: e.name, location: e.point, city: e.city)
+                    }
+                    await MainActor.run {
+                        self.displayedCourses = results
+                        self.state = .selectCourse(results)
+                    }
+                    return
+                }
+
                 let apiResults = try await golfCourseAPI.searchCourses(query: query, playerLocation: searchCenter)
                 let loc = self.currentLocation
                 let filtered = apiResults
