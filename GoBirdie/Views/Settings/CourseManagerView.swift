@@ -52,7 +52,8 @@ struct CourseManagerView: View {
             if !searchResults.isEmpty {
                 Section("Search Results") {
                     ForEach(searchResults, id: \.id) { result in
-                        let alreadySaved = savedCourses.contains { $0.id == result.id }
+                        // Layouts of a complex are saved as "<id>-1", "<id>-2", so match the prefix too.
+                        let alreadySaved = savedCourses.contains { $0.id == result.id || $0.id.hasPrefix(result.id + "-") }
                             || (result.apiId.map { apiId in savedCourses.contains { $0.golfCourseApiId == apiId } } ?? false)
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
@@ -227,6 +228,8 @@ struct CourseManagerView: View {
                 )
 
                 try? CourseStore().save(downloadResult.course)
+                // Other layouts of a multi-course complex are saved too.
+                for layout in downloadResult.additionalCourses { try? CourseStore().save(layout) }
 
                 await MainActor.run {
                     downloadingId = nil
