@@ -28,6 +28,9 @@
 "settings.syncFooter" = "Makes this iPhone discoverable to the GoBirdie desktop app nearby — no shared WiFi needed.";
 "settings.tee" = "Tee";
 "settings.teeColor" = "Tee Color";
+"settings.handedness" = "Handedness";
+"settings.handedness.right" = "Right-handed";
+"settings.handedness.left" = "Left-handed";
 "settings.supportDevelopment" = "Support Development";
 "settings.tipJarFooter" = "GoBirdie is free with no ads. Tips help cover the $99/year Apple Developer fee.";
 "settings.thankYou" = "Thank you! ⛳️ You're now a Patron.";

@@ -37,6 +37,7 @@ struct SettingsView: View {
                 LanguageSection()
                 SyncServerSection()
                 TeeSection()
+                HandednessSection()
                 if !isPatron {
                     TipJarSection()
                 }
@@ -161,6 +162,21 @@ private struct TeeSection: View {
                     }
                     .tag(color)
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Handedness Section
+
+private struct HandednessSection: View {
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        Section("settings.handedness".localized) {
+            Picker("settings.handedness".localized, selection: $appState.handedness) {
+                Text("settings.handedness.right".localized).tag("right")
+                Text("settings.handedness.left".localized).tag("left")
             }
         }
     }

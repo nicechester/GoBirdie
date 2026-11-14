@@ -28,6 +28,9 @@
 "settings.syncFooter" = "근처의 GoBirdie 데스크톱 앱에서 이 iPhone을 검색할 수 있습니다. 같은 WiFi가 필요 없습니다.";
 "settings.tee" = "티";
 "settings.teeColor" = "티 색상";
+"settings.handedness" = "타격 방향";
+"settings.handedness.right" = "오른손잡이";
+"settings.handedness.left" = "왼손잡이";
 "settings.supportDevelopment" = "개발 지원";
 "settings.tipJarFooter" = "GoBirdie는 광고 없이 무료입니다. 팁은 연간 $99 Apple 개발자 비용을 충당하는 데 도움이 됩니다.";
 "settings.thankYou" = "감사합니다! ⛳️ 이제 후원자입니다.";
