@@ -313,6 +313,8 @@ private struct ScorecardDetailView: View {
         let prompt = AIPromptBuilder.build(
             round: currentRound,
             handicap: appState.sgBaseline.displayName,
+            course: try? CourseStore().load(id: currentRound.courseId),
+            handedness: appState.handedness,
             language: lang
         )
         UIPasteboard.general.string = prompt

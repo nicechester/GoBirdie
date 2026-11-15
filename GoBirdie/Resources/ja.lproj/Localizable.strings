@@ -28,6 +28,9 @@
 "settings.syncFooter" = "近くにある GoBirdie デスクトップアプリからこの iPhone を検出できるようにします。同じ WiFi は必要ありません。";
 "settings.tee" = "ティー";
 "settings.teeColor" = "ティーの色";
+"settings.handedness" = "利き手";
+"settings.handedness.right" = "右利き";
+"settings.handedness.left" = "左利き";
 "settings.supportDevelopment" = "開発を応援";
 "settings.tipJarFooter" = "GoBirdie は広告なしで無料です。チップは年間 $99 の Apple 開発者登録料の支払いに充てられます。";
 "settings.thankYou" = "ありがとうございます！ ⛳️ サポーターになりました。";

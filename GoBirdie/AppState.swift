@@ -31,6 +31,10 @@ final class AppState: ObservableObject {
     @Published var teeColor: String = UserDefaults.standard.string(forKey: "teeColor") ?? "Blue" {
         didSet { UserDefaults.standard.set(teeColor, forKey: "teeColor") }
     }
+    /// "right" or "left". Used in the "Ask AI" prompt.
+    @Published var handedness: String = UserDefaults.standard.string(forKey: "handedness") ?? "right" {
+        didSet { UserDefaults.standard.set(handedness, forKey: "handedness") }
+    }
     @Published var sgBaseline: SGBaseline = SGBaseline(rawValue: UserDefaults.standard.string(forKey: "sgBaseline") ?? "") ?? .bogey {
         didSet { UserDefaults.standard.set(sgBaseline.rawValue, forKey: "sgBaseline") }
     }
