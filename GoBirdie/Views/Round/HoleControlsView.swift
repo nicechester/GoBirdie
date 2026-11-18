@@ -94,6 +94,8 @@ struct HoleControlsView: View {
                     if session.currentHoleNumber == session.round.holes.count {
                         appState.endActiveRound()
                     } else {
+                        // Read the score before advancing; the Finish case is skipped on purpose.
+                        session.celebration = session.currentHole.flatMap { ScoreCelebration(hole: $0) }
                         session.navigateTo(holeNumber: session.currentHoleNumber + 1, course: course)
                         appState.resetIdleTimer()
                     }

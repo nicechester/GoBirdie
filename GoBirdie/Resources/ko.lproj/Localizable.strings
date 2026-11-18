@@ -281,3 +281,7 @@
 "insight.APPROACH_WORSE_VS_HISTORY" = "어프로치가 최근 평균보다 ~%@야드 더 멀었습니다 — 오늘 아이언이 덜 예리했습니다.";
 "insight.APPROACH_BETTER_VS_HISTORY" = "어프로치가 최근 평균보다 ~%@야드 더 가까웠습니다 — 오늘 아이언이 정확했습니다.";
 "insight.ROUND_DURATION_LONG" = "라운드가 %@분 걸렸습니다 — 4시간 이상의 정신적 피로가 후반 홀 의사결정에 영향을 미칠 수 있습니다.";
+
+"celebration.eagle" = "이글!";
+"celebration.birdie" = "버디 좋아요!";
+"celebration.par" = "파 좋아요!";

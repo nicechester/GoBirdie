@@ -16,6 +16,8 @@ final class RoundSession: ObservableObject {
     @Published var round: Round
     @Published var currentHoleIndex: Int = 0
     @Published var isComplete: Bool = false
+    /// Set when Next is tapped on an eagle, birdie, or par. The overlay clears it when finished.
+    @Published var celebration: ScoreCelebration?
 
     init(round: Round, startingHoleIndex: Int = 0) {
         self.round = round

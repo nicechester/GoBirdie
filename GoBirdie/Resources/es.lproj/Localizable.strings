@@ -281,3 +281,7 @@
 "insight.APPROACH_WORSE_VS_HISTORY" = "Los approach promediaron ~%@ yardas más lejos del pin que tu promedio reciente — los hierros no estuvieron tan afilados hoy.";
 "insight.APPROACH_BETTER_VS_HISTORY" = "Los approach promediaron ~%@ yardas más cerca del pin que tu promedio reciente — los hierros estuvieron precisos hoy.";
 "insight.ROUND_DURATION_LONG" = "La ronda tomó %@ minutos — la fatiga mental después de 4+ horas puede afectar la toma de decisiones en los últimos nueve.";
+
+"celebration.eagle" = "¡Águila!";
+"celebration.birdie" = "¡Buen birdie!";
+"celebration.par" = "¡Buen par!";
