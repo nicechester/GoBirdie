@@ -57,6 +57,11 @@ struct StartRoundView: View {
                     case .downloading(let courseName):
                         DownloadingView(courseName: courseName)
 
+                    case .selectLayouts(let layouts):
+                        LayoutPickerView(layouts: layouts) { picked in
+                            viewModel.pickLayouts(picked)
+                        }
+
                     case .selectStartingHole(let course):
                         StartingHoleView(course: course) { hole in
                             viewModel.startRound(course: course, startingHole: hole)
@@ -405,6 +410,8 @@ class StartRoundViewModel: ObservableObject {
         case selectCourse([GolfCourseResult])
         case downloading(String)
         case selectStartingHole(Course)
+        /// A multi-course complex: pick one layout (9 holes) or two (18 holes).
+        case selectLayouts([Course])
         case error(String)
     }
 
@@ -604,6 +611,18 @@ class StartRoundViewModel: ObservableObject {
         startedRound = true
     }
 
+    /// One layout plays as-is. Two layouts are combined into one 18-hole course, saved so it shows in the saved list.
+    func pickLayouts(_ layouts: [Course]) {
+        guard !layouts.isEmpty else { return }
+        if layouts.count == 1 {
+            state = .selectStartingHole(layouts[0])
+            return
+        }
+        guard let combined = CourseLayouts.combine(layouts) else { return }
+        try? CourseStore().save(combined)
+        state = .selectStartingHole(combined)
+    }
+
     func retry() {
         if let course = lastFailedCourse {
             downloadCourse(course)
@@ -617,9 +636,16 @@ class StartRoundViewModel: ObservableObject {
         let cacheId = course.id
 
         // Check cache first. Layouts of a complex are saved as "<id>-1", "<id>-2", so match the prefix too.
-        let cachedCourse = (try? store.load(id: cacheId))
-            ?? (try? store.loadAll())?.first { $0.id.hasPrefix(cacheId + "-") }
-        if let cached = cachedCourse {
+        // Combined courses ("…+…") are skipped here; they are not separate layouts.
+        let cachedLayouts = ((try? store.loadAll()) ?? [])
+            .filter { ($0.id == cacheId || $0.id.hasPrefix(cacheId + "-")) && !$0.id.contains("+") }
+            .sorted { $0.id < $1.id }
+        if cachedLayouts.count > 1 {
+            print("[CourseStore] Loaded \(course.name) from cache: \(cachedLayouts.count) layouts")
+            state = .selectLayouts(cachedLayouts)
+            return
+        }
+        if let cached = cachedLayouts.first {
             print("[CourseStore] Loaded \(course.name) from cache")
             state = .selectStartingHole(cached)
             return
@@ -647,7 +673,8 @@ class StartRoundViewModel: ObservableObject {
 
                 await MainActor.run {
                     self.lastFailedCourse = nil
-                    self.state = .selectStartingHole(result.course)
+                    let layouts = [result.course] + result.additionalCourses
+                    self.state = layouts.count > 1 ? .selectLayouts(layouts) : .selectStartingHole(result.course)
                 }
             } catch {
                 print("[Download] Error: \(error)")

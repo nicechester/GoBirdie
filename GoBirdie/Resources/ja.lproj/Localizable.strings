@@ -285,3 +285,9 @@
 "celebration.eagle" = "イーグル！";
 "celebration.birdie" = "ナイスバーディー！";
 "celebration.par" = "ナイスパー！";
+
+"layout.pickPrompt" = "1コースは9ホール、2コースは18ホールを選択";
+"layout.start9" = "9ホールでスタート";
+"layout.start18" = "18ホールでスタート";
+"layout.choose" = "コースを選択";
+"layout.holes" = "%dホール";
