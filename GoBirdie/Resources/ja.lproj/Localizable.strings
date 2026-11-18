@@ -281,3 +281,7 @@
 "insight.APPROACH_WORSE_VS_HISTORY" = "アプローチの平均が直近の平均よりピンから約 %@ ヤード遠くなりました — 本日はアイアンのキレが今ひとつでした。";
 "insight.APPROACH_BETTER_VS_HISTORY" = "アプローチの平均が直近の平均よりピンから約 %@ ヤード近くなりました — 本日はアイアンが正確でした。";
 "insight.ROUND_DURATION_LONG" = "ラウンドに %@ 分かかりました — 4時間以上の精神的な疲労は、後半のホールでの判断に影響することがあります。";
+
+"celebration.eagle" = "イーグル！";
+"celebration.birdie" = "ナイスバーディー！";
+"celebration.par" = "ナイスパー！";

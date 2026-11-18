@@ -161,6 +161,14 @@ private struct ActiveRoundView: View {
             )
         }
         .overlay {
+            if let celebration = session.celebration {
+                CelebrationOverlayView(celebration: celebration) {
+                    session.celebration = nil
+                }
+                .id(celebration)
+            }
+        }
+        .overlay {
             if appState.isSavingRound {
                 ZStack {
                     Color.black.opacity(0.4).ignoresSafeArea()

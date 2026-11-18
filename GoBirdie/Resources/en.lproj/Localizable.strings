@@ -281,3 +281,7 @@
 "insight.APPROACH_WORSE_VS_HISTORY" = "Approaches averaged ~%@ yards farther from the pin than your recent average — irons weren't as sharp today.";
 "insight.APPROACH_BETTER_VS_HISTORY" = "Approaches averaged ~%@ yards closer to the pin than your recent average — irons were dialed in today.";
 "insight.ROUND_DURATION_LONG" = "The round took %@ minutes — mental fatigue over 4+ hours can affect decision-making on the back nine.";
+
+"celebration.eagle" = "Eagle!";
+"celebration.birdie" = "Nice birdie!";
+"celebration.par" = "Nice par!";
