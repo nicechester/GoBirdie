@@ -6,7 +6,7 @@
 import SwiftUI
 import GoBirdieCore
 
-/// Picks the layouts of a multi-course complex: one layout for a 9-hole round, two for an 18-hole round.
+/// Picks the layouts of a multi-course complex: one layout, or two when all are 9-hole, for an 18-hole round.
 /// Shared by start round and course explore.
 struct LayoutPickerView: View {
     let layouts: [Course]
@@ -17,7 +17,7 @@ struct LayoutPickerView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("layout.pickPrompt".localized)
+            Text((allNineHole ? "layout.pickPrompt" : "layout.pickPromptOne").localized)
                 .font(.headline)
                 .multilineTextAlignment(.center)
 
@@ -47,12 +47,19 @@ struct LayoutPickerView: View {
         pickedIds.compactMap { id in layouts.first { $0.id == id } }
     }
 
+    private var allNineHole: Bool {
+        layouts.allSatisfy { $0.holes.count <= 9 }
+    }
+
+    private var maxPicks: Int {
+        allNineHole ? 2 : 1
+    }
+
     private var startTitle: String {
-        switch pickedIds.count {
-        case 2: return "layout.start18".localized
-        case 1: return "layout.start9".localized
-        default: return "layout.choose".localized
+        if pickedIds.isEmpty {
+            return "layout.choose".localized
         }
+        return "layout.startN".localized(with: pickedLayouts.reduce(0) { $0 + $1.holes.count })
     }
 
     private func layoutRow(_ layout: Course) -> some View {
@@ -89,8 +96,10 @@ struct LayoutPickerView: View {
     private func toggle(_ id: String) {
         if let index = pickedIds.firstIndex(of: id) {
             pickedIds.remove(at: index)
-        } else if pickedIds.count < 2 {
+        } else if pickedIds.count < maxPicks {
             pickedIds.append(id)
+        } else if maxPicks == 1 {
+            pickedIds = [id]
         }
     }
 }
