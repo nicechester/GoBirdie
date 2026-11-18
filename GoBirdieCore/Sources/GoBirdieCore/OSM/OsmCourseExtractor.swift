@@ -9,7 +9,9 @@ enum OsmCourseExtractor {
     private static let margin = 0.006
 
     /// The course outline is the feature with `osmId`. Its holes are the golf features within `margin` of the
-    /// outline's bounds, so holes mapped just outside the club polygon are kept. Hole lines are split into
+    /// outline's bounds, so holes mapped just outside the club polygon are kept. A hole is kept only if it belongs
+    /// to this outline: its tee is inside the outline's polygon, or nearest to its centroid among nearby outlines.
+    /// This keeps neighboring courses whose bounds overlap (Torrey Pines North/South) out. Hole lines are split into
     /// layouts (a multi-course complex gives one course per layout). Returns an empty list when the outline or
     /// its holes aren't in this file.
     static func extract(from file: URL, osmId: String, name: String, anchor: GpsPoint) throws -> [Course] {
@@ -39,17 +41,35 @@ enum OsmCourseExtractor {
         var greens: [[GpsPoint]] = []
         var fairways: [[GpsPoint]] = []
         var bunkers: [[GpsPoint]] = []
+        // The requested outline plus any other course outline near it, so each hole can be matched to its own outline.
+        var courseOutlines = [CourseOutline(id: osmId, rings: outlineRings)]
         let golfNeedle = Data("\"golf\"".utf8)
+        let courseNeedle = Data("\"golf_course\"".utf8)
+        let inBox: (GpsPoint) -> Bool = { (minLat...maxLat).contains($0.lat) && (minLon...maxLon).contains($0.lon) }
 
         try forEachFeatureBytes(in: file) { bytes in
-            guard bytes.range(of: golfNeedle) != nil,
-                  let feature = parseFeature(bytes) else { return true }
+            let mayBeHole = bytes.range(of: golfNeedle) != nil
+            let mayBeOutline = bytes.range(of: courseNeedle) != nil
+            guard mayBeHole || mayBeOutline, let feature = parseFeature(bytes) else { return true }
             let props = properties(of: feature)
-            guard let golf = props["golf"] as? String, golfKinds.contains(golf) else { return true }
+
+            if props["leisure"] as? String == "golf_course" {
+                // Only areas count as outlines, as in fetch_course.sh. A LineString trace of the club
+                // boundary (same name, no polygon) would otherwise claim the holes inside it.
+                let id = feature["id"] as? String ?? ""
+                let geometryType = (feature["geometry"] as? [String: Any])?["type"] as? String
+                let isArea = geometryType == "Polygon" || geometryType == "MultiPolygon"
+                let outline = rings(of: feature).filter { $0.count >= 3 }
+                if isArea, id != osmId, outline.joined().contains(where: inBox) {
+                    courseOutlines.append(CourseOutline(id: id, rings: outline))
+                }
+                return true
+            }
+
+            guard mayBeHole, let golf = props["golf"] as? String, golfKinds.contains(golf) else { return true }
             let parts = rings(of: feature)
-            guard let first = parts.first?.first,
-                  (minLat...maxLat).contains(first.lat),
-                  (minLon...maxLon).contains(first.lon) else { return true }
+            // Same as the script's in_bounds: any coordinate of the feature in the box, not just its start.
+            guard parts.joined().contains(where: inBox) else { return true }
 
             switch golf {
             case "hole":
@@ -66,9 +86,15 @@ enum OsmCourseExtractor {
             return true
         }
 
-        // Layouts of a complex. Preferred: the golf:course:name tag on each hole (e.g. "C.W. Koiner Course").
-        // Fallback: one layout per duplicate hole ref, split by way-ID gap.
+        // Keep only the holes whose start point belongs to this outline (see owningOutlineId).
+        holeLines = holeLines.filter { owningOutlineId(for: $0.points[0], in: courseOutlines) == osmId }
+
+        // Layouts of a complex, in order of preference:
+        // 1. The golf:course:name tag on each hole (e.g. "C.W. Koiner Course").
+        // 2. The text before the number in each ref (e.g. "Creek 1", "Oaks 1"): one layout per prefix.
+        // 3. One layout per duplicate hole ref, split by way-ID gap.
         let tagged = !holeLines.isEmpty && holeLines.allSatisfy { ($0.props["golf:course:name"] as? String) != nil }
+        let prefixed = tagged ? [] : groupByRefPrefix(holeLines)
         let layouts: [(name: String?, lines: [HoleLine])]
         if tagged {
             var order: [String] = []
@@ -79,8 +105,10 @@ enum OsmCourseExtractor {
                 byName[layoutName, default: []].append(line)
             }
             layouts = order.map { key -> (name: String?, lines: [HoleLine]) in (name: key, lines: byName[key] ?? []) }
+        } else if prefixed.count > 1 {
+            layouts = prefixed.map { group -> (name: String?, lines: [HoleLine]) in (name: group.name, lines: group.lines) }
         } else {
-            let layoutCount = Dictionary(grouping: holeLines.compactMap { intValue($0.props["ref"]) }, by: { $0 })
+            let layoutCount = Dictionary(grouping: holeLines.compactMap { holeNumber($0.props["ref"]) }, by: { $0 })
                 .values.map(\.count).max() ?? 1
             layouts = splitByWayGap(holeLines, layouts: layoutCount).map { group -> (name: String?, lines: [HoleLine]) in
                 (name: nil, lines: group)
@@ -109,6 +137,12 @@ enum OsmCourseExtractor {
     }
 
     // MARK: - Layouts and hole building
+
+    /// A course outline (leisure=golf_course) near the requested one, used to decide which outline a hole belongs to.
+    private struct CourseOutline {
+        let id: String
+        let rings: [[GpsPoint]]
+    }
 
     private struct HoleLine {
         let id: String
@@ -151,7 +185,7 @@ enum OsmCourseExtractor {
         // One line per hole number within a layout: keep the way whose tee is closest to the anchor.
         var byRef: [Int: HoleLine] = [:]
         for line in lines {
-            guard let ref = intValue(line.props["ref"]) else { continue }
+            guard let ref = holeNumber(line.props["ref"]) else { continue }
             if let existing = byRef[ref],
                line.points[0].distanceMeters(to: anchor) >= existing.points[0].distanceMeters(to: anchor) {
                 continue
@@ -297,6 +331,66 @@ enum OsmCourseExtractor {
     private static func intValue(_ value: Any?) -> Int? {
         if let text = value as? String { return Int(text) }
         return (value as? NSNumber)?.intValue
+    }
+
+    /// The hole number in a ref: "4" -> 4, "Creek 1" -> 1.
+    private static func holeNumber(_ value: Any?) -> Int? {
+        guard let text = value as? String else { return (value as? NSNumber)?.intValue }
+        if let number = Int(text) { return number }
+        guard let range = text.range(of: #"\d+$"#, options: .regularExpression) else { return nil }
+        return Int(text[range])
+    }
+
+    /// The text before the hole number in a ref: "Creek 1" -> "Creek", "4" -> "".
+    private static func refPrefix(_ value: Any?) -> String {
+        guard let text = value as? String else { return "" }
+        return text.replacingOccurrences(of: #"\s*\d+$"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Groups holes by the prefix of their ref. Holes without a prefix are left out.
+    private static func groupByRefPrefix(_ lines: [HoleLine]) -> [(name: String, lines: [HoleLine])] {
+        var order: [String] = []
+        var byPrefix: [String: [HoleLine]] = [:]
+        for line in lines {
+            let prefix = refPrefix(line.props["ref"])
+            guard !prefix.isEmpty else { continue }
+            if byPrefix[prefix] == nil { order.append(prefix) }
+            byPrefix[prefix, default: []].append(line)
+        }
+        return order.map { (name: $0, lines: byPrefix[$0] ?? []) }
+    }
+
+    /// The outline a hole belongs to: the outline whose polygon contains the tee, otherwise the nearest outline centroid.
+    /// Matches fetch_course.sh: the nearest centroid is measured in degrees (lon, lat), not meters.
+    private static func owningOutlineId(for point: GpsPoint, in outlines: [CourseOutline]) -> String? {
+        if let inside = outlines.first(where: { outline in outline.rings.contains { pointInPolygon(point, $0) } }) {
+            return inside.id
+        }
+        return outlines.min { a, b in
+            degreeDistance(centroid(a.rings.flatMap { $0 }), point) < degreeDistance(centroid(b.rings.flatMap { $0 }), point)
+        }?.id
+    }
+
+    /// Straight-line distance in degrees, as the script's dist() computes it.
+    private static func degreeDistance(_ a: GpsPoint, _ b: GpsPoint) -> Double {
+        hypot(a.lon - b.lon, a.lat - b.lat)
+    }
+
+    /// Ray casting. Points are treated as (lat, lon) pairs.
+    private static func pointInPolygon(_ point: GpsPoint, _ ring: [GpsPoint]) -> Bool {
+        var inside = false
+        var j = ring.count - 1
+        for i in ring.indices {
+            let a = ring[i]
+            let b = ring[j]
+            if (a.lat > point.lat) != (b.lat > point.lat),
+               point.lon < (b.lon - a.lon) * (point.lat - a.lat) / (b.lat - a.lat) + a.lon {
+                inside.toggle()
+            }
+            j = i
+        }
+        return inside
     }
 
     private static func centroid(_ points: [GpsPoint]) -> GpsPoint {

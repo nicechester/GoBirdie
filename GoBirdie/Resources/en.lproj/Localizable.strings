@@ -285,3 +285,9 @@
 "celebration.eagle" = "Eagle!";
 "celebration.birdie" = "Nice birdie!";
 "celebration.par" = "Nice par!";
+
+"layout.pickPrompt" = "Choose one layout for 9 holes, or two for 18 holes";
+"layout.start9" = "Start 9 holes";
+"layout.start18" = "Start 18 holes";
+"layout.choose" = "Choose a layout";
+"layout.holes" = "%d holes";

@@ -129,6 +129,11 @@ private struct ExploreCoursePicker: View {
                     case .downloading(let courseName):
                         DownloadingView(courseName: courseName)
 
+                    case .selectLayouts(let layouts):
+                        LayoutPickerView(layouts: layouts) { picked in
+                            viewModel.pickLayouts(picked)
+                        }
+
                     case .selectStartingHole(let course):
                         // Auto-transition to map view (skip intermediate screen)
                         Color.clear

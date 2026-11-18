@@ -285,3 +285,9 @@
 "celebration.eagle" = "이글!";
 "celebration.birdie" = "버디 좋아요!";
 "celebration.par" = "파 좋아요!";
+
+"layout.pickPrompt" = "1개 코스는 9홀, 2개 코스는 18홀로 선택하세요";
+"layout.start9" = "9홀 시작";
+"layout.start18" = "18홀 시작";
+"layout.choose" = "코스를 선택하세요";
+"layout.holes" = "%d홀";
