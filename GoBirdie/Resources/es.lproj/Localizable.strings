@@ -287,7 +287,7 @@
 "celebration.par" = "¡Buen par!";
 
 "layout.pickPrompt" = "Elige un recorrido para 9 hoyos, o dos para 18 hoyos";
-"layout.start9" = "Empezar 9 hoyos";
-"layout.start18" = "Empezar 18 hoyos";
+"layout.pickPromptOne" = "Elige un recorrido para jugar";
+"layout.startN" = "Empezar %d hoyos";
 "layout.choose" = "Elige un recorrido";
 "layout.holes" = "%d hoyos";

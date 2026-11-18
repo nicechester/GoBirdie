@@ -252,7 +252,7 @@
 "insight.SG_APPROACH_CRITICAL" = "어프로치 샷이 약점이었습니다 — 그린 공략에서 %@ 타 손실. 거리 컨트롤과 아이언 정확도 향상이 필요합니다.";
 "insight.SG_OFF_TEE_CRITICAL" = "티샷이 큰 문제였습니다 — 티에서 %@ 타 손실. 좋은 홀에서는 거리보다 정확도를 우선하세요.";
 "insight.SG_SHORT_GAME_CRITICAL" = "숟 게임에서 %@ 타를 잃었습니다. 업앤다운 성공률을 높이는 것이 스코어를 줄이는 가장 빠른 방법입니다.";
-"insight.SG_PUTTING_STRONG" = "퍼터가 화력했습니다 — 그린에서 %@ 타 획득. 페이스 컨트롤과 그린 리딩이 훌륭했습니다.";
+"insight.SG_PUTTING_STRONG" = "퍼터가 불을 뿜었습니다 — 그린에서 %@ 타 획득. 페이스 컨트롤과 그린 리딩이 훌륭했습니다.";
 "insight.SG_APPROACH_STRONG" = "볼 스트라이킹이 훌륭했습니다 — 어프로치 샷에서 %@ 타 획득. 이런 아이언 플레이가 버디 기회를 만듭니다.";
 "insight.SG_SHORT_GAME_STRONG" = "숟 게임이 무기였습니다 — 그린 주변에서 %@ 타 획득. 미스 했을 때 훌륭한 터치와 창의성을 보여줬습니다.";
 "insight.SG_OFF_TEE_STRONG" = "티샷이 정확했습니다 — 티에서 %@ 타 획득. 하루 종일 좋은 포지션을 잡았습니다.";
@@ -287,7 +287,7 @@
 "celebration.par" = "파 좋아요!";
 
 "layout.pickPrompt" = "1개 코스는 9홀, 2개 코스는 18홀로 선택하세요";
-"layout.start9" = "9홀 시작";
-"layout.start18" = "18홀 시작";
+"layout.pickPromptOne" = "플레이할 코스를 선택하세요";
+"layout.startN" = "%d홀 시작";
 "layout.choose" = "코스를 선택하세요";
 "layout.holes" = "%d홀";

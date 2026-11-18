@@ -16,6 +16,33 @@ struct CourseManagerView: View {
     @State private var cachedRegionBytes = 0
     @State private var clearedMessage: String?
 
+    /// One saved club: all its saved layouts and combined courses. Deleting a club removes all of them.
+    private struct SavedClub: Identifiable {
+        let id: String
+        let name: String
+        let courses: [Course]
+
+        /// Holes in the saved layouts (combined courses are not counted again).
+        var holes: Int { courses.filter { !$0.id.contains("+") }.reduce(0) { $0 + $1.holes.count } }
+        var downloadedAt: Date { courses.map(\.downloadedAt).max() ?? Date() }
+    }
+
+    /// Saved courses grouped by club, in store order.
+    private var savedClubs: [SavedClub] {
+        var order: [String] = []
+        var groups: [String: [Course]] = [:]
+        for course in savedCourses {
+            let key = CourseLayouts.complexKey(forId: course.id)
+            if groups[key] == nil { order.append(key) }
+            groups[key, default: []].append(course)
+        }
+        return order.map { key in
+            let courses = groups[key] ?? []
+            let base = courses.first { !$0.id.contains("+") } ?? courses[0]
+            return SavedClub(id: key, name: CourseLayouts.clubName(base.name), courses: courses)
+        }
+    }
+
     private let courseDownloadService = CourseDownloadService()
     private let golfCourseAPI = GolfCourseAPIClient(apiKey: Config.golfCourseAPIKey)
     private let overpassClient = OverpassClient()
@@ -53,7 +80,7 @@ struct CourseManagerView: View {
                 Section("Search Results") {
                     ForEach(searchResults, id: \.id) { result in
                         // Layouts of a complex are saved as "<id>-1", "<id>-2", so match the prefix too.
-                        let alreadySaved = savedCourses.contains { $0.id == result.id || $0.id.hasPrefix(result.id + "-") }
+                        let alreadySaved = savedCourses.contains { CourseLayouts.complexKey(forId: $0.id) == CourseLayouts.complexKey(forId: result.id) }
                             || (result.apiId.map { apiId in savedCourses.contains { $0.golfCourseApiId == apiId } } ?? false)
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
@@ -88,15 +115,15 @@ struct CourseManagerView: View {
                 }
             }
 
-            Section("Saved Courses (\(savedCourses.count))") {
+            Section("Saved Courses (\(savedClubs.count))") {
                 if savedCourses.isEmpty {
                     Text("courses.noCourses".localized)
                         .font(.caption).foregroundStyle(.secondary)
                 } else {
-                    ForEach(savedCourses) { course in
+                    ForEach(savedClubs) { club in
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(course.name).font(.subheadline)
-                            Text("courses.holesDownloaded".localized(with: course.holes.count, course.downloadedAt.formatted(.relative(presentation: .named))))
+                            Text(club.name).font(.subheadline)
+                            Text("courses.holesDownloaded".localized(with: club.holes, club.downloadedAt.formatted(.relative(presentation: .named))))
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                     }
@@ -148,10 +175,16 @@ struct CourseManagerView: View {
 
     private func deleteCourses(at offsets: IndexSet) {
         let store = CourseStore()
+        let clubs = savedClubs
+        var removedIds = Set<String>()
         for idx in offsets {
-            try? store.delete(id: savedCourses[idx].id)
+            // Delete every saved layout and combined course of the club, so none is left behind.
+            for course in clubs[idx].courses {
+                try? store.delete(id: course.id)
+                removedIds.insert(course.id)
+            }
         }
-        savedCourses.remove(atOffsets: offsets)
+        savedCourses.removeAll { removedIds.contains($0.id) }
         Task { await overpassClient.clearCache() }
     }
 

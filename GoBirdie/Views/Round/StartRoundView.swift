@@ -404,6 +404,7 @@ class StartRoundViewModel: ObservableObject {
     private var lastFailedCourse: GolfCourseResult?
     private var displayedCourses: [GolfCourseResult] = []
     private var savedCourseIds: Set<String> = []
+    private var searchToken = 0
 
     enum ViewState {
         case requestingLocation
@@ -421,20 +422,46 @@ class StartRoundViewModel: ObservableObject {
         self.locationService = locationService
     }
 
+    private func refreshSavedIds(_ saved: [Course]) {
+        savedCourseIds = Set(saved.filter { !$0.id.contains("+") }.map { CourseLayouts.complexKey(forId: $0.id) })
+    }
+
+    /// One row per saved complex (its layouts share a key), nearest first when a location is given.
+    private func savedClubRows(_ saved: [Course], near location: GpsPoint?) -> [GolfCourseResult] {
+        var keys: [String] = []
+        var firstByKey: [String: Course] = [:]
+        for course in saved where !course.id.contains("+") {
+            let key = CourseLayouts.complexKey(forId: course.id)
+            if firstByKey[key] == nil {
+                firstByKey[key] = course
+                keys.append(key)
+            }
+        }
+        var groups = keys.compactMap { firstByKey[$0] }
+        if let location {
+            groups.sort { $0.location.distanceMeters(to: location) < $1.location.distanceMeters(to: location) }
+        }
+        return groups
+            .prefix(20)
+            .map { first -> GolfCourseResult in
+                GolfCourseResult(
+                    id: CourseLayouts.complexKey(forId: first.id),
+                    name: CourseLayouts.clubName(first.name),
+                    location: first.location,
+                    city: ""
+                )
+            }
+    }
+
     func requestLocation() {
         // 1. Load and show saved courses immediately (without waiting for location)
         let store = CourseStore()
         let saved = (try? store.loadAll()) ?? []
+        refreshSavedIds(saved)
+        let rows = savedClubRows(saved, near: nil)
 
-        if !saved.isEmpty {
-            let savedResults = saved
-                .prefix(20)
-                .map { c -> GolfCourseResult in
-                    GolfCourseResult(id: c.id, name: c.name, location: c.location, city: "")
-                }
-
-            savedCourseIds = Set(savedResults.map { $0.id })
-            displayedCourses = savedResults
+        if !rows.isEmpty {
+            displayedCourses = rows
             state = .selectCourse(displayedCourses)
         }
 
@@ -465,14 +492,9 @@ class StartRoundViewModel: ObservableObject {
         // 1. Show saved courses immediately, sorted by distance
         let store = CourseStore()
         let saved = (try? store.loadAll()) ?? []
-        let savedResults = saved
-            .sorted { $0.location.distanceMeters(to: location) < $1.location.distanceMeters(to: location) }
-            .prefix(20)
-            .map { c -> GolfCourseResult in
-                GolfCourseResult(id: c.id, name: c.name, location: c.location, city: "")
-            }
+        refreshSavedIds(saved)
+        let savedResults = savedClubRows(saved, near: location)
 
-        savedCourseIds = Set(savedResults.map { $0.id })
         displayedCourses = savedResults
         state = .selectCourse(displayedCourses)
 
@@ -481,10 +503,12 @@ class StartRoundViewModel: ObservableObject {
     }
 
     private func searchOnlineForLocation(_ location: GpsPoint) {
+        searchToken += 1
+        let token = searchToken
         isSearchingOnline = true
         searchFailed = false
         Task {
-            defer { Task { @MainActor in self.isSearchingOnline = false } }
+            defer { Task { @MainActor in if token == self.searchToken { self.isSearchingOnline = false } } }
             do {
                 // Static OSM index first (no live query); Overpass only when the index has nothing nearby.
                 let staticHits = (try? await OsmCourseSource.shared.nearby(location, radiusMeters: 15_000)) ?? []
@@ -494,7 +518,7 @@ class StartRoundViewModel: ObservableObject {
                         .map { e in
                             GolfCourseResult(id: "osm-\(e.osmId)", name: e.name, location: e.point, city: e.city)
                         }
-                        .filter { !self.savedCourseIds.contains($0.id) }
+                        .filter { !self.savedCourseIds.contains(CourseLayouts.complexKey(forId: $0.id)) }
                 } else {
                     var osmResults = try await overpassClient.searchCourses(location: location, radius: 15_000)
                     if osmResults.isEmpty {
@@ -506,11 +530,14 @@ class StartRoundViewModel: ObservableObject {
                         .map { r -> GolfCourseResult in
                             GolfCourseResult(id: "osm-\(r.osmId)", name: r.name, location: r.location, city: "")
                         }
-                        .filter { !self.savedCourseIds.contains($0.id) }
+                        .filter { !self.savedCourseIds.contains(CourseLayouts.complexKey(forId: $0.id)) }
                 }
 
                 await MainActor.run {
-                    self.displayedCourses.append(contentsOf: newResults)
+                    guard token == self.searchToken else { return }
+                    var seen = Set<String>()
+                    self.displayedCourses = (self.displayedCourses + newResults)
+                        .filter { seen.insert(CourseLayouts.complexKey(forId: $0.id)).inserted }
                     self.displayedCourses.sort { $0.location.distanceMeters(to: location) < $1.location.distanceMeters(to: location) }
                     if case .selectCourse = self.state {
                         self.state = .selectCourse(self.displayedCourses)
@@ -520,6 +547,7 @@ class StartRoundViewModel: ObservableObject {
                 print("[Search] Online search failed: \(error)")
                 // Saved courses are already showing, so don't overwrite with error
                 await MainActor.run {
+                    guard token == self.searchToken else { return }
                     self.searchFailed = true
                     if self.displayedCourses.isEmpty {
                         self.state = .error("No courses found. \(error.localizedDescription)")
@@ -538,22 +566,26 @@ class StartRoundViewModel: ObservableObject {
     }
 
     func isSaved(_ course: GolfCourseResult) -> Bool {
-        savedCourseIds.contains(course.id)
+        savedCourseIds.contains(CourseLayouts.complexKey(forId: course.id))
     }
 
     func searchByName() {
         let query = searchText.trimmingCharacters(in: .whitespaces)
         guard !query.isEmpty else {
-            // Clear search — restore location-based results
+            // Clear search — restore location-based results. Bump the token so an in-flight name search can't overwrite them.
+            searchToken += 1
             if let loc = currentLocation { showCoursesForLocation(loc) }
             return
         }
 
+        searchToken += 1
+        let token = searchToken
+        refreshSavedIds((try? CourseStore().loadAll()) ?? [])
         isSearchingOnline = true
         state = .selectCourse([])
 
         Task {
-            defer { Task { @MainActor in self.isSearchingOnline = false } }
+            defer { Task { @MainActor in if token == self.searchToken { self.isSearchingOnline = false } } }
             do {
                 let searchCenter = currentLocation ?? GpsPoint(lat: 34.0, lon: -118.0)
 
@@ -571,6 +603,7 @@ class StartRoundViewModel: ObservableObject {
                         GolfCourseResult(id: "osm-\(e.osmId)", name: e.name, location: e.point, city: e.city)
                     }
                     await MainActor.run {
+                        guard token == self.searchToken else { return }
                         self.displayedCourses = results
                         self.state = .selectCourse(results)
                     }
@@ -587,12 +620,14 @@ class StartRoundViewModel: ObservableObject {
                     }
 
                 await MainActor.run {
+                    guard token == self.searchToken else { return }
                     self.displayedCourses = filtered
                     self.state = .selectCourse(filtered)
                 }
             } catch {
                 print("[Search] Name search failed: \(error)")
                 await MainActor.run {
+                    guard token == self.searchToken else { return }
                     self.state = .error("Search failed: \(error.localizedDescription)")
                 }
             }
@@ -633,12 +668,13 @@ class StartRoundViewModel: ObservableObject {
 
     func downloadCourse(_ course: GolfCourseResult) {
         let store = CourseStore()
-        let cacheId = course.id
+        let key = CourseLayouts.complexKey(forId: course.id)
 
-        // Check cache first. Layouts of a complex are saved as "<id>-1", "<id>-2", so match the prefix too.
+        // Check cache first. Layouts of a complex share a key ("osm-a1-1", "osm-a1-2" -> "osm-a1").
         // Combined courses ("…+…") are skipped here; they are not separate layouts.
-        let cachedLayouts = ((try? store.loadAll()) ?? [])
-            .filter { ($0.id == cacheId || $0.id.hasPrefix(cacheId + "-")) && !$0.id.contains("+") }
+        let allCourses = (try? store.loadAll()) ?? []
+        let cachedLayouts = allCourses
+            .filter { !$0.id.contains("+") && CourseLayouts.complexKey(forId: $0.id) == key }
             .sorted { $0.id < $1.id }
         if cachedLayouts.count > 1 {
             print("[CourseStore] Loaded \(course.name) from cache: \(cachedLayouts.count) layouts")
@@ -649,6 +685,9 @@ class StartRoundViewModel: ObservableObject {
             print("[CourseStore] Loaded \(course.name) from cache")
             state = .selectStartingHole(cached)
             return
+        }
+        if cachedLayouts.isEmpty {
+            print("[CourseStore] no cache match for key=\(key) rowId=\(course.id) ids=\(allCourses.map(\.id))")
         }
 
         lastFailedCourse = course
