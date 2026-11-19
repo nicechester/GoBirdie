@@ -50,10 +50,17 @@ public enum CourseLayouts {
         return parts.count > 1 ? parts.dropFirst().joined(separator: " – ") : name
     }
 
-    /// Finds the saved course for a round, which stores no location, so it matches by id, then name, then pars.
+    /// Finds the saved course for a round. A round stores no course location, but it stores each hole's green center.
     /// Order: exact id; else same club (non-combined ids), with a combined round's "A + B" layouts combined in order;
-    /// else the club candidate with the same hole pars; else the first candidate with the same hole count; else nil.
-    public static func resolveSavedCourse(id: String, roundCourseName: String, roundHolePars: [Int], saved: [Course]) -> Course? {
+    /// else the club candidate with the same hole pars; else any saved course whose green centers match the round's
+    /// (within 50 m on most holes, at least 3 compared); else the first candidate with the same hole count; else nil.
+    public static func resolveSavedCourse(
+        id: String,
+        roundCourseName: String,
+        roundHolePars: [Int],
+        roundGreens: [Int: GpsPoint] = [:],
+        saved: [Course]
+    ) -> Course? {
         if let exact = saved.first(where: { $0.id == id }) { return exact }
 
         func normalized(_ text: String) -> String {
@@ -73,6 +80,58 @@ public enum CourseLayouts {
         if let match = candidates.first(where: { $0.holes.count == roundHolePars.count && $0.holes.map(\.par) == roundHolePars }) {
             return match
         }
+
+        // No name match (e.g. GolfCourseAPI names like "Course #2 (E.O. Nay)"): compare green centers across all saved courses.
+        if let match = greenMatch(roundCourseName: roundCourseName, roundGreens: roundGreens, saved: saved) {
+            return match
+        }
         return candidates.first { $0.holes.count == roundHolePars.count }
+    }
+
+    /// The saved non-combined course that matches the round by green centers and by name.
+    /// Green match: at least 3 holes compared and at least 80% within `radiusMeters`.
+    /// Name hint: the saved layout (or club) name appears in the round's name, e.g. "E.O. Nay" in "Course #2 (E.O. Nay)".
+    /// Ranked by green match ratio, then name hint. Nil when nothing qualifies or the top two tie on both.
+    static func greenMatch(roundCourseName: String, roundGreens: [Int: GpsPoint], saved: [Course], radiusMeters: Double = 50) -> Course? {
+        guard roundGreens.count >= 3 else { return nil }
+        func normalized(_ text: String) -> String {
+            text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        }
+        let roundName = normalized(roundCourseName)
+
+        var scored: [(course: Course, ratio: Double, nameHit: Bool)] = []
+        for course in saved where !course.id.contains("+") {
+            var matched = 0
+            var compared = 0
+            for hole in course.holes {
+                guard let roundGreen = roundGreens[hole.number], let green = hole.greenCenter else { continue }
+                compared += 1
+                if roundGreen.distanceMeters(to: green) <= radiusMeters { matched += 1 }
+            }
+            guard compared >= 3 else { continue }
+            let ratio = Double(matched) / Double(compared)
+            guard ratio >= 0.8 else { continue }
+
+            // Layout part without the generic " Course" suffix, e.g. "E.O. Nay Course" -> "e.o. nay".
+            var layout = normalized(layoutName(course.name))
+            for suffix in [" golf course", " course"] where layout.hasSuffix(suffix) {
+                layout = String(layout.dropLast(suffix.count))
+                break
+            }
+            let nameHit = (!layout.isEmpty && layout != normalized(course.name) && roundName.contains(layout))
+                || roundName.contains(normalized(clubName(course.name)))
+            scored.append((course, ratio, nameHit))
+        }
+
+        scored.sort { lhs, rhs in
+            if lhs.ratio != rhs.ratio { return lhs.ratio > rhs.ratio }
+            return lhs.nameHit && !rhs.nameHit
+        }
+        guard let best = scored.first else { return nil }
+        if scored.count > 1 {
+            let runnerUp = scored[1]
+            if runnerUp.ratio == best.ratio && runnerUp.nameHit == best.nameHit { return nil }
+        }
+        return best.course
     }
 }

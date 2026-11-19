@@ -169,6 +169,10 @@ private struct ScorecardDetailView: View {
             id: currentRound.courseId,
             roundCourseName: currentRound.courseName,
             roundHolePars: currentRound.holes.map(\.par),
+            roundGreens: Dictionary(
+                currentRound.holes.compactMap { hole in hole.greenCenter.map { (hole.number, $0) } },
+                uniquingKeysWith: { first, _ in first }
+            ),
             saved: saved
         )
     }
