@@ -49,4 +49,30 @@ public enum CourseLayouts {
         let parts = name.components(separatedBy: " – ")
         return parts.count > 1 ? parts.dropFirst().joined(separator: " – ") : name
     }
+
+    /// Finds the saved course for a round, which stores no location, so it matches by id, then name, then pars.
+    /// Order: exact id; else same club (non-combined ids), with a combined round's "A + B" layouts combined in order;
+    /// else the club candidate with the same hole pars; else the first candidate with the same hole count; else nil.
+    public static func resolveSavedCourse(id: String, roundCourseName: String, roundHolePars: [Int], saved: [Course]) -> Course? {
+        if let exact = saved.first(where: { $0.id == id }) { return exact }
+
+        func normalized(_ text: String) -> String {
+            text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        }
+        let wantedClub = normalized(clubName(roundCourseName))
+        let candidates = saved.filter { !$0.id.contains("+") && normalized(clubName($0.name)) == wantedClub }
+
+        if roundCourseName.contains(" + ") {
+            let parts = layoutName(roundCourseName).components(separatedBy: " + ")
+            let layouts = parts.compactMap { part in
+                candidates.first { normalized(layoutName($0.name)) == normalized(part) }
+            }
+            if layouts.count == parts.count, let combined = combine(layouts) { return combined }
+        }
+
+        if let match = candidates.first(where: { $0.holes.count == roundHolePars.count && $0.holes.map(\.par) == roundHolePars }) {
+            return match
+        }
+        return candidates.first { $0.holes.count == roundHolePars.count }
+    }
 }

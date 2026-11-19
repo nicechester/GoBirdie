@@ -163,8 +163,17 @@ private struct ScorecardDetailView: View {
         let b = Array(currentRound.holes.dropFirst(9).prefix(9))
         return b.contains(where: { $0.strokes > 0 }) ? b : []
     }
+    private var savedCourse: Course? {
+        let saved = (try? CourseStore().loadAll()) ?? []
+        return CourseLayouts.resolveSavedCourse(
+            id: currentRound.courseId,
+            roundCourseName: currentRound.courseName,
+            roundHolePars: currentRound.holes.map(\.par),
+            saved: saved
+        )
+    }
     private var courseHoles: [Hole] {
-        (try? CourseStore().load(id: currentRound.courseId))?.holes ?? []
+        savedCourse?.holes ?? []
     }
 
     private var historicalRounds: [Round] {
@@ -313,7 +322,7 @@ private struct ScorecardDetailView: View {
         let prompt = AIPromptBuilder.build(
             round: currentRound,
             handicap: appState.sgBaseline.displayName,
-            course: try? CourseStore().load(id: currentRound.courseId),
+            course: savedCourse,
             handedness: appState.handedness,
             language: lang
         )
